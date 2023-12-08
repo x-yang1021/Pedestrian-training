@@ -1,5 +1,6 @@
 import numpy as np
 import gymnasium as gym
+import torch
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.ppo import MlpPolicy
@@ -69,3 +70,7 @@ env.seed(SEED)
 learner_rewards_after_training, _ = evaluate_policy(
     learner, env, 100, return_episode_rewards=True,
 )
+
+SAVED_REWARD_PATH = 'Reward/experiment.pt'
+torch.save(reward_net, SAVED_REWARD_PATH)
+
