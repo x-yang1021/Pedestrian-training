@@ -34,4 +34,4 @@ rollouts = rollout.rollout(
     rng=np.random.default_rng(SEED),
 )
 
-print(rollouts)
+
