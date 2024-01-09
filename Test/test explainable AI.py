@@ -184,6 +184,7 @@ plt.tight_layout()
 ax.set_xticks(x_axis_data + 0.5)
 ax.set_xticklabels(x_axis_data_labels)
 
-plt.show()
 plt.savefig('Input attribution.png')
+plt.show()
+
 
