@@ -44,7 +44,11 @@ rollouts = rollout.generate_transitions(
 X_test = []
 
 model = torch.load('Reward/experiment.pt')
-print(model)
+
+
+
+
+
 
 
 
@@ -72,12 +76,14 @@ next_obs = np.array(next_obs)
 dones = np.array(dones)
 
 
-X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
+obs, acts, next_obs, dones = RewardNet.preprocess(model,
     types.assert_not_dictobs(obs),
     acts,
     types.assert_not_dictobs(next_obs),
     dones,
 )
+
+X_test = obs, acts
 
 # model.eval()
 # outputs = model(obs,acts,next_obs,dones)
@@ -87,7 +93,7 @@ X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
 
 
 
-ig = IntegratedGradients(model)
+ig = IntegratedGradients(model._base)
 ig_nt = NoiseTunnel(ig)
 dl = DeepLift(model)
 fa = FeatureAblation(model)
@@ -151,11 +157,11 @@ fa_attr_test_norm_sum = \
     np.concatenate((fa_attr_test_norm_sum1, fa_attr_test_norm_sum2, fa_attr_test_norm_sum3))
 
 
-lin_weight1 = model._base.mlp.dense0.weight[0].detach().numpy()
-lin_weight2 = model.potential._potential_net.dense0.weight[0].detach().numpy()
-y_axis_lin_weight1 = lin_weight1 / np.linalg.norm(lin_weight1, ord=1)
-y_axis_lin_weight2 = lin_weight2 / np.linalg.norm(lin_weight2, ord=1)
-y_axis_lin_weight = np.concatenate((y_axis_lin_weight1,y_axis_lin_weight2))
+# lin_weight1 = model._base.mlp.dense0.weight[0].detach().numpy()
+# lin_weight2 = model.potential._potential_net.dense0.weight[0].detach().numpy()
+# y_axis_lin_weight1 = lin_weight1 / np.linalg.norm(lin_weight1, ord=1)
+# y_axis_lin_weight2 = lin_weight2 / np.linalg.norm(lin_weight2, ord=1)
+# y_axis_lin_weight = np.concatenate((y_axis_lin_weight1,y_axis_lin_weight2))
 
 width = 0.14
 legends = ['Int Grads', 'Int Grads w/SmoothGrad', 'Feature Ablation', 'Weight']
