@@ -30,7 +30,7 @@ expert = load_policy(
 rollouts = rollout.rollout(
     expert,
     env,
-    rollout.make_sample_until(min_episodes=60),
+    rollout.make_sample_until(min_episodes=200),
     rng=np.random.default_rng(SEED),
 )
 
@@ -65,7 +65,7 @@ env.seed(SEED)
 learner_rewards_before_training, _ = evaluate_policy(
     learner, env, 100, return_episode_rewards=True,
 )
-airl_trainer.train(20000000)
+airl_trainer.train(2000000)
 env.seed(SEED)
 learner_rewards_after_training, _ = evaluate_policy(
     learner, env, 100, return_episode_rewards=True,

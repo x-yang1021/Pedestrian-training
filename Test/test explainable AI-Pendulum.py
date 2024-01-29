@@ -36,14 +36,14 @@ expert = load_policy(
 rollouts = rollout.generate_transitions(
         policy=None,
         venv= env,
-        n_timesteps=60,
+        n_timesteps=200,
         rng=np.random.default_rng(seed=SEED),
 )
 
 
 X_test = []
 
-model = torch.load('Reward/experiment-Pendulum.pt')
+model = torch.load('Reward/experiment-Pendulum 3.pt')
 
 
 
@@ -76,26 +76,28 @@ dones = np.array(dones)
 
 tensor_dim = len(obs)
 
-ob_baseline1 = np.average(obs[0])
-ob_baseline2 = np.average(obs[1])
-ob_baseline3 = np.average(obs[2])
+ob_baseline1 = np.median(obs[0])
+ob_baseline2 = np.median(obs[1])
+ob_baseline3 = np.median(obs[2])
 ob_baseline = torch.tensor([ob_baseline1,ob_baseline2,ob_baseline3])
+ob_baseline = torch.tensor([-1,0,0])
 ob_baseline = ob_baseline.repeat(tensor_dim,1)
 
 
-act_baseline = torch.tensor([np.average(acts)])
+act_baseline = torch.tensor([np.median(acts)])
 act_baseline = act_baseline.repeat(tensor_dim,1)
 
-next_baseline1 = np.average(next_obs[0])
-next_baseline2 = np.average(next_obs[1])
-next_baseline3 = np.average(next_obs[2])
+next_baseline1 = np.median(next_obs[0])
+next_baseline2 = np.median(next_obs[1])
+next_baseline3 = np.median(next_obs[2])
 next_baseline = torch.tensor([next_baseline1,next_baseline2,next_baseline3])
+next_baseline = torch.tensor([-1,0,0])
 next_baseline = next_baseline.repeat(tensor_dim,1)
 
 # done_baseline = torch.tensor(np.average(dones))
 # done_baseline = done_baseline.repeat(1,tensor_dim)
 
-baselines = (ob_baseline,act_baseline,next_baseline, 0)
+baselines = (ob_baseline,0,next_baseline, 0)
 
 
 
@@ -105,6 +107,7 @@ X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
     types.assert_not_dictobs(next_obs),
     dones,
 )
+
 
 
 # model.eval()
