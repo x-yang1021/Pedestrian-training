@@ -99,6 +99,7 @@ fa = FeatureAblation(model)
 fa_nt = NoiseTunnel(fa)
 
 ig_attr_test = ig.attribute(X_test, n_steps=50)
+
 ig_nt_attr_test = ig_nt.attribute(X_test)
 # dl_attr_test = dl.attribute(X_test)
 fa_attr_test = fa.attribute(X_test)
@@ -106,9 +107,9 @@ fa_nt_attr_test = fa_nt.attribute(X_test)
 
 # prepare attributions for visualization
 
-x_axis_data = np.arange(10)
-x_axis_data_labels = ['Position', 'Velocity','Angle', 'Angular','Left', 'Right',
-                      'Next Position', 'Next Velocity','Next Angle', 'Next Angular']
+x_axis_data = np.arange(7)
+x_axis_data_labels = ['X', 'Y','Angular', 'Torque',
+                      'Next X', 'Next Y', 'Next Angular']
 
 ig_attr_test_sum1 = ig_attr_test[0].detach().numpy().sum(0)
 ig_attr_test_norm_sum1 = ig_attr_test_sum1 / np.linalg.norm(ig_attr_test_sum1, ord=1)
@@ -157,6 +158,17 @@ fa_attr_test_norm_sum3 = fa_attr_test_sum3 / np.linalg.norm(fa_attr_test_sum3, o
 fa_attr_test_norm_sum = \
     np.concatenate((fa_attr_test_norm_sum1, fa_attr_test_norm_sum2, fa_attr_test_norm_sum3))
 
+fa_nt_attr_test_sum1 = fa_nt_attr_test[0].detach().numpy().sum(0)
+fa_nt_attr_test_norm_sum1 = fa_nt_attr_test_sum1 / np.linalg.norm(fa_nt_attr_test_sum1, ord=1)
+
+fa_nt_attr_test_sum2 = fa_nt_attr_test[1].detach().numpy().sum(0)
+fa_nt_attr_test_norm_sum2 = fa_nt_attr_test_sum2 / np.linalg.norm(fa_nt_attr_test_sum2, ord=1)
+
+fa_nt_attr_test_sum3 = fa_nt_attr_test[2].detach().numpy().sum(0)
+fa_nt_attr_test_norm_sum3 = fa_nt_attr_test_sum3 / np.linalg.norm(fa_nt_attr_test_sum3, ord=1)
+
+fa_nt_attr_test_norm_sum = \
+    np.concatenate((fa_nt_attr_test_norm_sum1, fa_nt_attr_test_norm_sum2, fa_nt_attr_test_norm_sum3))
 
 # lin_weight1 = model._base.mlp.dense0.weight[0].detach().numpy()
 # lin_weight2 = model.potential._potential_net.dense0.weight[0].detach().numpy()
@@ -165,7 +177,7 @@ fa_attr_test_norm_sum = \
 # y_axis_lin_weight = np.concatenate((y_axis_lin_weight1,y_axis_lin_weight2))
 
 width = 0.14
-legends = ['Int Grads', 'Int Grads w/SmoothGrad', 'Feature Ablation']
+legends = ['Int Grads', 'Int Grads w/SmoothGrad', 'Feature Ablation', 'Feature Ablation w/SmoothGrad']
 
 plt.figure(figsize=(20, 10))
 
@@ -185,13 +197,14 @@ ax.bar(x_axis_data + width, ig_nt_attr_test_norm_sum, width, align='center', alp
 # ax.bar(x_axis_data + 3 * width, gs_attr_test_norm_sum, width, align='center',  alpha=0.8, color='#4260f5')
 ax.bar(x_axis_data + 2 * width, fa_attr_test_norm_sum, width, align='center', alpha=1.0, color='#49ba81')
 # ax.bar(x_axis_data + 3 * width, y_axis_lin_weight, width, align='center', alpha=1.0, color='grey')
+ax.bar(x_axis_data + 3 * width, fa_nt_attr_test_norm_sum, width, align='center', alpha=1.0, color='grey')
 ax.autoscale_view()
 plt.tight_layout()
 
 ax.set_xticks(x_axis_data + 0.5)
 ax.set_xticklabels(x_axis_data_labels)
 
-plt.savefig('Input attribution.png')
+plt.savefig('Input attribution - Pendulum.png')
 plt.show()
 
 

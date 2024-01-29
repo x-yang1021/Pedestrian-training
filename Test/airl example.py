@@ -16,7 +16,7 @@ from imitation.util.util import make_vec_env
 SEED = 42
 
 env = make_vec_env(
-    "seals:seals/CartPole-v0",
+    "Pendulum-v1",
     rng=np.random.default_rng(SEED),
     n_envs=8,
     post_wrappers=[lambda env, _: RolloutInfoWrapper(env)],  # to compute rollouts
@@ -24,7 +24,7 @@ env = make_vec_env(
 expert = load_policy(
     "ppo-huggingface",
     organization="HumanCompatibleAI",
-    env_name="seals-CartPole-v0",
+    env_name="Pendulum-v1",
     venv=env,
 )
 rollouts = rollout.rollout(
@@ -65,12 +65,12 @@ env.seed(SEED)
 learner_rewards_before_training, _ = evaluate_policy(
     learner, env, 100, return_episode_rewards=True,
 )
-airl_trainer.train(20000)  # Train for 2_000_000 steps to match expert.
+airl_trainer.train(20000000)
 env.seed(SEED)
 learner_rewards_after_training, _ = evaluate_policy(
     learner, env, 100, return_episode_rewards=True,
 )
 
-SAVED_REWARD_PATH = 'Reward/experiment.pt'
+SAVED_REWARD_PATH = 'Reward/experiment-Pendulum 3.pt'
 torch.save(reward_net, SAVED_REWARD_PATH)
 
