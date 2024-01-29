@@ -74,6 +74,30 @@ acts = np.array(acts)
 next_obs = np.array(next_obs)
 dones = np.array(dones)
 
+tensor_dim = len(obs)
+
+ob_baseline1 = np.average(obs[0])
+ob_baseline2 = np.average(obs[1])
+ob_baseline3 = np.average(obs[2])
+ob_baseline = torch.tensor([ob_baseline1,ob_baseline2,ob_baseline3])
+ob_baseline = ob_baseline.repeat(tensor_dim,1)
+
+
+act_baseline = torch.tensor([np.average(acts)])
+act_baseline = act_baseline.repeat(tensor_dim,1)
+
+next_baseline1 = np.average(next_obs[0])
+next_baseline2 = np.average(next_obs[1])
+next_baseline3 = np.average(next_obs[2])
+next_baseline = torch.tensor([next_baseline1,next_baseline2,next_baseline3])
+next_baseline = next_baseline.repeat(tensor_dim,1)
+
+# done_baseline = torch.tensor(np.average(dones))
+# done_baseline = done_baseline.repeat(1,tensor_dim)
+
+baselines = (ob_baseline,act_baseline,next_baseline, 0)
+
+
 
 X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
     types.assert_not_dictobs(obs),
@@ -81,7 +105,6 @@ X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
     types.assert_not_dictobs(next_obs),
     dones,
 )
-
 
 
 # model.eval()
@@ -98,12 +121,11 @@ ig_nt = NoiseTunnel(ig)
 fa = FeatureAblation(model)
 fa_nt = NoiseTunnel(fa)
 
-ig_attr_test = ig.attribute(X_test, n_steps=50)
-
-ig_nt_attr_test = ig_nt.attribute(X_test)
+ig_attr_test = ig.attribute(X_test, n_steps=50, baselines=baselines)
+ig_nt_attr_test = ig_nt.attribute(X_test,baselines=baselines)
 # dl_attr_test = dl.attribute(X_test)
-fa_attr_test = fa.attribute(X_test)
-fa_nt_attr_test = fa_nt.attribute(X_test)
+fa_attr_test = fa.attribute(X_test,baselines=baselines)
+fa_nt_attr_test = fa_nt.attribute(X_test,baselines=baselines)
 
 # prepare attributions for visualization
 
