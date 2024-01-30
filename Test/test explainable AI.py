@@ -96,7 +96,7 @@ next_baseline = next_baseline.repeat(tensor_dim,1)
 # done_baseline = torch.tensor(np.average(dones))
 # done_baseline = done_baseline.repeat(1,tensor_dim)
 
-baselines = (0,0,0,0)
+baselines = (ob_baseline,act_baseline,next_baseline,0)
 
 
 X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
@@ -200,7 +200,7 @@ fa_nt_attr_test_norm_sum = \
 
 
 width = 0.14
-legends = ['Int Grads', 'Int Grads w/SmoothGrad', 'Feature Ablation']
+legends = ['Int Grads', 'Int Grads w/SmoothGrad', 'Feature Ablation', 'Feature Ablation w/SmoothGrad']
 
 plt.figure(figsize=(20, 10))
 

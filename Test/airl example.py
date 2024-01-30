@@ -74,3 +74,16 @@ learner_rewards_after_training, _ = evaluate_policy(
 SAVED_REWARD_PATH = 'Reward/experiment-cartpole.pt'
 torch.save(reward_net, SAVED_REWARD_PATH)
 
+print(
+    "Rewards before training:",
+    np.mean(learner_rewards_before_training),
+    "+/-",
+    np.std(learner_rewards_before_training),
+)
+print(
+    "Rewards after training:",
+    np.mean(learner_rewards_after_training),
+    "+/-",
+    np.std(learner_rewards_after_training),
+)
+
