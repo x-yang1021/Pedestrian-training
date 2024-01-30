@@ -22,7 +22,7 @@ from captum.attr import IntegratedGradients, DeepLift, GradientShap, NoiseTunnel
 SEED = 42
 
 env = make_vec_env(
-    "seals:seals/CartPole-v0",
+    "seals:seals/MountainCar-v0",
     rng=np.random.default_rng(SEED),
     n_envs=8,
     post_wrappers=[lambda env, _: RolloutInfoWrapper(env)],  # to compute rollouts
@@ -30,7 +30,7 @@ env = make_vec_env(
 expert = load_policy(
     "ppo-huggingface",
     organization="HumanCompatibleAI",
-    env_name="seals-CartPole-v0",
+    env_name="seals-MountainCar-v0",
     venv=env,
 )
 rollouts = rollout.generate_transitions(
@@ -43,7 +43,7 @@ rollouts = rollout.generate_transitions(
 
 X_test = []
 
-model = torch.load('Reward/experiment-cartpole.pt')
+model = torch.load('Reward/experiment-mountain car.pt')
 
 
 # print('obs', rollouts[0].obs, 'acts', rollouts[0].acts,
@@ -73,22 +73,19 @@ tensor_dim = len(obs)
 
 ob_baseline1 = np.average(obs[0])
 ob_baseline2 = np.average(obs[1])
-ob_baseline3 = np.average(obs[2])
-ob_baseline4 = np.average(obs[3])
-ob_baseline = torch.tensor([ob_baseline1,ob_baseline2, ob_baseline3, ob_baseline4])
+ob_baseline = torch.tensor([ob_baseline1,ob_baseline2])
 # ob_baseline = torch.tensor([-1,0,0])
 ob_baseline = ob_baseline.repeat(tensor_dim,1)
 
 act_baseline1 = np.average(acts[0])
 act_baseline2 = np.average(acts[1])
-act_baseline = torch.tensor([act_baseline1,act_baseline2]).float()
+act_baseline3 = np.average(acts[2])
+act_baseline = torch.tensor([act_baseline1,act_baseline2,act_baseline3]).float()
 act_baseline = act_baseline.repeat(tensor_dim,1)
 
 next_baseline1 = np.average(next_obs[0])
 next_baseline2 = np.average(next_obs[1])
-next_baseline3 = np.average(next_obs[2])
-next_baseline4 = np.average(next_obs[3])
-next_baseline = torch.tensor([next_baseline1,next_baseline2, next_baseline3,next_baseline4])
+next_baseline = torch.tensor([next_baseline1,next_baseline2])
 # next_baseline = torch.tensor([-1,0,0])
 next_baseline = next_baseline.repeat(tensor_dim,1)
 
@@ -96,7 +93,7 @@ next_baseline = next_baseline.repeat(tensor_dim,1)
 # done_baseline = torch.tensor(np.average(dones))
 # done_baseline = done_baseline.repeat(1,tensor_dim)
 
-baselines = (0,0,0,0)
+baselines = (ob_baseline,act_baseline,next_baseline,0)
 
 
 X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
@@ -106,8 +103,7 @@ X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
     dones,
 )
 
-
-# model.eval()
+model.eval()
 # outputs = model(obs,acts,next_obs,dones)
 # print('output', outputs)
 
@@ -120,7 +116,7 @@ ig_nt = NoiseTunnel(ig)
 fa = FeatureAblation(model)
 fa_nt = NoiseTunnel(fa)
 
-ig_attr_test = ig.attribute(X_test, n_steps=50,baselines=baselines)
+ig_attr_test = ig.attribute(X_test, n_steps=50, baselines=baselines)
 ig_nt_attr_test = ig_nt.attribute(X_test,baselines=baselines)
 # dl_attr_test = dl.attribute(X_test)
 fa_attr_test = fa.attribute(X_test,baselines=baselines)
@@ -128,9 +124,10 @@ fa_nt_attr_test = fa_nt.attribute(X_test,baselines=baselines)
 
 # prepare attributions for visualization
 
-x_axis_data = np.arange(10)
-x_axis_data_labels = ['Position', 'Velocity','Angle', 'Angular','Left', 'Right',
-                      'Next Position', 'Next Velocity','Next Angle', 'Next Angular']
+x_axis_data = np.arange(7)
+x_axis_data_labels = ['Position', 'Velocity',
+                      'Left Acc', 'No Acc', 'Right Acc',
+                      'Next Position', 'Next Velocity']
 
 ig_attr_test_sum1 = ig_attr_test[0].detach().numpy().sum(0)
 ig_attr_test_norm_sum1 = ig_attr_test_sum1 / np.linalg.norm(ig_attr_test_sum1, ord=1)
@@ -179,13 +176,6 @@ fa_attr_test_norm_sum3 = fa_attr_test_sum3 / np.linalg.norm(fa_attr_test_sum3, o
 fa_attr_test_norm_sum = \
     np.concatenate((fa_attr_test_norm_sum1, fa_attr_test_norm_sum2, fa_attr_test_norm_sum3))
 
-
-# lin_weight1 = model._base.mlp.dense0.weight[0].detach().numpy()
-# lin_weight2 = model.potential._potential_net.dense0.weight[0].detach().numpy()
-# y_axis_lin_weight1 = lin_weight1 / np.linalg.norm(lin_weight1, ord=1)
-# y_axis_lin_weight2 = lin_weight2 / np.linalg.norm(lin_weight2, ord=1)
-# y_axis_lin_weight = np.concatenate((y_axis_lin_weight1,y_axis_lin_weight2))
-
 fa_nt_attr_test_sum1 = fa_nt_attr_test[0].detach().numpy().sum(0)
 fa_nt_attr_test_norm_sum1 = fa_nt_attr_test_sum1 / np.linalg.norm(fa_nt_attr_test_sum1, ord=1)
 
@@ -198,14 +188,19 @@ fa_nt_attr_test_norm_sum3 = fa_nt_attr_test_sum3 / np.linalg.norm(fa_nt_attr_tes
 fa_nt_attr_test_norm_sum = \
     np.concatenate((fa_nt_attr_test_norm_sum1, fa_nt_attr_test_norm_sum2, fa_nt_attr_test_norm_sum3))
 
+# lin_weight1 = model._base.mlp.dense0.weight[0].detach().numpy()
+# lin_weight2 = model.potential._potential_net.dense0.weight[0].detach().numpy()
+# y_axis_lin_weight1 = lin_weight1 / np.linalg.norm(lin_weight1, ord=1)
+# y_axis_lin_weight2 = lin_weight2 / np.linalg.norm(lin_weight2, ord=1)
+# y_axis_lin_weight = np.concatenate((y_axis_lin_weight1,y_axis_lin_weight2))
 
 width = 0.14
-legends = ['Int Grads', 'Int Grads w/SmoothGrad', 'Feature Ablation']
+legends = ['Int Grads', 'Int Grads w/SmoothGrad', 'Feature Ablation', 'Feature Ablation w/SmoothGrad']
 
 plt.figure(figsize=(20, 10))
 
 ax = plt.subplot()
-ax.set_title('Comparing input feature importances across multiple method')
+ax.set_title('Comparing input feature importances across multiple algorithms and learned weights')
 ax.set_ylabel('Attributions')
 
 FONT_SIZE = 16
@@ -224,11 +219,11 @@ ax.bar(x_axis_data + 3 * width, fa_nt_attr_test_norm_sum, width, align='center',
 ax.autoscale_view()
 plt.tight_layout()
 
-ax.set_xticks(x_axis_data)
+ax.set_xticks(x_axis_data+0.2)
 ax.set_xticklabels(x_axis_data_labels)
 
 plt.legend(legends, loc=3)
-plt.savefig('Input attribution-Cartpole.png')
+plt.savefig('Input attribution - Moutain Car.png')
 plt.show()
 
 
