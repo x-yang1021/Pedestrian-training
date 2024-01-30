@@ -84,11 +84,7 @@ act_baseline2 = np.average(acts[1])
 act_baseline = torch.tensor([act_baseline1,act_baseline2]).float()
 act_baseline = act_baseline.repeat(tensor_dim,1)
 
-next_baseline1 = np.average(next_obs[0])
-next_baseline2 = np.average(next_obs[1])
-next_baseline3 = np.average(next_obs[2])
-next_baseline4 = np.average(next_obs[3])
-next_baseline = torch.tensor([next_baseline1,next_baseline2, next_baseline3,next_baseline4])
+next_baseline = torch.tensor([np.average(next_obs[:,i]) for i in range(next_obs.shape[1])])
 # next_baseline = torch.tensor([-1,0,0])
 next_baseline = next_baseline.repeat(tensor_dim,1)
 
@@ -107,13 +103,12 @@ X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
     dones,
 )
 
-print(X_test)
+
 
 
 # outputs = model(obs,acts,next_obs,dones)
 # print('output', outputs)
 
-# print('x test', X_test, 'type', type(X_test))
 
 
 ig = IntegratedGradients(model)
@@ -226,11 +221,11 @@ ax.bar(x_axis_data + 3 * width, fa_nt_attr_test_norm_sum, width, align='center',
 ax.autoscale_view()
 plt.tight_layout()
 
-ax.set_xticks(x_axis_data)
+ax.set_xticks(x_axis_data+0.2)
 ax.set_xticklabels(x_axis_data_labels)
 
 plt.legend(legends, loc=3)
-plt.savefig('Input attribution-Cartpole 5.png')
+plt.savefig('Input attribution-Cartpole 10.png')
 plt.show()
 
 
