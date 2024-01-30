@@ -16,8 +16,8 @@ from imitation.rewards.reward_nets import RewardNet
 from imitation.util.networks import RunningNorm
 from imitation.util.util import make_vec_env
 
-from captum.attr import LayerConductance, LayerActivation, LayerIntegratedGradients
-from captum.attr import IntegratedGradients, DeepLift, GradientShap, NoiseTunnel, FeatureAblation
+
+from captum.attr import IntegratedGradients, LimeBase, GradientShap, NoiseTunnel, FeatureAblation
 
 SEED = 42
 
@@ -40,8 +40,16 @@ rollouts = rollout.generate_transitions(
         rng=np.random.default_rng(seed=SEED),
 )
 
+train = rollout.generate_transitions(
+        policy=None,
+        venv= env,
+        n_timesteps=200,
+        rng=np.random.default_rng(seed=100),
+)
+
 
 X_test = []
+X_train = []
 
 model = torch.load('Reward/experiment-cartpole.pt')
 model.eval()
@@ -76,7 +84,7 @@ ob_baseline2 = np.average(obs[1])
 ob_baseline3 = np.average(obs[2])
 ob_baseline4 = np.average(obs[3])
 ob_baseline = torch.tensor([ob_baseline1,ob_baseline2, ob_baseline3, ob_baseline4])
-# ob_baseline = torch.tensor([-1,0,0])
+ob_baseline = torch.tensor([-2.4,-10,-0.2095,-10])
 ob_baseline = ob_baseline.repeat(tensor_dim,1)
 
 act_baseline1 = np.average(acts[0])
@@ -85,14 +93,14 @@ act_baseline = torch.tensor([act_baseline1,act_baseline2]).float()
 act_baseline = act_baseline.repeat(tensor_dim,1)
 
 next_baseline = torch.tensor([np.average(next_obs[:,i]) for i in range(next_obs.shape[1])])
-# next_baseline = torch.tensor([-1,0,0])
+next_baseline = torch.tensor([-2.4,-10,-0.2095,-10])
 next_baseline = next_baseline.repeat(tensor_dim,1)
 
 
 # done_baseline = torch.tensor(np.average(dones))
 # done_baseline = done_baseline.repeat(1,tensor_dim)
 
-baselines = (ob_baseline,act_baseline,next_baseline,0)
+# baselines = (ob_baseline,0.5 ,next_baseline,0)
 # baselines = (0,0,0,0)
 
 
@@ -103,9 +111,29 @@ X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
     dones,
 )
 
+# Process data for SHAP
 
+obs = []
+acts = []
+next_obs = []
+dones = []
+for i in range(len(train)-1):
+    obs.append(train[i]['obs'])
+    acts.append(train[i]['acts'])
+    next_obs.append(train[i+1]['obs'])
+    dones.append(train[i]['dones'])
 
+obs = np.array(obs)
+acts = np.array(acts)
+next_obs = np.array(next_obs)
+dones = np.array(dones)
 
+X_train = obs_train, acts_train, next_obs_train, dones_train = RewardNet.preprocess(model,
+    types.assert_not_dictobs(obs),
+    acts,
+    types.assert_not_dictobs(next_obs),
+    dones,
+)
 # outputs = model(obs,acts,next_obs,dones)
 # print('output', outputs)
 
@@ -113,13 +141,16 @@ X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
 
 ig = IntegratedGradients(model)
 ig_nt = NoiseTunnel(ig)
-# dl = DeepLift(model)
+gs = GradientShap(model)
+lm = LimeBase(model)
 fa = FeatureAblation(model)
 fa_nt = NoiseTunnel(fa)
 
 ig_attr_test = ig.attribute(X_test, n_steps=50,baselines=baselines)
 ig_nt_attr_test = ig_nt.attribute(X_test,baselines=baselines)
-# dl_attr_test = dl.attribute(X_test)
+gs_attr_test = gs.attribute(X_test, X_train)
+lm_attr_test = lm.attribute(X_test)
+print(lm_attr_test)
 fa_attr_test = fa.attribute(X_test,baselines=baselines)
 fa_nt_attr_test = fa_nt.attribute(X_test,baselines=baselines)
 
@@ -128,6 +159,30 @@ fa_nt_attr_test = fa_nt.attribute(X_test,baselines=baselines)
 x_axis_data = np.arange(10)
 x_axis_data_labels = ['Position', 'Velocity','Angle', 'Angular','Left', 'Right',
                       'Next Position', 'Next Velocity','Next Angle', 'Next Angular']
+
+gs_attr_test_sum1 = gs_attr_test[0].detach().numpy().sum(0)
+gs_attr_test_norm_sum1 = gs_attr_test_sum1 / np.linalg.norm(gs_attr_test_sum1, ord=1)
+
+gs_attr_test_sum2 = gs_attr_test[1].detach().numpy().sum(0)
+gs_attr_test_norm_sum2 = gs_attr_test_sum2 / np.linalg.norm(gs_attr_test_sum2, ord=1)
+
+gs_attr_test_sum3 = gs_attr_test[2].detach().numpy().sum(0)
+gs_attr_test_norm_sum3 = gs_attr_test_sum3 / np.linalg.norm(gs_attr_test_sum3, ord=1)
+
+gs_attr_test_norm_sum = np.concatenate((gs_attr_test_norm_sum1, gs_attr_test_norm_sum2, gs_attr_test_norm_sum3))
+
+
+lm_attr_test_sum1 = lm_attr_test[0].detach().numpy().sum(0)
+lm_attr_test_norm_sum1 = lm_attr_test_sum1 / np.linalg.norm(lm_attr_test_sum1, ord=1)
+
+lm_attr_test_sum2 = lm_attr_test[1].detach().numpy().sum(0)
+lm_attr_test_norm_sum2 = lm_attr_test_sum2 / np.linalg.norm(lm_attr_test_sum2, ord=1)
+
+lm_attr_test_sum3 = lm_attr_test[2].detach().numpy().sum(0)
+lm_attr_test_norm_sum3 = lm_attr_test_sum3 / np.linalg.norm(lm_attr_test_sum3, ord=1)
+
+lm_attr_test_norm_sum = np.concatenate((lm_attr_test_norm_sum1, lm_attr_test_norm_sum2, lm_attr_test_norm_sum3))
+
 
 ig_attr_test_sum1 = ig_attr_test[0].detach().numpy().sum(0)
 ig_attr_test_norm_sum1 = ig_attr_test_sum1 / np.linalg.norm(ig_attr_test_sum1, ord=1)
@@ -197,7 +252,7 @@ fa_nt_attr_test_norm_sum = \
 
 
 width = 0.14
-legends = ['Int Grads', 'Int Grads w/SmoothGrad', 'Feature Ablation', 'Feature Ablation w/SmoothGrad']
+legends = ['Int Grads', 'Int Grads w/SmoothGrad', 'SHAP', 'Feature Ablation', 'Feature Ablation w/SmoothGrad']
 
 plt.figure(figsize=(20, 10))
 
@@ -214,10 +269,10 @@ plt.rc('legend', fontsize=FONT_SIZE - 4)  # fontsize of the legend
 ax.bar(x_axis_data, ig_attr_test_norm_sum, width, align='center', alpha=0.8, color='#eb5e7c')
 ax.bar(x_axis_data + width, ig_nt_attr_test_norm_sum, width, align='center', alpha=0.7, color='#A90000')
 # ax.bar(x_axis_data + 2 * width, dl_attr_test_norm_sum, width, align='center', alpha=0.6, color='#34b8e0')
-# ax.bar(x_axis_data + 3 * width, gs_attr_test_norm_sum, width, align='center',  alpha=0.8, color='#4260f5')
-ax.bar(x_axis_data + 2 * width, fa_attr_test_norm_sum, width, align='center', alpha=1.0, color='#49ba81')
+ax.bar(x_axis_data + 2 * width, gs_attr_test_norm_sum, width, align='center',  alpha=0.8, color='#4260f5')
+ax.bar(x_axis_data + 3 * width, fa_attr_test_norm_sum, width, align='center', alpha=1.0, color='#49ba81')
 # ax.bar(x_axis_data + 3 * width, y_axis_lin_weight, width, align='center', alpha=1.0, color='grey')
-ax.bar(x_axis_data + 3 * width, fa_nt_attr_test_norm_sum, width, align='center', alpha=1.0, color='grey')
+ax.bar(x_axis_data + 4 * width, fa_nt_attr_test_norm_sum, width, align='center', alpha=1.0, color='grey')
 ax.autoscale_view()
 plt.tight_layout()
 
@@ -225,7 +280,7 @@ ax.set_xticks(x_axis_data+0.2)
 ax.set_xticklabels(x_axis_data_labels)
 
 plt.legend(legends, loc=3)
-plt.savefig('Input attribution-Cartpole 10.png')
+# plt.savefig('Input attribution-Cartpole 10.png')
 plt.show()
 
 
