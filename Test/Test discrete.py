@@ -102,14 +102,12 @@ X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
 
 
 fa = FeatureAblation(model)
-oc = Occlusion(model)
 fp = FeaturePermutation(model)
 sv = ShapleyValueSampling(model)
 ks = KernelShap(model)
 
 
-fa_attr_test = fa.attribute(X_test,baselines=baselines)
-oc_attr_test = oc.attribute(X_test, sliding_window_shapes = ((1,),(1,),(1,),()))
+fa_attr_test = fa.attribute(X_test)
 fp_attr_test = fp.attribute(X_test)
 sv_attr_test = sv.attribute(X_test)
 ks_attr_test = ks.attribute(X_test)
@@ -134,11 +132,10 @@ x_axis_data_labels = ['Position', 'Velocity','Angle', 'Angular','Left', 'Right',
 fa_attr_test_norm_sums = [fa_attr_test[i].detach().numpy().sum(0) / np.linalg.norm(fa_attr_test[i].detach().numpy().sum(0), ord=1) for i in range(3)]
 fa_attr_test_norm_sum = np.concatenate(fa_attr_test_norm_sums)
 
-oc_attr_test_norm_sums = [oc_attr_test[i].detach().numpy().sum(0) / np.linalg.norm(oc_attr_test[i].detach().numpy().sum(0), ord=1) for i in range(3)]
-oc_attr_test_norm_sum = np.concatenate(oc_attr_test_norm_sums)
 
 fp_attr_test_norm_sums = [fp_attr_test[i].detach().numpy().sum(0) / np.linalg.norm(fp_attr_test[i].detach().numpy().sum(0), ord=1) for i in range(3)]
 fp_attr_test_norm_sum = np.concatenate(fp_attr_test_norm_sums)
+
 
 sv_attr_test_norm_sums = [sv_attr_test[i].detach().numpy().sum(0) / np.linalg.norm(sv_attr_test[i].detach().numpy().sum(0), ord=1) for i in range(3)]
 sv_attr_test_norm_sum = np.concatenate(sv_attr_test_norm_sums)
@@ -147,13 +144,12 @@ ks_attr_test_norm_sums = [ks_attr_test[i].detach().numpy().sum(0) / np.linalg.no
 ks_attr_test_norm_sum = np.concatenate(ks_attr_test_norm_sums)
 
 width = 0.14
-legends = ['Feature Ablation', 'Occlusion',
+legends = ['Feature Ablation',
            'Shapley Value Sampling', 'KernelShap']
 
 plt.figure(figsize=(20, 10))
 
 ax = plt.subplot()
-ax.set_title('Comparing input feature importances across multiple method')
 ax.set_ylabel('Attributions')
 
 FONT_SIZE = 16
@@ -163,12 +159,12 @@ plt.rc('axes', labelsize=FONT_SIZE)       # fontsize of the x and y labels
 plt.rc('legend', fontsize=FONT_SIZE - 4)  # fontsize of the legend
 
 ax.bar(x_axis_data, fa_attr_test_norm_sum, width, align='center', alpha=0.8, color='#eb5e7c')
-ax.bar(x_axis_data + width, oc_attr_test_norm_sum, width, align='center', alpha=0.7, color='#A90000')
+# ax.bar(x_axis_data + width, fp_attr_test_norm_sum, width, align='center', alpha=0.7, color='#A90000')
 # ax.bar(x_axis_data + 2 * width, dl_attr_test_norm_sum, width, align='center', alpha=0.6, color='#34b8e0')
-# ax.bar(x_axis_data + 2 * width, fp_attr_test_norm_sum, width, align='center',  alpha=0.8, color='#4260f5')
-ax.bar(x_axis_data + 2 * width, sv_attr_test_norm_sum, width, align='center', alpha=1.0, color='#49ba81')
+# ax.bar(x_axis_data + 3 * width, fp_attr_test_norm_sum, width, align='center',  alpha=0.8, color='#4260f5')
+ax.bar(x_axis_data +  width, sv_attr_test_norm_sum, width, align='center', alpha=1.0, color='#49ba81')
 # ax.bar(x_axis_data + 3 * width, y_axis_lin_weight, width, align='center', alpha=1.0, color='grey')
-ax.bar(x_axis_data + 3 * width, ks_attr_test_norm_sum, width, align='center', alpha=1.0, color='grey')
+ax.bar(x_axis_data + 2 * width, ks_attr_test_norm_sum, width, align='center', alpha=1.0, color='grey')
 ax.autoscale_view()
 plt.tight_layout()
 
