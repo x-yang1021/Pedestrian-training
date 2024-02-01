@@ -39,17 +39,6 @@ rollouts = rollout.generate_transitions(
         rng=np.random.default_rng(seed=SEED),
 )
 
-train = rollout.generate_transitions(
-        policy=None,
-        venv= env,
-        n_timesteps=200,
-        rng=np.random.default_rng(seed=100),
-)
-
-
-X_test = []
-X_train = []
-
 model = torch.load('Reward/experiment-cartpole.pt')
 model.eval()
 
@@ -109,6 +98,7 @@ X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
     types.assert_not_dictobs(next_obs),
     dones,
 )
+
 
 
 fa = FeatureAblation(model)
@@ -188,7 +178,7 @@ ax.set_xticks(x_axis_data+0.2)
 ax.set_xticklabels(x_axis_data_labels)
 
 plt.legend(legends, loc=3)
-plt.savefig('Input attribution-Cartpole 10.png')
+# plt.savefig('Input attribution-Cartpole 10.png')
 plt.show()
 
 

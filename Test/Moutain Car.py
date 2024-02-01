@@ -16,8 +16,7 @@ from imitation.rewards.reward_nets import RewardNet
 from imitation.util.networks import RunningNorm
 from imitation.util.util import make_vec_env
 
-from captum.attr import LayerConductance, LayerActivation, LayerIntegratedGradients
-from captum.attr import IntegratedGradients, DeepLift, GradientShap, NoiseTunnel, FeatureAblation
+from captum.attr import FeatureAblation,Occlusion, FeaturePermutation, ShapleyValueSampling, KernelShap
 
 SEED = 42
 
@@ -36,7 +35,7 @@ expert = load_policy(
 rollouts = rollout.generate_transitions(
         policy=None,
         venv= env,
-        n_timesteps=200,
+        n_timesteps=1000,
         rng=np.random.default_rng(seed=SEED),
 )
 
@@ -93,7 +92,7 @@ next_baseline = next_baseline.repeat(tensor_dim,1)
 # done_baseline = torch.tensor(np.average(dones))
 # done_baseline = done_baseline.repeat(1,tensor_dim)
 
-baselines = (ob_baseline,act_baseline,next_baseline,0)
+baselines = (0,0,0,0)
 
 
 X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
@@ -102,6 +101,11 @@ X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
     types.assert_not_dictobs(next_obs),
     dones,
 )
+n = 0
+for i in range(len(acts)):
+    if acts[i,1] == 1:
+        n += 1
+print(n)
 
 model.eval()
 # outputs = model(obs,acts,next_obs,dones)
@@ -110,17 +114,19 @@ model.eval()
 # print('x test', X_test, 'type', type(X_test))
 
 
-ig = IntegratedGradients(model)
-ig_nt = NoiseTunnel(ig)
-# dl = DeepLift(model)
 fa = FeatureAblation(model)
-fa_nt = NoiseTunnel(fa)
+oc = Occlusion(model)
+fp = FeaturePermutation(model)
+sv = ShapleyValueSampling(model)
+ks = KernelShap(model)
 
-ig_attr_test = ig.attribute(X_test, n_steps=50, baselines=baselines)
-ig_nt_attr_test = ig_nt.attribute(X_test,baselines=baselines)
-# dl_attr_test = dl.attribute(X_test)
+
 fa_attr_test = fa.attribute(X_test,baselines=baselines)
-fa_nt_attr_test = fa_nt.attribute(X_test,baselines=baselines)
+oc_attr_test = oc.attribute(X_test, sliding_window_shapes = ((1,),(1,),(1,),()))
+fp_attr_test = fp.attribute(X_test)
+sv_attr_test = sv.attribute(X_test)
+ks_attr_test = ks.attribute(X_test)
+
 
 # prepare attributions for visualization
 
@@ -128,41 +134,6 @@ x_axis_data = np.arange(7)
 x_axis_data_labels = ['Position', 'Velocity',
                       'Left Acc', 'No Acc', 'Right Acc',
                       'Next Position', 'Next Velocity']
-
-ig_attr_test_sum1 = ig_attr_test[0].detach().numpy().sum(0)
-ig_attr_test_norm_sum1 = ig_attr_test_sum1 / np.linalg.norm(ig_attr_test_sum1, ord=1)
-
-ig_attr_test_sum2 = ig_attr_test[1].detach().numpy().sum(0)
-ig_attr_test_norm_sum2 = ig_attr_test_sum2 / np.linalg.norm(ig_attr_test_sum2, ord=1)
-
-ig_attr_test_sum3 = ig_attr_test[2].detach().numpy().sum(0)
-ig_attr_test_norm_sum3 = ig_attr_test_sum3 / np.linalg.norm(ig_attr_test_sum3, ord=1)
-
-ig_attr_test_norm_sum = np.concatenate((ig_attr_test_norm_sum1, ig_attr_test_norm_sum2, ig_attr_test_norm_sum3))
-
-ig_nt_attr_test_sum1 = ig_nt_attr_test[0].detach().numpy().sum(0)
-ig_nt_attr_test_norm_sum1 = ig_nt_attr_test_sum1 / np.linalg.norm(ig_nt_attr_test_sum1, ord=1)
-
-ig_nt_attr_test_sum2 = ig_nt_attr_test[1].detach().numpy().sum(0)
-ig_nt_attr_test_norm_sum2 = ig_nt_attr_test_sum2 / np.linalg.norm(ig_nt_attr_test_sum2, ord=1)
-
-ig_nt_attr_test_sum3 = ig_nt_attr_test[2].detach().numpy().sum(0)
-ig_nt_attr_test_norm_sum3 = ig_nt_attr_test_sum3 / np.linalg.norm(ig_nt_attr_test_sum3, ord=1)
-
-ig_nt_attr_test_norm_sum = \
-    np.concatenate((ig_nt_attr_test_norm_sum1, ig_nt_attr_test_norm_sum2, ig_nt_attr_test_norm_sum3))
-#
-# dl_attr_test_sum1 = dl_attr_test[0].detach().numpy().sum(0)
-# dl_attr_test_norm_sum1 = dl_attr_test_sum1 / np.linalg.norm(dl_attr_test_sum1, ord=1)
-#
-# dl_attr_test_sum2 = dl_attr_test[1].detach().numpy().sum(0)
-# dl_attr_test_norm_sum2 = dl_attr_test_sum2 / np.linalg.norm(dl_attr_test_sum2, ord=1)
-#
-# dl_attr_test_sum3 = dl_attr_test[2].detach().numpy().sum(0)
-# dl_attr_test_norm_sum3 = dl_attr_test_sum3 / np.linalg.norm(dl_attr_test_sum3, ord=1)
-#
-# dl_attr_test_norm_sum = \
-#     np.concatenate((dl_attr_test_norm_sum1, dl_attr_test_norm_sum2, dl_attr_test_norm_sum3))
 
 fa_attr_test_sum1 = fa_attr_test[0].detach().numpy().sum(0)
 fa_attr_test_norm_sum1 = fa_attr_test_sum1 / np.linalg.norm(fa_attr_test_sum1, ord=1)
@@ -176,31 +147,26 @@ fa_attr_test_norm_sum3 = fa_attr_test_sum3 / np.linalg.norm(fa_attr_test_sum3, o
 fa_attr_test_norm_sum = \
     np.concatenate((fa_attr_test_norm_sum1, fa_attr_test_norm_sum2, fa_attr_test_norm_sum3))
 
-fa_nt_attr_test_sum1 = fa_nt_attr_test[0].detach().numpy().sum(0)
-fa_nt_attr_test_norm_sum1 = fa_nt_attr_test_sum1 / np.linalg.norm(fa_nt_attr_test_sum1, ord=1)
+oc_attr_test_norm_sums = [oc_attr_test[i].detach().numpy().sum(0) / np.linalg.norm(oc_attr_test[i].detach().numpy().sum(0), ord=1) for i in range(3)]
+oc_attr_test_norm_sum = np.concatenate(oc_attr_test_norm_sums)
 
-fa_nt_attr_test_sum2 = fa_nt_attr_test[1].detach().numpy().sum(0)
-fa_nt_attr_test_norm_sum2 = fa_nt_attr_test_sum2 / np.linalg.norm(fa_nt_attr_test_sum2, ord=1)
+fp_attr_test_norm_sums = [fp_attr_test[i].detach().numpy().sum(0) / np.linalg.norm(fp_attr_test[i].detach().numpy().sum(0), ord=1) for i in range(3)]
+fp_attr_test_norm_sum = np.concatenate(fp_attr_test_norm_sums)
 
-fa_nt_attr_test_sum3 = fa_nt_attr_test[2].detach().numpy().sum(0)
-fa_nt_attr_test_norm_sum3 = fa_nt_attr_test_sum3 / np.linalg.norm(fa_nt_attr_test_sum3, ord=1)
+sv_attr_test_norm_sums = [sv_attr_test[i].detach().numpy().sum(0) / np.linalg.norm(sv_attr_test[i].detach().numpy().sum(0), ord=1) for i in range(3)]
+sv_attr_test_norm_sum = np.concatenate(sv_attr_test_norm_sums)
 
-fa_nt_attr_test_norm_sum = \
-    np.concatenate((fa_nt_attr_test_norm_sum1, fa_nt_attr_test_norm_sum2, fa_nt_attr_test_norm_sum3))
-
-# lin_weight1 = model._base.mlp.dense0.weight[0].detach().numpy()
-# lin_weight2 = model.potential._potential_net.dense0.weight[0].detach().numpy()
-# y_axis_lin_weight1 = lin_weight1 / np.linalg.norm(lin_weight1, ord=1)
-# y_axis_lin_weight2 = lin_weight2 / np.linalg.norm(lin_weight2, ord=1)
-# y_axis_lin_weight = np.concatenate((y_axis_lin_weight1,y_axis_lin_weight2))
+ks_attr_test_norm_sums = [ks_attr_test[i].detach().numpy().sum(0) / np.linalg.norm(ks_attr_test[i].detach().numpy().sum(0), ord=1) for i in range(3)]
+ks_attr_test_norm_sum = np.concatenate(ks_attr_test_norm_sums)
 
 width = 0.14
-legends = ['Int Grads', 'Int Grads w/SmoothGrad', 'Feature Ablation', 'Feature Ablation w/SmoothGrad']
+legends = ['Feature Ablation', 'Occlusion',
+           'Shapley Value Sampling', 'KernelShap']
 
 plt.figure(figsize=(20, 10))
 
 ax = plt.subplot()
-ax.set_title('Comparing input feature importances across multiple algorithms and learned weights')
+ax.set_title('Comparing input feature importances across multiple method')
 ax.set_ylabel('Attributions')
 
 FONT_SIZE = 16
@@ -209,13 +175,13 @@ plt.rc('axes', titlesize=FONT_SIZE)       # fontsize of the axes title
 plt.rc('axes', labelsize=FONT_SIZE)       # fontsize of the x and y labels
 plt.rc('legend', fontsize=FONT_SIZE - 4)  # fontsize of the legend
 
-ax.bar(x_axis_data, ig_attr_test_norm_sum, width, align='center', alpha=0.8, color='#eb5e7c')
-ax.bar(x_axis_data + width, ig_nt_attr_test_norm_sum, width, align='center', alpha=0.7, color='#A90000')
+ax.bar(x_axis_data, fa_attr_test_norm_sum, width, align='center', alpha=0.8, color='#eb5e7c')
+ax.bar(x_axis_data + width, oc_attr_test_norm_sum, width, align='center', alpha=0.7, color='#A90000')
 # ax.bar(x_axis_data + 2 * width, dl_attr_test_norm_sum, width, align='center', alpha=0.6, color='#34b8e0')
-# ax.bar(x_axis_data + 3 * width, gs_attr_test_norm_sum, width, align='center',  alpha=0.8, color='#4260f5')
-ax.bar(x_axis_data + 2 * width, fa_attr_test_norm_sum, width, align='center', alpha=1.0, color='#49ba81')
+# ax.bar(x_axis_data + 2 * width, fp_attr_test_norm_sum, width, align='center',  alpha=0.8, color='#4260f5')
+ax.bar(x_axis_data + 2 * width, sv_attr_test_norm_sum, width, align='center', alpha=1.0, color='#49ba81')
 # ax.bar(x_axis_data + 3 * width, y_axis_lin_weight, width, align='center', alpha=1.0, color='grey')
-ax.bar(x_axis_data + 3 * width, fa_nt_attr_test_norm_sum, width, align='center', alpha=1.0, color='grey')
+ax.bar(x_axis_data + 3 * width, ks_attr_test_norm_sum, width, align='center', alpha=1.0, color='grey')
 ax.autoscale_view()
 plt.tight_layout()
 
@@ -223,7 +189,7 @@ ax.set_xticks(x_axis_data+0.2)
 ax.set_xticklabels(x_axis_data_labels)
 
 plt.legend(legends, loc=3)
-plt.savefig('Input attribution - Moutain Car.png')
+# plt.savefig('Input attribution - Moutain Car.png')
 plt.show()
 
 
