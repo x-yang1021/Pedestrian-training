@@ -32,11 +32,11 @@ expert = load_policy(
     env_name="seals-CartPole-v0",
     venv=env,
 )
-rollouts = rollout.generate_transitions(
-        policy=None,
-        venv= env,
-        n_timesteps=200,
-        rng=np.random.default_rng(seed=SEED),
+rollouts = rollout.rollout(
+    expert,
+    env,
+    rollout.make_sample_until(min_episodes=1),
+    rng=np.random.default_rng(SEED),
 )
 
 model = torch.load('Reward/experiment-cartpole.pt')
@@ -50,20 +50,20 @@ model.eval()
 
 # X_test = RewardNet.preprocess(model, state=rollouts[0].obs[:-1], action=rollouts[0].acts,
 #                      next_state=rollouts[1].obs[:-1], done=np.array([1]))
-obs = []
-acts = []
-next_obs = []
-dones = []
-for i in range(len(rollouts)-1):
-    obs.append(rollouts[i]['obs'])
-    acts.append(rollouts[i]['acts'])
-    next_obs.append(rollouts[i+1]['obs'])
-    dones.append(rollouts[i]['dones'])
+# obs = []
+# acts = []
+# next_obs = []
+# dones = []
+# for i in range(len(rollouts)-1):
+#     obs.append(rollouts[i]['obs'])
+#     acts.append(rollouts[i]['acts'])
+#     next_obs.append(rollouts[i+1]['obs'])
+#     dones.append(rollouts[i]['dones'])
 
-obs = np.array(obs)
-acts = np.array(acts)
-next_obs = np.array(next_obs)
-dones = np.array(dones)
+obs = np.array(rollouts[0].obs[:-1])
+acts = np.array(rollouts[0].acts)
+next_obs = np.array(rollouts[0].obs[1:])
+dones = np.zeros(len(obs))
 
 tensor_dim = len(obs)
 
@@ -114,27 +114,25 @@ fp_attr_test = fp.attribute(X_test)
 sv_attr_test = sv.attribute(X_test)
 ks_attr_test = ks.attribute(X_test)
 
-
+# print(fa_attr_test[0][:,0])
 
 # prepare attributions for visualization
 
+
+#
 x_axis_data = np.arange(10)
+
+# x_axis = np.arange(1,501)
+# plt.plot(x_axis,fa_attr_test[0][:,3])
+# plt.show()
+
 x_axis_data_labels = ['Position', 'Velocity','Angle', 'Angular','Left', 'Right',
                       'Next Position', 'Next Velocity','Next Angle', 'Next Angular']
 
 
 
-fa_attr_test_sum1 = fa_attr_test[0].detach().numpy().sum(0)
-fa_attr_test_norm_sum1 = fa_attr_test_sum1 / np.linalg.norm(fa_attr_test_sum1, ord=1)
-
-fa_attr_test_sum2 = fa_attr_test[1].detach().numpy().sum(0)
-fa_attr_test_norm_sum2 = fa_attr_test_sum2 / np.linalg.norm(fa_attr_test_sum2, ord=1)
-
-fa_attr_test_sum3 = fa_attr_test[2].detach().numpy().sum(0)
-fa_attr_test_norm_sum3 = fa_attr_test_sum3 / np.linalg.norm(fa_attr_test_sum3, ord=1)
-
-fa_attr_test_norm_sum = \
-    np.concatenate((fa_attr_test_norm_sum1, fa_attr_test_norm_sum2, fa_attr_test_norm_sum3))
+fa_attr_test_norm_sums = [fa_attr_test[i].detach().numpy().sum(0) / np.linalg.norm(fa_attr_test[i].detach().numpy().sum(0), ord=1) for i in range(3)]
+fa_attr_test_norm_sum = np.concatenate(fa_attr_test_norm_sums)
 
 oc_attr_test_norm_sums = [oc_attr_test[i].detach().numpy().sum(0) / np.linalg.norm(oc_attr_test[i].detach().numpy().sum(0), ord=1) for i in range(3)]
 oc_attr_test_norm_sum = np.concatenate(oc_attr_test_norm_sums)
@@ -178,7 +176,7 @@ ax.set_xticks(x_axis_data+0.2)
 ax.set_xticklabels(x_axis_data_labels)
 
 plt.legend(legends, loc=3)
-# plt.savefig('Input attribution-Cartpole 10.png')
+plt.savefig('Input attribution-Cartpole.png')
 plt.show()
 
 

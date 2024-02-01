@@ -16,7 +16,7 @@ from imitation.util.util import make_vec_env
 SEED = 42
 
 env = make_vec_env(
-    "seals:seals/MountainCar-v0",
+    "seals:seals/CartPole-v0",
     rng=np.random.default_rng(SEED),
     n_envs=8,
     post_wrappers=[lambda env, _: RolloutInfoWrapper(env)],  # to compute rollouts
@@ -24,7 +24,7 @@ env = make_vec_env(
 expert = load_policy(
     "ppo-huggingface",
     organization="HumanCompatibleAI",
-    env_name="seals-MountainCar-v0",
+    env_name="seals-CartPole-v0",
     venv=env,
 )
 rollouts = rollout.rollout(
@@ -33,6 +33,8 @@ rollouts = rollout.rollout(
     rollout.make_sample_until(min_episodes=200),
     rng=np.random.default_rng(SEED),
 )
+print(rollouts[0])
+exit()
 
 learner = PPO(
     env=env,

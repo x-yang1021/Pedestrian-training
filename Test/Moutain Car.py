@@ -101,11 +101,6 @@ X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
     types.assert_not_dictobs(next_obs),
     dones,
 )
-n = 0
-for i in range(len(acts)):
-    if acts[i,1] == 1:
-        n += 1
-print(n)
 
 model.eval()
 # outputs = model(obs,acts,next_obs,dones)
@@ -126,7 +121,6 @@ oc_attr_test = oc.attribute(X_test, sliding_window_shapes = ((1,),(1,),(1,),()))
 fp_attr_test = fp.attribute(X_test)
 sv_attr_test = sv.attribute(X_test)
 ks_attr_test = ks.attribute(X_test)
-
 
 # prepare attributions for visualization
 
