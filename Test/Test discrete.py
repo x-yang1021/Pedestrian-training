@@ -150,9 +150,9 @@ legends = ['Feature Ablation',
 plt.figure(figsize=(20, 10))
 
 ax = plt.subplot()
-ax.set_ylabel('Attributions')
+ax.set_ylabel('Relative Contributions', fontsize="20")
 
-FONT_SIZE = 16
+FONT_SIZE = 18
 plt.rc('font', size=FONT_SIZE)            # fontsize of the text sizes
 plt.rc('axes', titlesize=FONT_SIZE)       # fontsize of the axes title
 plt.rc('axes', labelsize=FONT_SIZE)       # fontsize of the x and y labels
@@ -169,9 +169,10 @@ ax.autoscale_view()
 plt.tight_layout()
 
 ax.set_xticks(x_axis_data+0.2)
-ax.set_xticklabels(x_axis_data_labels)
+ax.set_xticklabels(x_axis_data_labels, fontsize="18")
+ax.tick_params(axis='y', labelsize=FONT_SIZE)
 
-plt.legend(legends, loc=3)
+plt.legend(legends, loc="upper left", fontsize="22")
 plt.savefig('Input attribution-Cartpole.png')
 plt.show()
 
