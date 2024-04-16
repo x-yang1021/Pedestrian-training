@@ -34,15 +34,16 @@ def edge1(x):
 trajectory = pd.DataFrame()
 
 
+#convert to XY coordinates
 for csv_file in csv_files:
     df = pd.read_csv(csv_file)
 
-    # new_result = list(zip(*[df[col] for col in df.iloc[:,:]]))
     for i in range(len(df)):
         Coordinate = np.array(transformer.transform(df.iloc[i][1], df.iloc[i][2])) - sun
         df.iloc[i,1] = Coordinate[0]
         df.iloc[i,2] = Coordinate[1]
     trajectory = pd.concat([trajectory, df], axis=1)
+
 trajectory.to_csv('./raw data 2.csv', index=False)
 
 useful_data = 0
