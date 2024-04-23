@@ -18,28 +18,60 @@ wall_start1 = (np.array([29688,9734]) - sun_unity)/10
 wall_end1 = (np.array([29688,10392]) - sun_unity)/10
 wall_start2 = (np.array([29735,10778]) - sun_unity)/10
 wall_end2 = (np.array([29738,12794]) - sun_unity)/10
+wall_mid1 = (np.array([29688,10076]) - sun_unity)/10
+wall_mid2 = (np.array([29738,12525])- sun_unity)/10
 
-dataset = pd.ExcelFile("./raw data.xlsx")
-dataset1 = pd.read_excel(dataset, 'Group 2')
-dataset2 = pd.read_excel(dataset, "Group 3")
+# dataset = pd.ExcelFile("./raw data.xlsx")
+# dataset2 = pd.read_excel(dataset, 'Group 2')
+# dataset3 = pd.read_excel(dataset, "Group 3")
+
 
 def withinSight(x1, y1, direction, x2, y2, sight_radius=4, central_angle=np.pi):
     dx = x2 - x1
     dy = y2 - y1
-    dist = np.sqrt(dx**2 + dy**2)
+    dist = np.sqrt(dx ** 2 + dy ** 2)
     if dist > sight_radius:
         return False
-    direction = (direction + 2* np.pi) % (2 * np.pi)
-    angle = np.arctan2(dy,dx)
-    angle = (angle + 2* np.pi) % (2* np.pi)
+    direction = (direction + 2 * np.pi) % (2 * np.pi)
+    angle = np.arctan2(dy, dx)
+    angle = (angle + 2 * np.pi) % (2 * np.pi)
     angle_diff = min(abs(angle - direction), 2 * np.pi - abs(angle - direction))
-    if angle_diff > central_angle/2:
+    if angle_diff > central_angle / 2:
         return False
     else:
         return True
 
-def get_ob():
 
+def get_surrounding(x, y, direction, timestep, dataset, number, threshold = 1):
+    order = 0
+    fast = 0
+    slow = 0
+    data_row = dataset.iloc[timestep:timestep + 1, :]
+    for crowd in range(1, dataset.shape[1], 5):
+        if order == number:
+            continue
+        else:
+            x2 = data_row.iloc[:, crowd+1:crowd+2]
+            y2 = data_row.iloc[:,crowd+2:crowd+3]
+            if withinSight(x, y, direction, x2, y2):
+                if data_row.iloc[:,crowd+3:crowd+4] > threshold:
+                    fast += 1
+                else:
+                    slow += 1
+        order += 1
+    return np.array([fast,slow])
+
+def get_wall(y):
+    if y < wall_start1[1] or y > wall_mid1[1] and y <wall_end1[1] or y > wall_mid2[1]:
+        return np.array([1])
+    else:
+        return np.array([0])
+
+def get_green_space(y):
+    if y < wall_end1[1]:
+        return np.array([1])
+    else:
+        return np.array([0])
 
 class Xinjiekou(gym.Env):
 
@@ -63,8 +95,10 @@ class Xinjiekou(gym.Env):
     # def step(self, action):
 
 
+    def reset(self):
 
 
+"""
     # Initialize Pygame
     pygame.init()
 
@@ -121,3 +155,4 @@ class Xinjiekou(gym.Env):
     # Quit Pygame
     pygame.quit()
     sys.exit()
+"""
