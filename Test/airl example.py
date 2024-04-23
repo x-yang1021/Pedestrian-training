@@ -33,7 +33,7 @@ rollouts = rollout.rollout(
     rollout.make_sample_until(min_episodes=200),
     rng=np.random.default_rng(SEED),
 )
-print(rollouts[0])
+print(type(rollouts))
 exit()
 
 learner = PPO(

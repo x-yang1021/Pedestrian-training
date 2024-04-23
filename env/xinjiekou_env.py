@@ -95,7 +95,7 @@ class Xinjiekou(gym.Env):
     # def step(self, action):
 
 
-    def reset(self):
+    # def reset(self):
 
 
 """
