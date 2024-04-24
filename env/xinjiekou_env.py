@@ -26,7 +26,7 @@ wall_mid2 = (np.array([29738,12525])- sun_unity)/10
 # dataset3 = pd.read_excel(dataset, "Group 3")
 
 
-def withinSight(x1, y1, direction, x2, y2, sight_radius=4, central_angle=np.pi):
+def withinSight(x1, y1, direction, x2, y2, sight_radius=10, central_angle=np.pi):
     dx = x2 - x1
     dy = y2 - y1
     dist = np.sqrt(dx ** 2 + dy ** 2)
@@ -48,13 +48,11 @@ def get_surrounding(x, y, direction, timestep, dataset, number, threshold = 1):
     slow = 0
     data_row = dataset.iloc[timestep:timestep + 1, :]
     for crowd in range(1, dataset.shape[1], 5):
-        if order == number:
-            continue
-        else:
-            x2 = data_row.iloc[:, crowd+1:crowd+2]
-            y2 = data_row.iloc[:,crowd+2:crowd+3]
+        if order != number:
+            x2 = data_row.iloc[0, crowd+1]
+            y2 = data_row.iloc[0, crowd+2]
             if withinSight(x, y, direction, x2, y2):
-                if data_row.iloc[:,crowd+3:crowd+4] > threshold:
+                if data_row.iloc[0, crowd+3] > threshold: #comparing speed
                     fast += 1
                 else:
                     slow += 1

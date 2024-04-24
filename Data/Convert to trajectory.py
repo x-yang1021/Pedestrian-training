@@ -1,4 +1,5 @@
 import imitation.data.types as types
+from imitation.data import serialize
 import numpy as np
 from env.xinjiekou_env import withinSight, get_surrounding, get_wall, get_green_space
 import pandas as pd
@@ -28,20 +29,19 @@ dataset3 = pd.read_excel(dataset, "Group 3")
 obs = []
 acts = []
 infos = []
-prev = 0
+prev = None
+number = 0
+trajectories = []
 for col in range(1, dataset2.shape[1], 5):
     data_col = data2.iloc[:,col:col+5]
-    number = col%5
     for timestep in range(dataset2.shape[0]):
         data_row = dataset2.iloc[timestep:timestep + 1, 1:]
-        if data_col.iloc[timestep:timestep + 1, 0:1] is not None and (timestep - prev) == 1:
+        if pd.notna(data_col.iloc[timestep, 0]) and (prev is None or (timestep - prev) == 1):
             prev = timestep
-            x1 = data_col.iloc[timestep:timestep + 1,1:2]
-            print(x1)
-            y1 = data_col.iloc[timestep:timestep + 1,2:3]
-            print(y1)
-            speed = data_col.iloc[timestep:timestep + 1, 3:4]
-            direction = data_col.iloc[timestep:timestep + 1, 4:5]
+            x1 = data_col.iloc[timestep,1]
+            y1 = data_col.iloc[timestep,2]
+            speed = data_col.iloc[timestep,3]
+            direction = data_col.iloc[timestep,4]
             obs.append([x1,y1])
             if len(obs) > 1:
                 acts.append([speed,direction])
@@ -51,25 +51,27 @@ for col in range(1, dataset2.shape[1], 5):
                     x1 = obs[i][0]
                     y1 = obs[i][1]
                     # add destination
-                    obs.append(obs[-1][0])
-                    obs.append(obs[-1][1])
+                    obs[i].append(obs[-1][0])
+                    obs[i].append(obs[-1][1])
                     #add surrounding
                     surrounding = get_surrounding(x1, y1, direction, timestep, dataset2, number)
-                    obs.append(surrounding[0])
-                    obs.append(surrounding[1])
+                    obs[i].append(surrounding[0])
+                    obs[i].append(surrounding[1])
                     wall = get_wall(y1)
-                    obs.append(wall)
+                    obs[i].append(wall[0])
                     green = get_green_space(y1)
-                    obs.append(green)
-                    print(obs)
+                    obs[i].append(green[0])
+                trajectory = types.Trajectory(obs = np.array(obs),acts = np.array(acts), infos = np.array(infos), terminal = True)
+                trajectories.append(trajectory)
                 obs = []
+                acts = []
+                infos = []
+                prev = None
         else:
             obs = []
             acts = []
             infos = []
+            prev = None
+    number += 1
 
-
-exit()
-trajectory = types.Trajectory(obs = obs,acts = acts, infos = None, terminal = terminal)
-
-print(trajectory)
+serialize.save('./', trajectories)
