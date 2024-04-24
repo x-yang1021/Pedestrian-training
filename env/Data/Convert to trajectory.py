@@ -45,7 +45,7 @@ for col in range(1, dataset2.shape[1], 5):
             obs.append([x1,y1])
             if len(obs) > 1:
                 acts.append([speed,direction])
-                infos.append([number,timestep])
+                infos.append([2, number,timestep])
             if len(obs) == episode_length:
                 for i in range(len(obs)):
                     x1 = obs[i][0]
