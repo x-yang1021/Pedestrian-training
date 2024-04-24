@@ -74,4 +74,4 @@ for col in range(1, dataset2.shape[1], 5):
             prev = None
     number += 1
 
-serialize.save('./', trajectories)
+serialize.save('', trajectories)

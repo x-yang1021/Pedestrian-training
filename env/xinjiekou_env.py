@@ -4,7 +4,7 @@ from os import path
 from typing import Optional
 import pandas as pd
 import numpy as np
-
+from imitation.data import serialize
 import gym
 from gym import spaces
 
@@ -24,7 +24,7 @@ wall_mid2 = (np.array([29738,12525])- sun_unity)/10
 # dataset = pd.ExcelFile("./raw data.xlsx")
 # dataset2 = pd.read_excel(dataset, 'Group 2')
 # dataset3 = pd.read_excel(dataset, "Group 3")
-
+trajectories = serialize.load('./Data')
 
 def withinSight(x1, y1, direction, x2, y2, sight_radius=10, central_angle=np.pi):
     dx = x2 - x1
