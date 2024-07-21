@@ -1,9 +1,9 @@
-import pygame
+# import pygame
 import sys
 from os import path
 from typing import Optional
-import pandas as pd
 import numpy as np
+import pandas as pd
 from imitation.data import serialize
 import gym
 from gym import spaces
@@ -21,11 +21,13 @@ wall_end2 = (np.array([29738,12794]) - sun_unity)/10
 wall_mid1 = (np.array([29688,10076]) - sun_unity)/10
 wall_mid2 = (np.array([29738,12525])- sun_unity)/10
 
-# dataset = pd.ExcelFile("./raw data.xlsx")
-# dataset2 = pd.read_excel(dataset, 'Group 2')
-# dataset3 = pd.read_excel(dataset, "Group 3")
+dataset = pd.ExcelFile("./raw data.xlsx")
+dataset2 = pd.read_excel(dataset, 'Group 2')
+dataset3 = pd.read_excel(dataset, "Group 3")
 trajectories = serialize.load('./Data')
+episode_length = 5
 
+exit()
 def withinSight(x1, y1, direction, x2, y2, sight_radius=10, central_angle=np.pi):
     dx = x2 - x1
     dy = y2 - y1
@@ -89,11 +91,13 @@ class Xinjiekou(gym.Env):
                 "Greenspace":spaces.Discrete(2),
             }
         )
+        self.dataset = dataset2
+        self.data = trajectories
 
     # def step(self, action):
 
-
     # def reset(self):
+
 
 
 """
