@@ -12,6 +12,7 @@ generate_file = True
 process_53 = False
 data_length = 1269
 step_length = 0.507
+congestion_range = 4
 
 #concat plyaer 53 due to technical issue
 if process_53:
@@ -36,7 +37,7 @@ if process_53:
 
     last_time = df_1.iloc[-1]['Time']
 
-    for i in range(1,time_diff+1):
+    for i in range(1,time_diff):
         new_row = pd.DataFrame({"Time":[step_length*i + last_time],
                                 "ID":[-1000],
                                 "Positionx":[-1000],
@@ -121,27 +122,41 @@ for file in all_files:
             df.at[i,'Trajectory'] = traj_count
     if generate_file:
         df.to_csv('./Experiment 1 data/processed data/%s old.csv' % (ID), index=False)
+
+    #linear interpolation
     correct_time = step_length
     added_rows = []
+    pre_time = 0
+    pre_x = df.iloc[0]['Positionx'] if df.iloc[0]['Positionx'] else np.nan
+    pre_y = df.iloc[0]['Positiony'] if df.iloc[0]['Positiony'] else np.nan
     for i in range(1, df.shape[0]):
         time_diff = df.iloc[i]['Time'] - correct_time
         if time_diff != 0:
             if abs(time_diff) < step_length:
-                if pd.notna(df.iloc[i]['Positionx']): #make modification
-                    df.at[i,'Positionx'] = df.iloc[i]['Positionx'] * (1+time_diff/step_length)
-                    df.at[i,'Positiony'] = df.iloc[i]['Positiony'] * (1+time_diff/step_length)
-                    curr_coor = np.array([df.iloc[i]['Positionx'],df.iloc[i]['Positiony']])
-                    df.at[i, 'Distance'] = np.linalg.norm([curr_coor,np.array([0,0])])
-                    # speed remain the same
-                    # if pd.notna(df.iloc[i-1]['Positionx']):
-                    #     prev_coor = np.array([df.iloc[i - 1]['Positionx'], df.iloc[i - 1]['Positiony']])
-                    #     last_move = np.linalg.norm(curr_coor - prev_coor)
-                    #     df.at[i, 'Speed'] = (last_move) / (df.iloc[i]['Time'] - df.iloc[i - 1]['Time'])
+                if pd.notna(df.iloc[i]['Positionx']):#make modification
+                    if pd.notna(df.iloc[i-1]['Positionx']):#exclude first line of trajectory
+                        curr_x = df.iloc[i]['Positionx']
+                        curr_y = df.iloc[i]['Positiony']
+                        #the current position is based on recorded previous position, not corrected position
+                        df.at[i,'Positionx'] = (curr_x-pre_x) * (step_length/(df.iloc[i]['Time'] - pre_time)) + pre_x
+                        df.at[i,'Positiony'] = (curr_y-pre_y) * (step_length/(df.iloc[i]['Time'] - pre_time)) + pre_y
+                        curr_coor = np.array([df.iloc[i]['Positionx'],df.iloc[i]['Positiony']])
+                        df.at[i, 'Distance'] = np.linalg.norm([curr_coor, np.array([0, 0])])
+                        #calculate the new speed
+                        prev_coor = np.array([df.iloc[i - 1]['Positionx'], df.iloc[i - 1]['Positiony']])
+                        last_move = np.linalg.norm(curr_coor - prev_coor)
+                        df.at[i, 'Speed'] = (last_move) / (correct_time - df.iloc[i - 1]['Time'])
+                        pre_x = curr_x
+                        pre_y = curr_y
+                    else:
+                        pre_x = df.iloc[i]['Positionx']
+                        pre_y = df.iloc[i]['Positiony']
+                pre_time = df.iloc[i]['Time']
                 df.at[i, 'Time'] = correct_time
                 correct_time += step_length
             else: # indicating a missing row above
                 if pd.isna(df.iloc[i]['Positionx']) or pd.isna(df.iloc[i-1]['Positionx']):
-                    new_row = pd.DataFrame({"Time":[correct_time + step_length],
+                    new_row = pd.DataFrame({"Time":[correct_time],
                                 "ID":[np.nan],
                                 "Positionx":[np.nan],
                                 "Positionz":[np.nan],
@@ -155,10 +170,15 @@ for file in all_files:
                                 "Distance":[np.nan],
                                 "Speed":[np.nan]}) # insert an empty row
                 else:
-                    speed = df.iloc[i]['Speed']
-                    t = df.iloc[i]['Time'] - df.iloc[i-1]['Time']
-                    x = df.iloc[i-1]['Positionx'] + (df.iloc[i]['Positionx']-df.iloc[i-1]['Positionx']) * (step_length/t)
-                    y = df.iloc[i-1]['Positiony'] + (df.iloc[i]['Positiony']-df.iloc[i-1]['Positiony']) * (step_length/t)
+                    t = df.iloc[i]['Time'] - pre_time
+                    x = pre_x + (df.iloc[i]['Positionx']-pre_x) * (step_length/t)
+                    y = pre_y + (df.iloc[i]['Positiony']-pre_y) * (step_length/t)
+                    curr_coor = np.array([x,y])
+                    dist = np.linalg.norm([curr_coor, np.array([0, 0])])
+                    # calculate the new speed
+                    prev_coor = np.array([df.iloc[i - 1]['Positionx'], df.iloc[i - 1]['Positiony']])
+                    last_move = np.linalg.norm(curr_coor - prev_coor)
+                    speed = (last_move) / (correct_time - df.iloc[i - 1]['Time'])
                     new_row = pd.DataFrame({"Time":[correct_time],
                                 "ID":[ID],
                                 "Positionx":[x],
@@ -170,13 +190,22 @@ for file in all_files:
                                 "Down":[df.iloc[i]['Down']],
                                 "Left":[df.iloc[i]['Left']],
                                 "Trajectory": [df.iloc[i]['Trajectory']],
-                                "Distance": [np.linalg.norm([np.array([x,y]),np.array([0,0])])],
-                                "Speed": [df.iloc[i]['Speed']]})
-                time_diff -= step_length
-                df.at[i,'Positionx'] = df.iloc[i]['Positionx'] * (1+time_diff/step_length)
-                df.at[i,'Positiony'] = df.iloc[i]['Positiony'] * (1+time_diff/step_length)
-                curr_coor = np.array([df.iloc[i]['Positionx'],df.iloc[i]['Positiony']])
-                df.at[i, 'Distance'] = np.linalg.norm([curr_coor,np.array([0,0])])
+                                "Distance": [dist],
+                                "Speed": [speed]})
+                curr_x = df.iloc[i]['Positionx']
+                curr_y = df.iloc[i]['Positiony']
+                # the current position is based on recorded previous position, not corrected position
+                df.at[i, 'Positionx'] = (curr_x - pre_x) * (2*step_length / (df.iloc[i]['Time'] - pre_time)) + pre_x
+                df.at[i, 'Positiony'] = (curr_y - pre_y) * (2*step_length / (df.iloc[i]['Time'] - pre_time)) + pre_y
+                curr_coor = np.array([df.iloc[i]['Positionx'], df.iloc[i]['Positiony']])
+                df.at[i, 'Distance'] = np.linalg.norm([curr_coor, np.array([0, 0])])
+                # calculate the new speed
+                prev_coor = np.array([df.iloc[i - 1]['Positionx'], df.iloc[i - 1]['Positiony']])
+                last_move = np.linalg.norm(curr_coor - prev_coor)
+                df.at[i, 'Speed'] = (last_move) / (correct_time + step_length - df.iloc[i - 1]['Time'])
+                pre_x = curr_x
+                pre_y = curr_y
+                pre_time = df.iloc[i]['Time']
                 df.at[i, 'Time'] = correct_time + step_length
                 correct_time += (2*step_length)
                 added_rows.append(new_row)
@@ -222,6 +251,7 @@ for file in all_files:
     # if df.iloc[-1]['Distance'] > longest_step:
     #     abandon_traj = df.iloc[-1]['Trajectory']
     #     df.loc[df['Trajectory'] == abandon_traj, df.columns[1:]] = np.nan
+
     #remove zeros at the beginning and too short traj
     initial_zeros = 0
     traj_length = 0
@@ -240,7 +270,7 @@ for file in all_files:
                 curr_traj = df.iloc[i]['Trajectory']
                 traj_length += 1
             else:
-                if traj_length == 1 and df.iloc[i]['Speed'] < 0.05 and df.iloc[i]['Distance'] > 4:
+                if traj_length == 1 and df.iloc[i]['Speed'] < 0.05 and df.iloc[i]['Distance'] > congestion_range:
                     initial_zeros = 1
                 elif initial_zeros > 0:
                     if df.iloc[i]['Speed'] < 0.05:
@@ -254,6 +284,8 @@ for file in all_files:
         df.loc[df['Trajectory'] == curr_traj, df.columns[1:]] = np.nan
     if initial_zeros > 0:
         df.iloc[i - initial_zeros - 1:i-1, 1:] = np.nan
+
+    # reset traj number
     curr_traj = 0
     traj_length = 0
     traj_map = {}
