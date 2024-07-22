@@ -5,51 +5,99 @@ import os
 
 column_names = ["Time", "ID", "Positionx","Positionz","Positiony", "Yaw", "Up", "Right", "Down", "Left"]
 shorest_episode = 10
-speed_limit = 2.5
 max_range = 11
 teleport_range = 7
-data_length = 1324
 speed_limit = 2.5 # per half second
+generate_file = True
+process_53 = False
+data_length = 1269
 step_length = 0.507
+congestion_range = 4
 
-all_files = glob.glob(os.path.join('./Experiment 3 data', "*.csv"))
+#concat plyaer 53 due to technical issue
+if process_53:
+    df_1 = pd.read_csv('./Experiment 1 data/PlayerPositions_53_240425_152535.csv',names=column_names)
+    df_1['Positionx'] = df_1['Positionx'].astype(str).str.replace(r'[()]', '', regex=True)
+    df_1['Positiony'] = df_1['Positiony'].astype(str).str.replace(r'[()]', '', regex=True)
+    df_1['Yaw'] = df_1['Yaw'].astype(str).str.replace('Yaw:', '').astype(float)
+    df_1[['Positionx', 'Positiony', 'Yaw', 'Time','ID']] = df_1[['Positionx', 'Positiony', 'Yaw', 'Time','ID']].apply(pd.to_numeric)
+
+    df_2 = pd.read_csv('./Experiment 1 data/PlayerPositions_53_240425_153959.csv',names=column_names)
+    df_2['Positionx'] = df_1['Positionx'].astype(str).str.replace(r'[()]', '', regex=True)
+    df_2['Positiony'] = df_1['Positiony'].astype(str).str.replace(r'[()]', '', regex=True)
+    df_2['Yaw'] = df_1['Yaw'].astype(str).str.replace('Yaw:', '').astype(float)
+    df_2[['Positionx', 'Positiony', 'Yaw', 'Time','ID']] = df_2[['Positionx', 'Positiony', 'Yaw', 'Time','ID']].apply(pd.to_numeric)
+
+    time_diff = data_length - df_1.shape[0] - df_2.shape[0]
+
+    origin = df_1.iloc[0,0]
+
+    for i in range(df_1.shape[0]):
+        df_1.iloc[i,0] = df_1.iloc[i,0] - origin
+
+    last_time = df_1.iloc[-1]['Time']
+
+    for i in range(1,time_diff):
+        new_row = pd.DataFrame({"Time":[step_length*i + last_time],
+                                "ID":[-1000],
+                                "Positionx":[-1000],
+                                "Positionz":[-1000],
+                                "Positiony":[-1000],
+                                "Yaw":[-1000],
+                                "Up":[-1000],
+                                "Right":[-1000],
+                                "Down":[-1000],
+                                "Left":[-1000]})
+        df_1 = pd.concat([df_1,new_row],axis=0, ignore_index = True)
+
+    df_2.at[0,'Time'] = df_1.iloc[-1]['Time'] + step_length
+
+    for i in range(1, df_2.shape[0]):
+        df_2.iloc[i,0] = df_2.iloc[i-1,0] + step_length
+
+    df = pd.concat(objs = [df_1,df_2], axis=0, ignore_index = True)
+
+
+    # Convert to NumPy array to remove column names
+    data = df.to_numpy()
+    # Convert back to DataFrame without column names
+    df_no_columns = pd.DataFrame(data)
+
+    print(df.shape[0])
+
+    df.to_csv('./Experiment 1 data/53 old.csv', index = False)
+
+    exit()
+
+all_files = glob.glob(os.path.join('./Experiment 1 data', "*.csv"))
 total_traj = 0
 entire_data = pd.DataFrame()
+ID_list = []
 for file in all_files:
     df = pd.read_csv(file,names=column_names)
-    ID = df['ID'][1]
-    if ID == 184:
-        origin = df.iloc[0]['Time']
-        for i in range(df.shape[0]):
-            df.at[i,'Time'] = df.at[i,'Time'] - origin + step_length * (data_length - df.shape[0]-1)
-            # technical issue
-        last_time = 0
-        new_start = []
-        for i in range(data_length - df.shape[0]-1):
-            new_row = pd.DataFrame({"Time": [step_length * i + last_time],
-                                    "ID": [-1000],
-                                    "Positionx": [-1000],
-                                    "Positionz": [-1000],
-                                    "Positiony": [-1000],
-                                    "Yaw": [-1000],
-                                    "Up": [-1000],
-                                    "Right": [-1000],
-                                    "Down": [-1000],
-                                    "Left": [-1000]})
-            new_start.append(new_row)
-        new_start_df = pd.concat(new_start, ignore_index=True)
-        df = pd.concat([new_start_df, df], axis=0, ignore_index=True)
     df['Positionx'] = df['Positionx'].astype(str).str.replace(r'[()]', '', regex=True)
     df['Positiony'] = df['Positiony'].astype(str).str.replace(r'[()]', '', regex=True)
-    df['Yaw'] = df['Yaw'].astype(str).str.replace('Yaw:', '').astype(float)
-    df[['Positionx', 'Positiony', 'Time','Yaw']] = df[['Positionx', 'Positiony', 'Time','Yaw']].apply(pd.to_numeric)
+    if file == './Experiment 1 data/53 old.csv':
+        # df['Positionx', 'Positiony', 'Time', 'Yaw','ID'] = df['Positionx', 'Positiony', 'Time', 'Yaw','ID'].astype(float)
+        df = df.iloc[1:]
+        df = df.reset_index(drop=True)
+            # print(df.iloc[i]['Yaw'], type(df.iloc[i]['Yaw']))
+        df['Yaw'] = df['Yaw'].astype(str).str.replace('Yaw:', '').astype(float)
+        df[['Positionx', 'Positiony', 'Time', 'Yaw']] = df[['Positionx', 'Positiony', 'Time', 'Yaw']].apply(
+            pd.to_numeric)
+        df['ID'] = int(53)
+    else:
+        df['Yaw'] = df['Yaw'].astype(str).str.replace('Yaw:', '').astype(float)
+        df[['Positionx', 'Positiony', 'Time','Yaw']] = df[['Positionx', 'Positiony', 'Time','Yaw']].apply(pd.to_numeric)
+    ID = df['ID'][1]
+    ID_list.append(ID)
     df['Trajectory'] = int(1)
     df['Distance'] = np.nan
     df['Speed'] = np.nan
     origin = df.iloc[0, 0]
-    traj_count = 1
-    #add speed, distance, remove teleportation
+    #add speed, distance, remove
     for i in range(df.shape[0]):
+        #specifically for 53
         if df.iloc[i]['Positionx'] == -1000:
             df.iloc[i, 1:] = np.nan
         df.iloc[i, 0] = df.iloc[i, 0] - origin
@@ -62,16 +110,28 @@ for file in all_files:
                 prev_coor = np.array([df.iloc[i-1]['Positionx'], df.iloc[i-1]['Positiony']])
                 last_move = np.linalg.norm(curr_coor-prev_coor)
                 df.at[i, 'Speed'] = (last_move)/(df.iloc[i]['Time']-df.iloc[i-1]['Time'])
-            else:
-                last_move = df.iloc[i]['Distance']
-            if teleport_range > last_move > speed_limit:
-                df.iloc[i - 1:i, 1:] = np.nan
-            elif last_move > teleport_range and df.iloc[i-1]['Distance']:
-                df.iloc[i-6:i,1:] = np.nan
+        # remove point that is too far away
+        if df.iloc[i]['Distance'] > max_range:
+            df.iloc[i, 1:] = np.nan
+
+    #break into trajectories
+    traj_count = 1
+    prev_coor = np.array([df.iloc[0]['Positionx'], df.iloc[0]['Positiony']])
+    for i in range(1, df.shape[0]):
+        if pd.notna(df.iloc[i]['Positionx']):
+            curr_coor = np.array([df.iloc[i]['Positionx'], df.iloc[i]['Positiony']])
+            last_move = np.linalg.norm(curr_coor-prev_coor)
+        # if teleport_range > last_move > speed_limit:
+        #     df.iloc[i - 1:i, 1:] = np.nan
+            if last_move > teleport_range:
+                df.iloc[i - 5:i, 1:] = np.nan
                 traj_count += 1
+            prev_coor = curr_coor
         if pd.notna(df.iloc[i]['Trajectory']):
-            df.at[i,'Trajectory'] = traj_count
-    df.to_csv('./Experiment 3 data/processed data/%s old.csv' % (ID), index=False)
+            df.at[i, 'Trajectory'] = traj_count
+
+    if generate_file:
+        df.to_csv('./Experiment 1 data/processed data/%s old.csv' % (ID), index=False)
 
     #linear interpolation
     correct_time = step_length
@@ -161,38 +221,15 @@ for file in all_files:
                 added_rows.append(new_row)
         else:
             correct_time += step_length
-    #add rows in the end
-    if df.iloc[-1]['Time'] <= step_length * (data_length-2):
-        curr_time = df.iloc[-1]['Time']
-        while curr_time <= step_length * (data_length-2):
-                new_row = pd.DataFrame({"Time": [curr_time+step_length],
-                                        "ID": [np.nan],
-                                        "Positionx": [np.nan],
-                                        "Positionz": [np.nan],
-                                        "Positiony": [np.nan],
-                                        "Yaw": [np.nan],
-                                        "Up": [np.nan],
-                                        "Right": [np.nan],
-                                        "Down": [np.nan],
-                                        "Left": [np.nan],
-                                        "Trajectory": [np.nan],
-                                        "Distance": [np.nan],
-                                        "Speed": [np.nan]})  # insert an empty row
-                curr_time += step_length
-                added_rows.append(new_row)
     if added_rows:
-        # print(added_rows, ID)
+        print(added_rows, ID)
         added_rows_df = pd.concat(added_rows, ignore_index=True)
         df = pd.concat([df,added_rows_df],ignore_index=True)
         df = df.sort_values(by='Time')
         df.reset_index(drop=True,inplace=True)
-
-
     consec_zero = 0
+    # zeros = []
     for i in range(df.shape[0]):
-        #remove point that is too far away
-        if df.iloc[i]['Distance'] > max_range:
-            df.iloc[i,1:] = np.nan
         #remove last zeros
         if pd.notna(df.iloc[i]['Speed']):
             if df.iloc[i]['Speed'] == 0 :
@@ -203,6 +240,25 @@ for file in all_files:
             consec_zero = 0
         if consec_zero and i == df.shape[0]-1:
             df.iloc[i-consec_zero+1:i+1, 1:] = np.nan
+
+    #         elif df.iloc[i]['Speed'] != 0 and consec_zero >= stop_time and df.iloc[i]['Distance'] > 7:
+    #             if df.iloc[i]['Distance'] < 8:
+    #                 print(df.iloc[i]['Distance'], ID)
+    #             df.iloc[i - consec_zero:i, 1:] = np.nan
+    #             zeros.append(consec_zero)
+    #             consec_zero = 0
+    #         else:
+    #             consec_zero = 0
+    # for i in range(df.shape[0]-1):
+    #     if pd.notna(df.iloc[i]['ID']) and pd.isna(df.iloc[i+1]['ID']):
+    #         if df.iloc[i]['Distance'] > longest_step: #traj not properly end in gate
+    #             abandon_traj = df.iloc[i]['Trajectory']
+    #             df.loc[df['Trajectory'] == abandon_traj, df.columns[1:]] = np.nan
+    # #remove the last traj if not properly end in gate
+    # if df.iloc[-1]['Distance'] > longest_step:
+    #     abandon_traj = df.iloc[-1]['Trajectory']
+    #     df.loc[df['Trajectory'] == abandon_traj, df.columns[1:]] = np.nan
+
     #remove zeros at the beginning and too short traj
     initial_zeros = 0
     traj_length = 0
@@ -221,7 +277,7 @@ for file in all_files:
                 curr_traj = df.iloc[i]['Trajectory']
                 traj_length += 1
             else:
-                if traj_length == 1 and df.iloc[i]['Speed'] < 0.05: # zeros in the beginning of experiment 3 needs to be removed due to late start of some participants
+                if traj_length == 1 and df.iloc[i]['Speed'] < 0.05 and df.iloc[i]['Distance'] > congestion_range:
                     initial_zeros = 1
                 elif initial_zeros > 0:
                     if df.iloc[i]['Speed'] < 0.05:
@@ -235,9 +291,6 @@ for file in all_files:
         df.loc[df['Trajectory'] == curr_traj, df.columns[1:]] = np.nan
     if initial_zeros > 0:
         df.iloc[i - initial_zeros - 1:i-1, 1:] = np.nan
-
-
-
 
     # reset traj number
     curr_traj = 0
@@ -260,8 +313,10 @@ for file in all_files:
     # Apply the trajectory mapping
     df['Trajectory'] = df['Trajectory'].map(traj_map)
     total_traj += curr_traj
-    print(df.shape[0],ID)
-    df.to_csv('./Experiment 3 data/processed data/%s new.csv' % (ID), index=False)
+    if generate_file:
+        df.to_csv('./Experiment 1 data/processed data/%s new.csv' % (ID), index=False)
     entire_data = pd.concat([entire_data,df], ignore_index = True)
 print(total_traj)
-entire_data.to_csv('./Experiment 3 data/processed data/Experiment 3.csv', index=False)
+if generate_file:
+    entire_data.to_csv('./Experiment 1 data/processed data/Experiment 1.csv', index=False)
+print(ID_list)
