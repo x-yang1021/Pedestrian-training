@@ -7,7 +7,6 @@ column_names = ["Time", "ID", "Positionx","Positionz","Positiony", "Yaw", "Up", 
 shorest_episode = 10
 max_range = 11
 teleport_range = 7
-speed_limit = 2.5 # per half second
 generate_file = True
 process_53 = False
 data_length = 1269
