@@ -304,12 +304,15 @@ for file in all_files:
     df['Direction'] = np.nan
     for i in range(df.shape[0]):
         if pd.notna(df.iloc[i]['Speed']):
-            x2 = df.iloc[i]['Positionx']
-            y2 = df.iloc[i]["Positiony"]
-            x1 = df.iloc[i-1]['Positionx']
-            y1 = df.iloc[i-1]["Positiony"]
-            theta_x = np.arctan2(y2-y1, x2-x1)
-            df.at[i,'Direction'] = round(theta_x,2)
+            if df.iloc[i]['Speed'] == 0:
+                df.at[i,'Direction'] = df.iloc[i-1]['Direction']
+            else:
+                x2 = df.iloc[i]['Positionx']
+                y2 = df.iloc[i]["Positiony"]
+                x1 = df.iloc[i-1]['Positionx']
+                y1 = df.iloc[i-1]["Positiony"]
+                theta_x = np.arctan2(y2-y1, x2-x1)
+                df.at[i,'Direction'] = round(theta_x,2)
         if pd.notna(df.iloc[i]['Yaw']):
             df.at[i,'Yaw'] = np.radians(90 - df.iloc[i]['Yaw'])
     df.to_csv('./Experiment 3 data/processed data/%s new.csv' % (ID), index=False)
