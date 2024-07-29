@@ -1,15 +1,16 @@
 import pandas as pd
 import numpy as np
 from scipy import stats
+import matplotlib.pyplot as plt
 
 df_1 = pd.read_csv('./Experiment 1.csv')
 df_2 = pd.read_csv('./Experiment 2.csv')
 df_3 = pd.read_csv('./Experiment 3.csv')
 dfs = [df_1, df_2, df_3]
 
-range_of_interest = 3
+range_of_interest = 2.8
 range_of_interest2 = 12
-time_of_interest = 300
+time_of_interest = 180
 defalut_direction = np.arctan2(-1,0)
 
 curr_traj = 0
@@ -125,7 +126,6 @@ tt_stat, p_value = stats.kruskal(np.array(change_direction_1), np.array(change_d
 print(p_value, 'Change Direction')
 
 
-
 head_speed = []
 head_speed_change = []
 tail_speed = []
@@ -143,7 +143,7 @@ near_direction_change = []
 far_direction = []
 far_direction_change = []
 for df in dfs:
-    t = time_of_interest
+    t = df.iloc[-1]['Time']//2
     for i in range(df.shape[0]):
         if pd.notna(df.iloc[i]['Speed']):
             if df.iloc[i]['Distance'] <= range_of_interest:
@@ -230,3 +230,10 @@ print(p_value, 'near Direction')
 tt_stat, p_value = stats.mannwhitneyu(np.array(near_direction_change), np.array(far_direction_change))
 
 print(p_value, 'near Direction Change', np.mean(near_direction_change), np.mean(far_direction_change))
+
+
+# plt.hist(np.array(far_direction_change), color='lightgreen', ec='black', bins=30)
+#
+# plt.xlim(-10, 10)
+#
+# plt.show()
