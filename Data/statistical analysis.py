@@ -2,38 +2,75 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
+import ruptures as rpt
+from scipy.optimize import curve_fit
 
 df_1 = pd.read_csv('./Experiment 1.csv')
 df_2 = pd.read_csv('./Experiment 2.csv')
 df_3 = pd.read_csv('./Experiment 3.csv')
 dfs = [df_1, df_2, df_3]
 
-range_of_interest = 2.8
+
+range_of_interest = 6
 range_of_interest2 = 12
 time_of_interest = 180
 defalut_direction = np.arctan2(-1,0)
 
-curr_traj = 0
-traj_length = 0
-lengths = []
-lost = 0
+def piecewise_linear(x, x0, y0, k1, k2):
+    return np.where(x < x0, k1*x + y0, k2*x + y0 + (k1-k2)*x0)
+
+df_total = pd.DataFrame()
+#add change of speed and direction
 for df in dfs:
+    df['Speed Change'] = np.nan
+    df['Direction Change'] = np.nan
     for i in range(df.shape[0]):
-        if (pd.isna(df.iloc[i]['Trajectory']) or df.iloc[i]['Time'] == 0) and traj_length != 0:
-            if traj_length < 9:
-                # print(df.iloc[i-1]["ID"], df.iloc[i-1]['Trajectory'], traj_length)
-                lost += traj_length
-            lengths.append(traj_length)
-            traj_length = 0
-        if pd.notna(df.iloc[i]['Trajectory']):
-            if df.iloc[i]['Distance'] <= range_of_interest:
-                traj_length += 1
-# print(lengths)
-# print(lost)
-# print(max(lengths), min(lengths))
-# print(sum(lengths))
-#
-# exit()
+        if pd.notna(df.iloc[i]['Speed']):
+                if pd.notna(df.iloc[i-1]['Speed']):
+                    df.at[i,'Speed Change'] = df.iloc[i]['Speed'] - df.iloc[i-1]['Speed']
+                else:
+                    df.at[i,'Speed Change'] = df.iloc[i]['Speed']
+        if pd.notna(df.iloc[i]['Direction']):
+                if pd.notna(df.iloc[i-1]['Direction']):
+                    df.at[i,'Direction Change'] = df.iloc[i]['Direction'] - df.iloc[i-1]['Direction']
+                else:
+                    df.at[i,'Direction Change'] = df.iloc[i]['Direction'] - defalut_direction
+        # if abs(df.iloc[i]['Speed Change']) > 10:
+        #     print(df.iloc[i]['ID'], df.iloc[i]['Time'], df.iloc[i]['Speed Change'], df.iloc[i]['Trajectory'])
+    # plt.plot(df['speed_change_rate'], df['Distance'],  marker='o', linestyle='-', color='b')
+    # # plt.plot(df['Direction Change'], df['Distance'],  marker='o', linestyle='-', color='r')
+    # plt.show()
+    df_total = pd.concat([df_total, df], axis=0)
+
+df_clean = df_total.dropna(subset=['Speed'])
+df_clean =df_clean.sort_values(by=['Distance'])
+df_clean.reset_index(drop=True, inplace=True)
+signal = df_clean['Speed Change'].values
+model = "l2"  # Change point detection model
+algo = rpt.Pelt(model=model).fit(signal)
+result = algo.predict(pen = 100)
+rpt.display(signal, result)
+plt.xlabel('Index')
+plt.ylabel('Speed Change')
+plt.show()
+
+# print(df_clean.iloc[result[0]]['Distance'])
+
+print(f'Change points: {result}')
+
+# # df_clean = df.dropna(subset=['Distance'])
+# p, e = curve_fit(piecewise_linear, df_clean['Distance'], df_clean['Speed Change'])
+# print(f'Estimated breakpoint: {p[0]} meters')
+# xd = np.linspace(0, 10, 100)
+# plt.plot(xd, piecewise_linear(xd, *p), label='Piecewise Linear Fit')
+# plt.axvline(x=p[0], color='r', linestyle='--', label=f'Breakpoint at {p[0]:.2f}')
+# plt.show()
+# # print(lengths)
+# # print(lost)
+# # print(max(lengths), min(lengths))
+# # print(sum(lengths))
+# #
+exit()
 
 speed_1 = []
 direction_1 = []
