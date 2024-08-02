@@ -4,6 +4,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import ruptures as rpt
 from scipy.optimize import curve_fit
+import statsmodels.api as sm
 
 df_1 = pd.read_csv('./Experiment 1.csv')
 df_2 = pd.read_csv('./Experiment 2.csv')
@@ -11,7 +12,7 @@ df_3 = pd.read_csv('./Experiment 3.csv')
 dfs = [df_1, df_2, df_3]
 
 
-range_of_interest = 6
+range_of_interest = 3.08
 range_of_interest2 = 12
 time_of_interest = 180
 defalut_direction = np.arctan2(-1,0)
@@ -34,7 +35,7 @@ for df in dfs:
                 if pd.notna(df.iloc[i-1]['Direction']):
                     df.at[i,'Direction Change'] = df.iloc[i]['Direction'] - df.iloc[i-1]['Direction']
                 else:
-                    df.at[i,'Direction Change'] = df.iloc[i]['Direction'] - defalut_direction
+                    df.at[i,'Direction Change'] = np.nan #df.iloc[i]['Direction'] - defalut_direction
         # if abs(df.iloc[i]['Speed Change']) > 10:
         #     print(df.iloc[i]['ID'], df.iloc[i]['Time'], df.iloc[i]['Speed Change'], df.iloc[i]['Trajectory'])
     # plt.plot(df['speed_change_rate'], df['Distance'],  marker='o', linestyle='-', color='b')
@@ -42,34 +43,51 @@ for df in dfs:
     # plt.show()
     df_total = pd.concat([df_total, df], axis=0)
 
-df_clean = df_total.dropna(subset=['Speed'])
+df_clean = df_total.dropna(subset=['Direction Change'])
+df_clean.reset_index(drop=True, inplace=True)
 df_clean =df_clean.sort_values(by=['Distance'])
 df_clean.reset_index(drop=True, inplace=True)
-signal = df_clean['Speed Change'].values
-model = "l2"  # Change point detection model
-algo = rpt.Pelt(model=model).fit(signal)
-result = algo.predict(pen = 100)
+
+signal = df_clean['Direction Change'].values
+signal = df_clean[['Distance', 'Direction Change']].values
+model = "clinear"  # Change point detection model
+algo = rpt.Binseg(model=model).fit(signal)
+n = signal.shape[0]
+sigma = np.std(signal)
+result = algo.predict(n_bkps=1)
 rpt.display(signal, result)
 plt.xlabel('Index')
-plt.ylabel('Speed Change')
+plt.ylabel('Direction Change')
+plt.savefig('Direction Change.png')
 plt.show()
 
-# print(df_clean.iloc[result[0]]['Distance'])
+print(df_clean.iloc[result[0]]['Distance'])
+
+# print(df_clean.iloc[result[1]]['Distance'])
 
 print(f'Change points: {result}')
 
-# # df_clean = df.dropna(subset=['Distance'])
-# p, e = curve_fit(piecewise_linear, df_clean['Distance'], df_clean['Speed Change'])
+#
+# p, e = curve_fit(piecewise_linear, df_clean['Distance'], df_clean['Direction Change'])
 # print(f'Estimated breakpoint: {p[0]} meters')
 # xd = np.linspace(0, 10, 100)
 # plt.plot(xd, piecewise_linear(xd, *p), label='Piecewise Linear Fit')
 # plt.axvline(x=p[0], color='r', linestyle='--', label=f'Breakpoint at {p[0]:.2f}')
 # plt.show()
-# # print(lengths)
-# # print(lost)
-# # print(max(lengths), min(lengths))
-# # print(sum(lengths))
-# #
+
+# lowess = sm.nonparametric.lowess
+# df_clean['y_lowess'] = lowess(df_clean['Speed Change'], df_clean['Distance'], frac=0.2)[:, 1]
+#
+# # Plot data and the LOESS fit
+# plt.figure(figsize=(10, 6))
+# plt.scatter(df_clean['Distance'], df_clean['Speed Change'], label='Data')
+# plt.plot(df_clean['Distance'], df_clean['y_lowess'], color='red', label='LOESS fit')
+# plt.xlabel('Distance')
+# plt.ylabel('Speed Change')
+# plt.title('LOESS Regression Fit')
+# plt.legend()
+# plt.show()
+
 exit()
 
 speed_1 = []
