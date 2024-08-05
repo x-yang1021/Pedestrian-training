@@ -17,15 +17,23 @@ range_of_interest2 = 12
 time_of_interest = 180
 defalut_direction = np.arctan2(-1,0)
 
-def piecewise_linear(x, x0, y0, k1, k2):
-    return np.where(x < x0, k1*x + y0, k2*x + y0 + (k1-k2)*x0)
 
 df_total = pd.DataFrame()
+IDs = []
 #add change of speed and direction
 for df in dfs:
     df['Speed Change'] = np.nan
     df['Direction Change'] = np.nan
     for i in range(df.shape[0]):
+        if pd.notna(df.iloc[i]['ID']):
+            if df.iloc[i]['ID'] not in IDs:
+                IDs.append(df.iloc[i]['ID'])
+            elif df.iloc[i]['ID'] in IDs:
+                if IDs[-1] == df.iloc[i]['ID']:
+                    pass
+                else:
+                    print(df.iloc[i]['ID'])
+                    IDs.append(df.iloc[i]['ID'])
         if pd.notna(df.iloc[i]['Speed']):
                 if pd.notna(df.iloc[i-1]['Speed']):
                     df.at[i,'Speed Change'] = df.iloc[i]['Speed'] - df.iloc[i-1]['Speed']
@@ -43,13 +51,22 @@ for df in dfs:
     # plt.show()
     df_total = pd.concat([df_total, df], axis=0)
 
-df_clean = df_total.dropna(subset=['Direction Change'])
+df_clean = df_total.dropna(subset=['Speed Change'])
 df_clean.reset_index(drop=True, inplace=True)
+
+df_file = df_clean[df_clean['Distance']<=3.2]
+df_file = df_file.dropna(subset=['Speed Change'])
+df_file.reset_index(drop=True, inplace=True)
+df_file = df_file[['ID', 'Trajectory', 'Speed Change', 'Direction Change']]
+df_file.to_csv('Cluster dataset.csv', index=False)
+
+exit()
+
 df_clean =df_clean.sort_values(by=['Distance'])
 df_clean.reset_index(drop=True, inplace=True)
 
-signal = df_clean['Direction Change'].values
-signal = df_clean[['Distance', 'Direction Change']].values
+signal = df_clean['Speed Change'].values
+signal = df_clean[['Distance', 'Speed Change']].values
 model = "clinear"  # Change point detection model
 algo = rpt.Binseg(model=model).fit(signal)
 n = signal.shape[0]

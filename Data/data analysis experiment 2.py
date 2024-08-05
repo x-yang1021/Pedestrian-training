@@ -336,7 +336,8 @@ for file in all_files:
                 df.at[i,'Direction'] = round(theta_x,2)
         if pd.notna(df.iloc[i]['Yaw']):
             df.at[i,'Yaw'] = np.radians(90 - df.iloc[i]['Yaw'])
-    df.to_csv('./Experiment 2 data/processed data/%s new.csv' % (ID), index=False)
+    df['ID'] += 200
+    df.to_csv('./Experiment 2 data/processed data/%s new.csv' % (ID+200), index=False)
     entire_data = pd.concat([entire_data,df], ignore_index = True)
 print(total_traj)
 entire_data.to_csv('./Experiment 2 data/processed data/Experiment 2.csv', index=False)
