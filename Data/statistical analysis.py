@@ -3,8 +3,8 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import ruptures as rpt
-from scipy.optimize import curve_fit
-import statsmodels.api as sm
+
+
 
 df_1 = pd.read_csv('./Experiment 1.csv')
 df_2 = pd.read_csv('./Experiment 2.csv')
@@ -24,26 +24,17 @@ IDs = []
 for df in dfs:
     df['Speed Change'] = np.nan
     df['Direction Change'] = np.nan
-    for i in range(df.shape[0]):
-        if pd.notna(df.iloc[i]['ID']):
-            if df.iloc[i]['ID'] not in IDs:
-                IDs.append(df.iloc[i]['ID'])
-            elif df.iloc[i]['ID'] in IDs:
-                if IDs[-1] == df.iloc[i]['ID']:
-                    pass
+    for i in range(df.shape[0]-1):
+        if pd.notna(df.iloc[i+1]['Speed']):
+                if pd.notna(df.iloc[i]['Speed']):
+                    df.at[i,'Speed Change'] = df.iloc[i+1]['Speed'] - df.iloc[i]['Speed']
                 else:
-                    print(df.iloc[i]['ID'])
-                    IDs.append(df.iloc[i]['ID'])
-        if pd.notna(df.iloc[i]['Speed']):
-                if pd.notna(df.iloc[i-1]['Speed']):
-                    df.at[i,'Speed Change'] = df.iloc[i]['Speed'] - df.iloc[i-1]['Speed']
+                    df.at[i,'Speed Change'] = df.iloc[i+1]['Speed']
+        if pd.notna(df.iloc[i+1]['Direction']):
+                if pd.notna(df.iloc[i]['Direction']):
+                    df.at[i,'Direction Change'] = df.iloc[i+1]['Direction'] - df.iloc[i]['Direction']
                 else:
-                    df.at[i,'Speed Change'] = df.iloc[i]['Speed']
-        if pd.notna(df.iloc[i]['Direction']):
-                if pd.notna(df.iloc[i-1]['Direction']):
-                    df.at[i,'Direction Change'] = df.iloc[i]['Direction'] - df.iloc[i-1]['Direction']
-                else:
-                    df.at[i,'Direction Change'] = np.nan #df.iloc[i]['Direction'] - defalut_direction
+                    df.at[i,'Direction Change'] = df.iloc[i+1]['Direction'] - defalut_direction
         # if abs(df.iloc[i]['Speed Change']) > 10:
         #     print(df.iloc[i]['ID'], df.iloc[i]['Time'], df.iloc[i]['Speed Change'], df.iloc[i]['Trajectory'])
     # plt.plot(df['speed_change_rate'], df['Distance'],  marker='o', linestyle='-', color='b')
@@ -51,16 +42,15 @@ for df in dfs:
     # plt.show()
     df_total = pd.concat([df_total, df], axis=0)
 
-df_clean = df_total.dropna(subset=['Speed Change'])
+df_clean = df_total.dropna(subset=['Direction Change']) #include the path that contain both features
 df_clean.reset_index(drop=True, inplace=True)
 
-df_file = df_clean[df_clean['Distance']<=3.2]
-df_file = df_file.dropna(subset=['Speed Change'])
-df_file.reset_index(drop=True, inplace=True)
-df_file = df_file[['ID', 'Trajectory', 'Speed Change', 'Direction Change']]
-df_file.to_csv('Cluster dataset.csv', index=False)
+# df_file = df_clean[df_clean['Distance']<=3.2]
+# df_file = df_file.dropna(subset=['Speed Change'])
+# df_file.reset_index(drop=True, inplace=True)
+# df_file = df_file[['ID', 'Trajectory', 'Speed Change', 'Direction Change']]
+# df_file.to_csv('Cluster dataset.csv', index=False)
 
-exit()
 
 df_clean =df_clean.sort_values(by=['Distance'])
 df_clean.reset_index(drop=True, inplace=True)
@@ -74,8 +64,8 @@ sigma = np.std(signal)
 result = algo.predict(n_bkps=1)
 rpt.display(signal, result)
 plt.xlabel('Index')
-plt.ylabel('Direction Change')
-plt.savefig('Direction Change.png')
+plt.ylabel('Speed Change')
+plt.savefig('Speed Change.png')
 plt.show()
 
 print(df_clean.iloc[result[0]]['Distance'])

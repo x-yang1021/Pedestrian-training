@@ -16,15 +16,17 @@ congestion_range = 4
 #concat plyaer 53 due to technical issue
 if process_53:
     df_1 = pd.read_csv('./Experiment 1 data/PlayerPositions_53_240425_152535.csv',names=column_names)
-    df_1['Positionx'] = df_1['Positionx'].astype(str).str.replace(r'[()]', '', regex=True)
-    df_1['Positiony'] = df_1['Positiony'].astype(str).str.replace(r'[()]', '', regex=True)
+    df_1['Positionx'] = df_1['Positionx'].astype(str).str.replace(r'-', '', regex=True)
+    df_1['Positionx'] = df_1['Positionx'].astype(str).str.replace(r'\(', '-', regex=True)
+    df_1['Positiony'] = df_1['Positiony'].astype(str).str.replace(r'\)', '', regex=True)
     df_1['Yaw'] = df_1['Yaw'].astype(str).str.replace('Yaw:', '').astype(float)
     df_1[['Positionx', 'Positiony', 'Yaw', 'Time','ID']] = df_1[['Positionx', 'Positiony', 'Yaw', 'Time','ID']].apply(pd.to_numeric)
 
     df_2 = pd.read_csv('./Experiment 1 data/PlayerPositions_53_240425_153959.csv',names=column_names)
-    df_2['Positionx'] = df_1['Positionx'].astype(str).str.replace(r'[()]', '', regex=True)
-    df_2['Positiony'] = df_1['Positiony'].astype(str).str.replace(r'[()]', '', regex=True)
-    df_2['Yaw'] = df_1['Yaw'].astype(str).str.replace('Yaw:', '').astype(float)
+    df_2['Positionx'] = df_2['Positionx'].astype(str).str.replace(r'-', '', regex=True)
+    df_2['Positionx'] = df_2['Positionx'].astype(str).str.replace(r'\(', '-', regex=True)
+    df_2['Positiony'] = df_2['Positiony'].astype(str).str.replace(r'\)', '', regex=True)
+    df_2['Yaw'] = df_2['Yaw'].astype(str).str.replace('Yaw:', '').astype(float)
     df_2[['Positionx', 'Positiony', 'Yaw', 'Time','ID']] = df_2[['Positionx', 'Positiony', 'Yaw', 'Time','ID']].apply(pd.to_numeric)
 
     time_diff = (data_length-1) * step_length -(df_1.iloc[-1]['Time'] - df_1.iloc[0]['Time']) - (df_2.iloc[-1]['Time'] - df_2.iloc[0]['Time'])
@@ -76,8 +78,6 @@ entire_data = pd.DataFrame()
 ID_list = []
 for file in all_files:
     df = pd.read_csv(file,names=column_names)
-    df['Positionx'] = df['Positionx'].astype(str).str.replace(r'[()]', '', regex=True)
-    df['Positiony'] = df['Positiony'].astype(str).str.replace(r'[()]', '', regex=True)
     if file == './Experiment 1 data/53 old.csv':
         # df['Positionx', 'Positiony', 'Time', 'Yaw','ID'] = df['Positionx', 'Positiony', 'Time', 'Yaw','ID'].astype(float)
         df = df.iloc[1:]
@@ -88,6 +88,9 @@ for file in all_files:
             pd.to_numeric)
         df['ID'] = int(53)
     else:
+        df['Positionx'] = df['Positionx'].astype(str).str.replace(r'-', '', regex=True)
+        df['Positionx'] = df['Positionx'].astype(str).str.replace(r'\(', '-', regex=True)
+        df['Positiony'] = df['Positiony'].astype(str).str.replace(r'\)', '', regex=True)
         df['Yaw'] = df['Yaw'].astype(str).str.replace('Yaw:', '').astype(float)
         df[['Positionx', 'Positiony', 'Time','Yaw']] = df[['Positionx', 'Positiony', 'Time','Yaw']].apply(pd.to_numeric)
     ID = df['ID'][1]
@@ -316,6 +319,19 @@ for file in all_files:
                 traj_length += 1
             else:
                 traj_length += 1
+
+    # Apply the trajectory mapping
+    df['Trajectory'] = df['Trajectory'].map(traj_map)
+    total_traj += curr_traj
+
+    # remove last step if it's teleporting
+    for i in range(df.shape[0]):
+        if df.iloc[i]['Trajectory'] == curr_traj:
+            break
+        elif pd.isna(df.iloc[i]['Trajectory']) and pd.notna(df.iloc[i-1]['Trajectory']):
+            if df.iloc[i-1]['Distance'] > df.iloc[i-2]['Distance']:
+                df.iloc[i-1, 1:] = np.nan
+
     #round distance and speed
     df['Distance'] = df['Distance'].round(2)
     df['Speed'] = df['Speed'].round(2)
@@ -345,9 +361,7 @@ for file in all_files:
         df = pd.concat([df,added_rows_df],ignore_index=True)
         df = df.sort_values(by='Time')
         df.reset_index(drop=True,inplace=True)
-    # Apply the trajectory mapping
-    df['Trajectory'] = df['Trajectory'].map(traj_map)
-    total_traj += curr_traj
+
     print(ID, df.shape[0], df.iloc[-1]['Time'])
 
     # add direction
