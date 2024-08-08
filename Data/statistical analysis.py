@@ -15,7 +15,7 @@ dfs = [df_1, df_2, df_3]
 range_of_interest = 3.08
 range_of_interest2 = 12
 time_of_interest = 180
-defalut_direction = np.arctan2(-1,0)
+defalut_direction = np.arctan2(1,0)
 
 
 df_total = pd.DataFrame()
@@ -45,18 +45,19 @@ for df in dfs:
 df_clean = df_total.dropna(subset=['Direction Change']) #include the path that contain both features
 df_clean.reset_index(drop=True, inplace=True)
 
-# df_file = df_clean[df_clean['Distance']<=3.2]
-# df_file = df_file.dropna(subset=['Speed Change'])
-# df_file.reset_index(drop=True, inplace=True)
-# df_file = df_file[['ID', 'Trajectory', 'Speed Change', 'Direction Change']]
-# df_file.to_csv('Cluster dataset.csv', index=False)
+df_file = df_clean[df_clean['Distance']<=3.1]
+df_file = df_file.dropna(subset=['Direction Change'])
+df_file.reset_index(drop=True, inplace=True)
+df_file = df_file[['ID', 'Trajectory', 'Speed Change', 'Direction Change']]
+df_file.to_csv('Cluster dataset.csv', index=False)
+exit()
 
 
 df_clean =df_clean.sort_values(by=['Distance'])
 df_clean.reset_index(drop=True, inplace=True)
 
-signal = df_clean['Speed Change'].values
-signal = df_clean[['Distance', 'Speed Change']].values
+signal = df_clean['Direction Change'].values
+signal = df_clean[['Distance', 'Direction Change']].values
 model = "clinear"  # Change point detection model
 algo = rpt.Binseg(model=model).fit(signal)
 n = signal.shape[0]
@@ -64,8 +65,8 @@ sigma = np.std(signal)
 result = algo.predict(n_bkps=1)
 rpt.display(signal, result)
 plt.xlabel('Index')
-plt.ylabel('Speed Change')
-plt.savefig('Speed Change.png')
+plt.ylabel('Direction Change')
+plt.savefig('Direction Change.png')
 plt.show()
 
 print(df_clean.iloc[result[0]]['Distance'])

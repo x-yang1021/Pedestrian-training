@@ -16,15 +16,13 @@ congestion_range = 4
 #concat plyaer 53 due to technical issue
 if process_53:
     df_1 = pd.read_csv('./Experiment 1 data/PlayerPositions_53_240425_152535.csv',names=column_names)
-    df_1['Positionx'] = df_1['Positionx'].astype(str).str.replace(r'-', '', regex=True)
-    df_1['Positionx'] = df_1['Positionx'].astype(str).str.replace(r'\(', '-', regex=True)
+    df_1['Positionx'] = df_1['Positionx'].astype(str).str.replace(r'\(', '', regex=True)
     df_1['Positiony'] = df_1['Positiony'].astype(str).str.replace(r'\)', '', regex=True)
     df_1['Yaw'] = df_1['Yaw'].astype(str).str.replace('Yaw:', '').astype(float)
     df_1[['Positionx', 'Positiony', 'Yaw', 'Time','ID']] = df_1[['Positionx', 'Positiony', 'Yaw', 'Time','ID']].apply(pd.to_numeric)
 
     df_2 = pd.read_csv('./Experiment 1 data/PlayerPositions_53_240425_153959.csv',names=column_names)
-    df_2['Positionx'] = df_2['Positionx'].astype(str).str.replace(r'-', '', regex=True)
-    df_2['Positionx'] = df_2['Positionx'].astype(str).str.replace(r'\(', '-', regex=True)
+    df_2['Positionx'] = df_2['Positionx'].astype(str).str.replace(r'\(', '', regex=True)
     df_2['Positiony'] = df_2['Positiony'].astype(str).str.replace(r'\)', '', regex=True)
     df_2['Yaw'] = df_2['Yaw'].astype(str).str.replace('Yaw:', '').astype(float)
     df_2[['Positionx', 'Positiony', 'Yaw', 'Time','ID']] = df_2[['Positionx', 'Positiony', 'Yaw', 'Time','ID']].apply(pd.to_numeric)
@@ -88,8 +86,7 @@ for file in all_files:
             pd.to_numeric)
         df['ID'] = int(53)
     else:
-        df['Positionx'] = df['Positionx'].astype(str).str.replace(r'-', '', regex=True)
-        df['Positionx'] = df['Positionx'].astype(str).str.replace(r'\(', '-', regex=True)
+        df['Positionx'] = df['Positionx'].astype(str).str.replace(r'\(', '', regex=True)
         df['Positiony'] = df['Positiony'].astype(str).str.replace(r'\)', '', regex=True)
         df['Yaw'] = df['Yaw'].astype(str).str.replace('Yaw:', '').astype(float)
         df[['Positionx', 'Positiony', 'Time','Yaw']] = df[['Positionx', 'Positiony', 'Time','Yaw']].apply(pd.to_numeric)
