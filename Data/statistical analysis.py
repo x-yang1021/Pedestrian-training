@@ -1,3 +1,4 @@
+import numpy.linalg
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -54,6 +55,7 @@ df_clean.reset_index(drop=True, inplace=True)
 
 
 df_clean =df_clean.sort_values(by=['Distance'])
+# df_clean = df_clean[df_clean['Distance'] <9]
 df_clean.reset_index(drop=True, inplace=True)
 
 # signal = df_clean['Distance'].values
@@ -73,6 +75,23 @@ print(df_clean.iloc[result[0]]['Distance'])
 
 print(f'Change points: {result}')
 
+# First segment
+X1 = df_clean.iloc[:result[0]]['Speed Change'].values.reshape(-1, 1)  # Reshape to 2D array
+y1 = df_clean.iloc[:result[0]]['Direction Change'].values
+
+# Compute the least squares solution for the first segment
+slope1, residuals1, _, _ = np.linalg.lstsq(X1, y1, rcond=None)
+print(f'Slope for first segment: {slope1[0]}')
+print(f'Residuals for first segment: {residuals1}')
+
+# Second segment
+X2 = df_clean.iloc[result[0]:]['Speed Change'].values.reshape(-1, 1)  # Reshape to 2D array
+y2 = df_clean.iloc[result[0]:]['Direction Change'].values
+
+# Compute the least squares solution for the second segment
+slope2, residuals2, _, _ = np.linalg.lstsq(X2, y2, rcond=None)
+print(f'Slope for second segment: {slope2[0]}')
+print(f'Residuals for second segment: {residuals2}')
 #
 # p, e = curve_fit(piecewise_linear, df_clean['Distance'], df_clean['Direction Change'])
 # print(f'Estimated breakpoint: {p[0]} meters')
