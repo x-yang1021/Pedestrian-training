@@ -4,7 +4,7 @@ import glob
 import os
 
 column_names = ["Time", "ID", "Positionx","Positionz","Positiony", "Yaw", "Up", "Right", "Down", "Left"]
-shorest_episode = 10
+shorest_episode = 9
 max_range = 11
 teleport_range = 7
 data_length = 721
@@ -86,7 +86,8 @@ for file in all_files:
         # remove point that is too far away
         if df.iloc[i]['Distance'] > max_range:
             df.iloc[i, 1:] = np.nan
-
+    # remove points that are in the building
+    df.loc[df['Positiony'] > 0, df.columns[1:]] = np.nan
 
     # break into trajectories
     traj_count = 1

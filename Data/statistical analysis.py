@@ -16,7 +16,7 @@ dfs = [df_1, df_2, df_3]
 range_of_interest = 3.08
 range_of_interest2 = 12
 time_of_interest = 180
-defalut_direction = np.arctan2(1,0)
+default_direction = np.arctan2(1,0)
 
 
 df_total = pd.DataFrame()
@@ -32,10 +32,20 @@ for df in dfs:
                 else:
                     df.at[i,'Speed Change'] = df.iloc[i+1]['Speed']
         if pd.notna(df.iloc[i+1]['Direction']):
-                if pd.notna(df.iloc[i]['Direction']):
-                    df.at[i,'Direction Change'] = df.iloc[i+1]['Direction'] - df.iloc[i]['Direction']
-                else:
-                    df.at[i,'Direction Change'] = df.iloc[i+1]['Direction'] - defalut_direction
+            diff = df.iloc[i + 1]['Direction'] - df.iloc[i]['Direction']
+            # Wrap the difference to the range -pi to pi
+            if diff > np.pi:
+                diff -= 2 * np.pi
+            elif diff < -np.pi:
+                diff += 2 * np.pi
+            df.at[i, 'Direction Change'] = diff
+        else:
+            # diff = df.iloc[i + 1]['Direction'] - default_direction
+            # if diff > np.pi:
+            #     diff -= 2 * np.pi
+            # elif diff < -np.pi:
+            #     diff += 2 * np.pi
+            df.at[i, 'Direction Change'] = np.nan
         # if abs(df.iloc[i]['Speed Change']) > 10:
         #     print(df.iloc[i]['ID'], df.iloc[i]['Time'], df.iloc[i]['Speed Change'], df.iloc[i]['Trajectory'])
     # plt.plot(df['speed_change_rate'], df['Distance'],  marker='o', linestyle='-', color='b')
@@ -46,7 +56,7 @@ for df in dfs:
 df_clean = df_total.dropna(subset=['Direction Change']) #include the path that contain both features
 df_clean.reset_index(drop=True, inplace=True)
 
-# df_file = df_clean[df_clean['Distance']<=3.1]
+# df_file = df_clean[df_clean['Distance']<=2.81]
 # df_file = df_file.dropna(subset=['Direction Change'])
 # df_file.reset_index(drop=True, inplace=True)
 # df_file = df_file[['ID', 'Trajectory', 'Speed Change', 'Direction Change']]
@@ -55,25 +65,27 @@ df_clean.reset_index(drop=True, inplace=True)
 
 
 df_clean =df_clean.sort_values(by=['Distance'])
-# df_clean = df_clean[df_clean['Distance'] <9]
+df_clean = df_clean[df_clean['Distance']<9.2]
 df_clean.reset_index(drop=True, inplace=True)
 
 # signal = df_clean['Distance'].values
-signal = df_clean[['Speed Change','Direction Change']].values
-model = "linear"  # Change point detection model
+signal = df_clean[['Speed Change']].values
+model = "ar"  # Change point detection model
 algo = rpt.Binseg(model=model).fit(signal)
-result = algo.predict(n_bkps=1)
+result = algo.predict(pen=10)
 rpt.display(signal, result)
 plt.xlabel('Index')
 # plt.ylabel('Direction Change')
 plt.savefig('Break point.png')
 plt.show()
 
+print(f'Change points: {result}')
+
 print(df_clean.iloc[result[0]]['Distance'])
 
 # print(df_clean.iloc[result[1]]['Distance'])
 
-print(f'Change points: {result}')
+exit()
 
 # First segment
 X1 = df_clean.iloc[:result[0]]['Speed Change'].values.reshape(-1, 1)  # Reshape to 2D array
