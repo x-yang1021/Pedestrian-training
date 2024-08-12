@@ -14,9 +14,9 @@ df_3 = pd.read_csv('./Experiment 3.csv')
 dfs = [df_1, df_2, df_3]
 
 
-range_of_interest = 3.08
+range_of_interest = 11
 range_of_interest2 = 12
-time_of_interest = 180
+time_of_interest = 300
 default_direction = np.arctan2(1,0)
 
 
@@ -81,11 +81,11 @@ for model in models:
     algo = rpt.Window(model=model).fit(signal)
     for i in range(1,2):
         result = algo.predict(n_bkps=i)
-        rpt.display(signal, result)
-        plt.xlabel('Index')
-        # plt.ylabel('Direction Change')
-        plt.savefig('Break point.png')
-        plt.show()
+        # rpt.display(signal, result)
+        # plt.xlabel('Index')
+        # # plt.ylabel('Direction Change')
+        # plt.savefig('Break point.png')
+        # plt.show()
 
         print(f'Change points: {result}', model,i)
 
@@ -111,7 +111,7 @@ var = signal[result[0]:].var(axis=0)
 
 print(mean, var)
 
-exit()
+
 
 speed_1 = []
 direction_1 = []
@@ -123,17 +123,12 @@ for i in range(df_1.shape[0]):
     if pd.notna(df_1.iloc[i]['Speed']):
         if df_1.iloc[i]['Distance'] <= range_of_interest:
             speed_1.append(df_1.iloc[i]['Speed'])
-        if pd.notna(df_1.iloc[i - 1]['Speed']):
-            change_speed_1.append(df_1.iloc[i]['Speed'] - df_1.iloc[i - 1]['Speed'])
-        else:
-            change_speed_1.append(df_1.iloc[i]['Speed'])
+        if pd.notna(df_1.iloc[i]['Speed Change']):
+            change_speed_1.append(df_1.iloc[i]['Speed Change'])
     if pd.notna(df_1.iloc[i]['Direction']):
         direction_1.append(df_1.iloc[i]['Direction'])
-        if pd.notna(df_1.iloc[i-1]['Direction']):
-            change_direction_1.append(df_1.iloc[i]['Direction'] - df_1.iloc[i-1]['Direction'])
-        else:
-            change_direction_1.append(df_1.iloc[i]['Direction'] - defalut_direction)
-
+        if pd.notna(df_1.iloc[i]['Direction Change']):
+            change_direction_1.append(df_1.iloc[i]['Direction Change'])
 speed_2 = []
 direction_2 = []
 change_speed_2 = []
@@ -144,17 +139,12 @@ for i in range(df_2.shape[0]):
     if pd.notna(df_2.iloc[i]['Speed']):
         if df_2.iloc[i]['Distance'] <= range_of_interest:
             speed_2.append(df_2.iloc[i]['Speed'])
-        if pd.notna(df_2.iloc[i - 1]['Speed']):
-            change_speed_2.append(df_2.iloc[i]['Speed'] - df_2.iloc[i - 1]['Speed'])
-        else:
-            change_speed_2.append(df_2.iloc[i]['Speed'])
+        if pd.notna(df_2.iloc[i]['Speed Change']):
+            change_speed_2.append(df_2.iloc[i]['Speed Change'])
     if pd.notna(df_2.iloc[i]['Direction']):
         direction_2.append(df_2.iloc[i]['Direction'])
-        if pd.notna(df_2.iloc[i-1]['Direction']):
-            change_direction_2.append(df_2.iloc[i]['Direction'] - df_2.iloc[i-1]['Direction'])
-        else:
-            change_direction_2.append(df_2.iloc[i]['Direction'] - defalut_direction)
-
+        if pd.notna(df_2.iloc[i]['Direction Change']):
+            change_direction_2.append(df_2.iloc[i]['Direction Change'])
 speed_3 = []
 direction_3 = []
 change_speed_3 = []
@@ -165,17 +155,12 @@ for i in range(df_3.shape[0]):
     if pd.notna(df_3.iloc[i]['Speed']):
         if df_3.iloc[i]['Distance'] <= range_of_interest:
             speed_3.append(df_3.iloc[i]['Speed'])
-        if pd.notna(df_3.iloc[i - 1]['Speed']):
-            change_speed_3.append(df_3.iloc[i]['Speed'] - df_3.iloc[i - 1]['Speed'])
-        else:
-            change_speed_3.append(df_3.iloc[i]['Speed'])
+        if pd.notna(df_3.iloc[i]['Speed Change']):
+            change_speed_3.append(df_3.iloc[i]['Speed Change'])
     if pd.notna(df_3.iloc[i]['Direction']):
         direction_3.append(df_3.iloc[i]['Direction'])
-        if pd.notna(df_3.iloc[i - 1]['Direction']):
-            change_direction_3.append(df_3.iloc[i]['Direction'] - df_3.iloc[i - 1]['Direction'])
-        else:
-            change_direction_3.append(df_3.iloc[i]['Direction'] - defalut_direction)
-
+        if pd.notna(df_3.iloc[i]['Direction Change']):
+            change_direction_3.append(df_3.iloc[i]['Direction Change'])
 
 
 # shapiro_test = stats.shapiro(np.array(change_direction_1))
@@ -204,75 +189,44 @@ tt_stat, p_value = stats.kruskal(np.array(change_direction_1), np.array(change_d
 print(p_value, 'Change Direction')
 
 
+
 head_speed = []
 head_speed_change = []
 tail_speed = []
 tail_speed_change = []
-near_speed = []
-near_speed_change = []
-far_speed = []
-far_speed_change = []
 head_direction = []
 head_direction_change = []
 tail_direction = []
 tail_direction_change = []
-near_direction = []
-near_direction_change = []
-far_direction = []
-far_direction_change = []
+# Make sure to initialize the lists before the loop
+head_speed, head_speed_change, tail_speed, tail_speed_change = [], [], [], []
+head_direction, head_direction_change, tail_direction, tail_direction_change = [], [], [], []
+
+dfs = [df_1]
 for df in dfs:
-    t = df.iloc[-1]['Time']//2
+    t = time_of_interest
     for i in range(df.shape[0]):
         if pd.notna(df.iloc[i]['Speed']):
             if df.iloc[i]['Distance'] <= range_of_interest:
-                far_speed.append(df.iloc[i]['Speed'])
-                if pd.notna(df.iloc[i-1]['Speed']):
-                    far_speed_change.append(df.iloc[i]['Speed'] - df.iloc[i-1]['Speed'])
-                else:
-                    far_speed_change.append(df.iloc[i]['Speed'])
-                if df.iloc[i]['Time']<=t:
+                if df.iloc[i]['Time'] <= t:
                     head_speed.append(df.iloc[i]['Speed'])
-                    if pd.notna(df.iloc[i-1]['Speed']):
-                        head_speed_change.append(df.iloc[i]['Speed'] - df.iloc[i-1]['Speed'])
-                    else:
-                        head_speed_change.append(df.iloc[i]['Speed'])
+                    if pd.notna(df.iloc[i]['Speed Change']):
+                        head_speed_change.append(df.iloc[i]['Speed Change'])
                 else:
                     tail_speed.append(df.iloc[i]['Speed'])
-                    if pd.notna(df.iloc[i-1]['Speed']):
-                        tail_speed_change.append(df.iloc[i]['Speed'] - df.iloc[i-1]['Speed'])
-                    else:
-                        tail_speed_change.append(df.iloc[i]['Speed'])
-            elif range_of_interest2 > df.iloc[i]['Distance'] > range_of_interest:
-                near_speed.append(df.iloc[i]['Speed'])
-                if pd.notna(df.iloc[i-1]['Speed']):
-                    near_speed_change.append(df.iloc[i]['Speed'] - df.iloc[i-1]['Speed'])
-                else:
-                    near_speed_change.append(df.iloc[i]['Speed'])
+                    if pd.notna(df.iloc[i]['Speed Change']):
+                        tail_speed_change.append(df.iloc[i]['Speed Change'])
+
         if pd.notna(df.iloc[i]['Direction']):
             if df.iloc[i]['Distance'] <= range_of_interest:
-                far_direction.append(df.iloc[i]['Direction'])
-                if pd.notna(df.iloc[i-1]['Direction']):
-                    far_direction_change.append(df.iloc[i]['Direction'] - df.iloc[i-1]['Direction'])
-                else:
-                    far_direction_change.append(df.iloc[i]['Direction'] - defalut_direction)
-                if df.iloc[i]['Time']<=t:
+                if df.iloc[i]['Time'] <= t:
                     head_direction.append(df.iloc[i]['Direction'])
-                    if pd.notna(df.iloc[i-1]['Direction']):
-                        head_direction_change.append(df.iloc[i]['Direction'] - df.iloc[i-1]['Direction'])
-                    else:
-                        head_direction_change.append(df.iloc[i]['Direction'] - defalut_direction)
+                    if pd.notna(df.iloc[i]['Direction Change']):
+                        head_direction_change.append(df.iloc[i]['Direction Change'])
                 else:
                     tail_direction.append(df.iloc[i]['Direction'])
-                    if pd.notna(df.iloc[i-1]['Direction']):
-                        tail_direction_change.append(df.iloc[i]['Direction'] - df.iloc[i-1]['Direction'])
-                    else:
-                        tail_direction_change.append(df.iloc[i]['Direction'] - defalut_direction)
-            elif range_of_interest2 > df.iloc[i]['Distance'] > range_of_interest:
-                near_direction.append(df.iloc[i]['Direction'])
-                if pd.notna(df.iloc[i-1]['Direction']):
-                    near_direction_change.append(df.iloc[i]['Direction'] - df.iloc[i-1]['Direction'])
-                else:
-                    near_direction_change.append(df.iloc[i]['Direction'] - defalut_direction)
+                    if pd.notna(df.iloc[i]['Direction Change']):
+                        tail_direction_change.append(df.iloc[i]['Direction Change'])
 
 tt_stat, p_value = stats.mannwhitneyu(np.array(head_speed), np.array(tail_speed))
 
@@ -293,21 +247,21 @@ print(p_value, 'head Direction Change')
 
 
 
-tt_stat, p_value = stats.mannwhitneyu(np.array(near_speed), np.array(far_speed))
-
-print(p_value, 'near Speed', np.mean(near_speed), np.mean(far_speed))
-
-tt_stat, p_value = stats.mannwhitneyu(np.array(near_speed_change), np.array(far_speed_change))
-
-print(p_value, 'near Speed Change', np.mean(near_speed_change), np.mean(far_speed_change))
-
-tt_stat, p_value = stats.mannwhitneyu(np.array(near_direction), np.array(far_direction))
-
-print(p_value, 'near Direction')
-
-tt_stat, p_value = stats.mannwhitneyu(np.array(near_direction_change), np.array(far_direction_change))
-
-print(p_value, 'near Direction Change', np.mean(near_direction_change), np.mean(far_direction_change))
+# tt_stat, p_value = stats.mannwhitneyu(np.array(near_speed), np.array(far_speed))
+#
+# print(p_value, 'near Speed', np.mean(near_speed), np.mean(far_speed))
+#
+# tt_stat, p_value = stats.mannwhitneyu(np.array(near_speed_change), np.array(far_speed_change))
+#
+# print(p_value, 'near Speed Change', np.mean(near_speed_change), np.mean(far_speed_change))
+#
+# tt_stat, p_value = stats.mannwhitneyu(np.array(near_direction), np.array(far_direction))
+#
+# print(p_value, 'near Direction')
+#
+# tt_stat, p_value = stats.mannwhitneyu(np.array(near_direction_change), np.array(far_direction_change))
+#
+# print(p_value, 'near Direction Change', np.mean(near_direction_change), np.mean(far_direction_change))
 
 
 # plt.hist(np.array(far_direction_change), color='lightgreen', ec='black', bins=30)
