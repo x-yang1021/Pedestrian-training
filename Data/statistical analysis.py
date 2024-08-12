@@ -4,6 +4,7 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import ruptures as rpt
+from ruptures import costs
 
 
 
@@ -30,7 +31,7 @@ for df in dfs:
                 if pd.notna(df.iloc[i]['Speed']):
                     df.at[i,'Speed Change'] = df.iloc[i+1]['Speed'] - df.iloc[i]['Speed']
                 else:
-                    df.at[i,'Speed Change'] = df.iloc[i+1]['Speed']
+                    df.at[i,'Speed Change'] = np.nan
         if pd.notna(df.iloc[i+1]['Direction']):
             diff = df.iloc[i + 1]['Direction'] - df.iloc[i]['Direction']
             # Wrap the difference to the range -pi to pi
@@ -40,12 +41,12 @@ for df in dfs:
                 diff += 2 * np.pi
             df.at[i, 'Direction Change'] = diff
         else:
-            # diff = df.iloc[i + 1]['Direction'] - default_direction
-            # if diff > np.pi:
-            #     diff -= 2 * np.pi
-            # elif diff < -np.pi:
-            #     diff += 2 * np.pi
-            df.at[i, 'Direction Change'] = np.nan
+            diff = df.iloc[i + 1]['Direction'] - default_direction
+            if diff > np.pi:
+                diff -= 2 * np.pi
+            elif diff < -np.pi:
+                diff += 2 * np.pi
+            df.at[i, 'Direction Change'] = diff
         # if abs(df.iloc[i]['Speed Change']) > 10:
         #     print(df.iloc[i]['ID'], df.iloc[i]['Time'], df.iloc[i]['Speed Change'], df.iloc[i]['Trajectory'])
     # plt.plot(df['speed_change_rate'], df['Distance'],  marker='o', linestyle='-', color='b')
@@ -56,74 +57,59 @@ for df in dfs:
 df_clean = df_total.dropna(subset=['Direction Change']) #include the path that contain both features
 df_clean.reset_index(drop=True, inplace=True)
 
-# df_file = df_clean[df_clean['Distance']<=2.81]
-# df_file = df_file.dropna(subset=['Direction Change'])
-# df_file.reset_index(drop=True, inplace=True)
-# df_file = df_file[['ID', 'Trajectory', 'Speed Change', 'Direction Change']]
-# df_file.to_csv('Cluster dataset.csv', index=False)
-# exit()
+df_file = df_clean[df_clean['Distance']<=2.6]
+df_file = df_file.dropna(subset=['Direction Change'])
+df_file.reset_index(drop=True, inplace=True)
+df_file = df_file[['ID', 'Trajectory', 'Speed Change', 'Direction Change']]
+df_file.to_csv('Cluster dataset.csv', index=False)
+exit()
 
 
 df_clean =df_clean.sort_values(by=['Distance'])
-df_clean = df_clean[df_clean['Distance']<9.2]
+# df_clean = df_clean[df_clean['Distance']<10]
 df_clean.reset_index(drop=True, inplace=True)
 
+df_test = pd.DataFrame()
+df_test['Speed Change'] = 2 * (df_clean['Speed Change'] - df_clean['Speed Change'].min()) / (df_clean['Speed Change'].max() - df_clean['Speed Change'].min()) - 1
+df_test['Direction Change'] = 2 * (df_clean['Direction Change'] - df_clean['Direction Change'].min()) / (df_clean['Direction Change'].max() - df_clean['Direction Change'].min()) - 1
+
 # signal = df_clean['Distance'].values
-signal = df_clean[['Speed Change']].values
-model = "ar"  # Change point detection model
-algo = rpt.Binseg(model=model).fit(signal)
-result = algo.predict(pen=10)
-rpt.display(signal, result)
-plt.xlabel('Index')
-# plt.ylabel('Direction Change')
-plt.savefig('Break point.png')
-plt.show()
+signal = df_test[['Speed Change','Direction Change']].values
+models = ["l2",'l1','linear','clinear','rank','ar'] # Change point detection model
+models=['rank']
+for model in models:
+    algo = rpt.Window(model=model).fit(signal)
+    for i in range(1,2):
+        result = algo.predict(n_bkps=i)
+        rpt.display(signal, result)
+        plt.xlabel('Index')
+        # plt.ylabel('Direction Change')
+        plt.savefig('Break point.png')
+        plt.show()
 
-print(f'Change points: {result}')
+        print(f'Change points: {result}', model,i)
 
-print(df_clean.iloc[result[0]]['Distance'])
+        for k in range(len(result)-1):
 
-# print(df_clean.iloc[result[1]]['Distance'])
+            print(df_clean.iloc[result[k]]['Distance'])
 
-exit()
+obs, vars = signal.shape
+ranks = stats.mstats.rankdata(signal, axis=0)
+ranks = ranks - ((obs + 1) / 2)
+cov = np.cov(ranks, rowvar=False, bias=True).reshape(vars, vars)
+inv_cov = np.linalg.pinv(cov)
 
-# First segment
-X1 = df_clean.iloc[:result[0]]['Speed Change'].values.reshape(-1, 1)  # Reshape to 2D array
-y1 = df_clean.iloc[:result[0]]['Direction Change'].values
+mean = np.reshape(np.mean(ranks[:result[0]], axis=0), (-1, 1))
 
-# Compute the least squares solution for the first segment
-slope1, residuals1, _, _ = np.linalg.lstsq(X1, y1, rcond=None)
-print(f'Slope for first segment: {slope1[0]}')
-print(f'Residuals for first segment: {residuals1}')
+var = signal[:result[0]].var(axis=0)
 
-# Second segment
-X2 = df_clean.iloc[result[0]:]['Speed Change'].values.reshape(-1, 1)  # Reshape to 2D array
-y2 = df_clean.iloc[result[0]:]['Direction Change'].values
+print(mean, var)
 
-# Compute the least squares solution for the second segment
-slope2, residuals2, _, _ = np.linalg.lstsq(X2, y2, rcond=None)
-print(f'Slope for second segment: {slope2[0]}')
-print(f'Residuals for second segment: {residuals2}')
-#
-# p, e = curve_fit(piecewise_linear, df_clean['Distance'], df_clean['Direction Change'])
-# print(f'Estimated breakpoint: {p[0]} meters')
-# xd = np.linspace(0, 10, 100)
-# plt.plot(xd, piecewise_linear(xd, *p), label='Piecewise Linear Fit')
-# plt.axvline(x=p[0], color='r', linestyle='--', label=f'Breakpoint at {p[0]:.2f}')
-# plt.show()
+mean = np.reshape(np.mean(ranks[result[0]:], axis=0), (-1, 1))
 
-# lowess = sm.nonparametric.lowess
-# df_clean['y_lowess'] = lowess(df_clean['Speed Change'], df_clean['Distance'], frac=0.2)[:, 1]
-#
-# # Plot data and the LOESS fit
-# plt.figure(figsize=(10, 6))
-# plt.scatter(df_clean['Distance'], df_clean['Speed Change'], label='Data')
-# plt.plot(df_clean['Distance'], df_clean['y_lowess'], color='red', label='LOESS fit')
-# plt.xlabel('Distance')
-# plt.ylabel('Speed Change')
-# plt.title('LOESS Regression Fit')
-# plt.legend()
-# plt.show()
+var = signal[result[0]:].var(axis=0)
+
+print(mean, var)
 
 exit()
 

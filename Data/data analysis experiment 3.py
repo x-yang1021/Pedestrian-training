@@ -10,7 +10,7 @@ max_range = 11
 teleport_range = 7
 data_length = 1343
 step_length = 0.5
-congestion_range = 4
+congestion_range = 3
 
 all_files = glob.glob(os.path.join('./Experiment 3 data', "*.csv"))
 total_traj = 0
@@ -330,4 +330,4 @@ for file in all_files:
     df.to_csv('./Experiment 3 data/processed data/%s new.csv' % (ID), index=False)
     entire_data = pd.concat([entire_data,df], ignore_index = True)
 print(total_traj)
-entire_data.to_csv('./Experiment 3 data/processed data/Experiment 3.csv', index=False)
+entire_data.to_csv('./Experiment 3.csv', index=False)

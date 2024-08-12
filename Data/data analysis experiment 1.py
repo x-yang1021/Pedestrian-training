@@ -11,7 +11,7 @@ generate_file = True
 process_53 = False
 data_length = 1287
 step_length = 0.5
-congestion_range = 4
+congestion_range = 3
 
 #concat plyaer 53 due to technical issue
 if process_53:
@@ -278,7 +278,8 @@ for file in all_files:
                 curr_traj = df.iloc[i]['Trajectory']
                 traj_length += 1
             else:
-                if traj_length == 1 and df.iloc[i]['Speed'] < 0.1 and df.iloc[i]['Distance'] > congestion_range:
+                if traj_length == 1 and df.iloc[i]['Speed'] <0.1 and df.iloc[i]['Distance'] > congestion_range:
+                    #
                     initial_zeros = 1
                 elif initial_zeros > 0:
                     if df.iloc[i]['Speed'] < 0.05:
@@ -384,5 +385,5 @@ for file in all_files:
     entire_data = pd.concat([entire_data,df], ignore_index = True)
 print(total_traj)
 if generate_file:
-    entire_data.to_csv('./Experiment 1 data/processed data/Experiment 1.csv', index=False)
+    entire_data.to_csv('./Experiment 1.csv', index=False)
 print(ID_list)

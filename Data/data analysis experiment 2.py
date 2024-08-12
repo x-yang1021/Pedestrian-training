@@ -9,7 +9,7 @@ max_range = 11
 teleport_range = 7
 data_length = 721
 step_length = 0.5
-congestion_range = 4
+congestion_range = 3
 
 all_files = glob.glob(os.path.join('./Experiment 2 data', "*.csv"))
 total_traj = 0
@@ -248,6 +248,7 @@ for file in all_files:
                 traj_length += 1
             else:
                 if traj_length == 1 and df.iloc[i]['Speed'] < 0.1 and df.iloc[i]['Distance'] > congestion_range:
+                    #
                     initial_zeros = 1
                 elif initial_zeros > 0:
                     if df.iloc[i]['Speed'] < 0.05:
@@ -350,4 +351,4 @@ for file in all_files:
     df.to_csv('./Experiment 2 data/processed data/%s new.csv' % (ID+200), index=False)
     entire_data = pd.concat([entire_data,df], ignore_index = True)
 print(total_traj)
-entire_data.to_csv('./Experiment 2 data/processed data/Experiment 2.csv', index=False)
+entire_data.to_csv('./Experiment 2.csv', index=False)
