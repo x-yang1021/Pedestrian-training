@@ -5,16 +5,10 @@ import numpy as np
 df = pd.read_csv('./Cluster dataset.csv')
 
 
-print(df['Speed Change'].max())
-print(df[df['Speed Change'] == df['Speed Change'].max()].index)
-print(df['Speed Change'].min())
-print(df[df['Speed Change'] == df['Speed Change'].min()].index)
-print(df['Direction Change'].max())
-print(df[df['Direction Change'] == df['Direction Change'].max()].index)
-print(df['Direction Change'].min())
-print(df[df['Direction Change'] == df['Direction Change'].min()].index)
+#normalization
 
-exit()
+df['Speed Change'] = 2 * (df['Speed Change'] - df['Speed Change'].min()) / (df['Speed Change'].max() - df['Speed Change'].min()) - 1
+df['Direction Change'] = 2 * (df['Direction Change'] - df['Direction Change'].min()) / (df['Direction Change'].max() - df['Direction Change'].min()) - 1
 
 ID = df.iloc[0]['ID']
 trajectory = 1
@@ -34,7 +28,7 @@ for i in range(df.shape[0]):
             traj.append([ID, trajectory])
         traj.append([df.iloc[i]['Speed Change'], df.iloc[i]['Direction Change']])
 
-# print(series)
+
 
 
 

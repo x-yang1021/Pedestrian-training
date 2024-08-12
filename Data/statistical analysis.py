@@ -57,12 +57,12 @@ for df in dfs:
 df_clean = df_total.dropna(subset=['Direction Change']) #include the path that contain both features
 df_clean.reset_index(drop=True, inplace=True)
 
-df_file = df_clean[df_clean['Distance']<=2.6]
-df_file = df_file.dropna(subset=['Direction Change'])
-df_file.reset_index(drop=True, inplace=True)
-df_file = df_file[['ID', 'Trajectory', 'Speed Change', 'Direction Change']]
-df_file.to_csv('Cluster dataset.csv', index=False)
-exit()
+# df_file = df_clean[df_clean['Distance']<=2.58]
+# df_file = df_file.dropna(subset=['Direction Change'])
+# df_file.reset_index(drop=True, inplace=True)
+# df_file = df_file[['ID', 'Trajectory', 'Speed Change', 'Direction Change']]
+# df_file.to_csv('Cluster dataset.csv', index=False)
+# exit()
 
 
 df_clean =df_clean.sort_values(by=['Distance'])
@@ -76,7 +76,7 @@ df_test['Direction Change'] = 2 * (df_clean['Direction Change'] - df_clean['Dire
 # signal = df_clean['Distance'].values
 signal = df_test[['Speed Change','Direction Change']].values
 models = ["l2",'l1','linear','clinear','rank','ar'] # Change point detection model
-models=['rank']
+models=['l2']
 for model in models:
     algo = rpt.Window(model=model).fit(signal)
     for i in range(1,2):
@@ -87,7 +87,7 @@ for model in models:
         plt.savefig('Break point.png')
         plt.show()
 
-        print(f'Change points: {result}', model,i)
+        print(f'Change points: {result}', model)
 
         for k in range(len(result)-1):
 
@@ -123,16 +123,12 @@ for i in range(df_1.shape[0]):
     if pd.notna(df_1.iloc[i]['Speed']):
         if df_1.iloc[i]['Distance'] <= range_of_interest:
             speed_1.append(df_1.iloc[i]['Speed'])
-        if pd.notna(df_1.iloc[i - 1]['Speed']):
-            change_speed_1.append(df_1.iloc[i]['Speed'] - df_1.iloc[i - 1]['Speed'])
-        else:
-            change_speed_1.append(df_1.iloc[i]['Speed'])
+        if pd.notna(df_1.iloc[i]['Speed Change']):
+            change_speed_1.append(df_1.iloc[i]['Speed Change'])
     if pd.notna(df_1.iloc[i]['Direction']):
         direction_1.append(df_1.iloc[i]['Direction'])
-        if pd.notna(df_1.iloc[i-1]['Direction']):
-            change_direction_1.append(df_1.iloc[i]['Direction'] - df_1.iloc[i-1]['Direction'])
-        else:
-            change_direction_1.append(df_1.iloc[i]['Direction'] - defalut_direction)
+        if pd.notna(df_1.iloc[i]['Direction Change']):
+            change_direction_1.append(df_1.iloc[i]['Direction Change'])
 
 speed_2 = []
 direction_2 = []
@@ -144,16 +140,13 @@ for i in range(df_2.shape[0]):
     if pd.notna(df_2.iloc[i]['Speed']):
         if df_2.iloc[i]['Distance'] <= range_of_interest:
             speed_2.append(df_2.iloc[i]['Speed'])
-        if pd.notna(df_2.iloc[i - 1]['Speed']):
-            change_speed_2.append(df_2.iloc[i]['Speed'] - df_2.iloc[i - 1]['Speed'])
-        else:
-            change_speed_2.append(df_2.iloc[i]['Speed'])
+        if pd.notna(df_2.iloc[i]['Speed Change']):
+            change_speed_2.append(df_2.iloc[i]['Speed Change'])
     if pd.notna(df_2.iloc[i]['Direction']):
         direction_2.append(df_2.iloc[i]['Direction'])
-        if pd.notna(df_2.iloc[i-1]['Direction']):
-            change_direction_2.append(df_2.iloc[i]['Direction'] - df_2.iloc[i-1]['Direction'])
-        else:
-            change_direction_2.append(df_2.iloc[i]['Direction'] - defalut_direction)
+        if pd.notna(df_2.iloc[i]['Direction Change']):
+            change_direction_2.append(df_2.iloc[i]['Direction Change'])
+
 
 speed_3 = []
 direction_3 = []
@@ -165,16 +158,13 @@ for i in range(df_3.shape[0]):
     if pd.notna(df_3.iloc[i]['Speed']):
         if df_3.iloc[i]['Distance'] <= range_of_interest:
             speed_3.append(df_3.iloc[i]['Speed'])
-        if pd.notna(df_3.iloc[i - 1]['Speed']):
-            change_speed_3.append(df_3.iloc[i]['Speed'] - df_3.iloc[i - 1]['Speed'])
-        else:
-            change_speed_3.append(df_3.iloc[i]['Speed'])
+        if pd.notna(df_3.iloc[i]['Speed Change']):
+            change_speed_3.append(df_3.iloc[i]['Speed Change'])
+
     if pd.notna(df_3.iloc[i]['Direction']):
         direction_3.append(df_3.iloc[i]['Direction'])
-        if pd.notna(df_3.iloc[i - 1]['Direction']):
-            change_direction_3.append(df_3.iloc[i]['Direction'] - df_3.iloc[i - 1]['Direction'])
-        else:
-            change_direction_3.append(df_3.iloc[i]['Direction'] - defalut_direction)
+        if pd.notna(df_3.iloc[i]['Direction Change']):
+            change_direction_3.append(df_3.iloc[i]['Direction Change'])
 
 
 
@@ -203,6 +193,8 @@ tt_stat, p_value = stats.kruskal(np.array(change_direction_1), np.array(change_d
 
 print(p_value, 'Change Direction')
 
+
+exit()
 
 head_speed = []
 head_speed_change = []
