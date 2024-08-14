@@ -6,27 +6,33 @@ from scipy.spatial.distance import squareform
 from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 
+shorest_traj = 9
 
 df = pd.read_csv('./Cluster dataset.csv')
+
 
 # record the raw data
 ID = df.iloc[0]['ID']
 trajectory = 1
 original_series = []
 traj = []
+
 for i in range(df.shape[0]):
     if df.iloc[i]['ID'] != ID and traj:
-        original_series.append(traj)
+        if len(traj) >= shorest_traj:
+            original_series.append(traj)
         ID = df.iloc[i]['ID']
         traj = []
     else:
         if df.iloc[i]['Trajectory'] != trajectory and traj:
-            original_series.append(traj)
+            if len(traj) >= shorest_traj:
+                original_series.append(traj)
             trajectory = df.iloc[i]['Trajectory']
             traj = []
-    traj.append([df.iloc[i]['Speed Change'], df.iloc[i]['Direction Change']])
+    traj.append([df.iloc[i]['Speed Change'], df.iloc[i]['Direction Change'], df.iloc[i]['Speed']])
 original_series.append(traj)
 
+df.pop('Speed')
 
 #normalization
 
@@ -40,12 +46,14 @@ series = []
 traj = []
 for i in range(df.shape[0]):
     if df.iloc[i]['ID'] != ID and traj:
-        series.append(traj)
+        if len(traj) >= shorest_traj + 1:
+            series.append(traj)
         ID = df.iloc[i]['ID']
         traj = []
     else:
         if df.iloc[i]['Trajectory'] != trajectory and traj:
-            series.append(traj)
+            if len(traj) >= shorest_traj + 1:
+                series.append(traj)
             trajectory = df.iloc[i]['Trajectory']
             traj = []
     if not traj:
@@ -73,15 +81,15 @@ for i in range(n):
 dtw_distances_condensed = squareform(dtw_distances)
 
 # Step 3: Perform hierarchical clustering using the precomputed distance matrix
-Z = linkage(dtw_distances_condensed, method='complete')
+Z = linkage(dtw_distances_condensed, method='ward')
 
-# # Step 4: Optional: Visualize the dendrogram
-# plt.figure(figsize=(10, 7))
-# dendrogram(Z)
-# plt.title("Dendrogram of Hierarchical Clustering with DTW (Ignoring First Column)")
-# plt.xlabel("Time Series Index")
-# plt.ylabel("Distance")
-# plt.show()
+# Step 4: Optional: Visualize the dendrogram
+plt.figure(figsize=(10, 7))
+dendrogram(Z, no_labels=True)
+plt.title("Dendrogram of Hierarchical Clustering with DTW (Ignoring First Column)")
+plt.ylabel("Distance")
+plt.savefig('Dendrogram.png')
+plt.show()
 
 # Step 5: Determine the optimal number of clusters using the Silhouette score
 range_n_clusters = range(2, 10)  # Example range to check
@@ -114,6 +122,7 @@ for i in range(n):
         'Trajectory':[first_columns[i][1]] * length,
         'Speed Change':[change[0] for change in original_series[i]],
         'Direction Change':[change[1] for change in original_series[i]],
+        'Speed':[change[2] for change in original_series[i]],
         'Cluster':[cluster_labels[i]] * length
     })
     clustered_dataset.append(clustered_data)
@@ -122,9 +131,9 @@ clustered_dataset = pd.concat(clustered_dataset, ignore_index=True)
 
 clustered_dataset.to_csv('./clustered.csv', index = False)
 
-cluster_3 = 0
+cluster_2 = 0
 for i in range(len(cluster_labels)):
-    if cluster_labels[i] == 3:
-        cluster_3+=1
-print(cluster_3)
+    if cluster_labels[i] == 2:
+        cluster_2+=1
+print(cluster_2, len(cluster_labels))
 

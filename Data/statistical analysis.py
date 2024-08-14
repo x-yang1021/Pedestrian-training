@@ -60,7 +60,7 @@ df_clean.reset_index(drop=True, inplace=True)
 df_file = df_clean[df_clean['Distance']<= 2.58]
 df_file = df_file.dropna(subset=['Direction Change'])
 df_file.reset_index(drop=True, inplace=True)
-df_file = df_file[['ID', 'Trajectory', 'Speed Change', 'Direction Change']]
+df_file = df_file[['ID', 'Trajectory', 'Speed', 'Speed Change', 'Direction Change']]
 df_file.to_csv('Cluster dataset.csv', index=False)
 exit()
 
