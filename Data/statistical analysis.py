@@ -60,12 +60,12 @@ for df in dfs:
 df_clean = df_total.dropna(subset=['Direction Change']) #include the path that contain both features
 df_clean.reset_index(drop=True, inplace=True)
 
-df_file = df_clean[df_clean['Distance']<= 3.28]
-df_file = df_file.dropna(subset=['Direction Change'])
-df_file.reset_index(drop=True, inplace=True)
-df_file = df_file[['ID', 'Trajectory', 'Speed', 'Speed Change', 'Direction Change']]
-df_file.to_csv('Cluster dataset.csv', index=False)
-exit()
+# df_file = df_clean[df_clean['Distance']<= 3.28]
+# df_file = df_file.dropna(subset=['Direction Change'])
+# df_file.reset_index(drop=True, inplace=True)
+# df_file = df_file[['ID', 'Trajectory', 'Speed', 'Speed Change', 'Direction Change']]
+# df_file.to_csv('Cluster dataset.csv', index=False)
+# exit()
 
 
 df_clean =df_clean.sort_values(by=['Distance'])
