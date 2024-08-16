@@ -14,7 +14,7 @@ df_3 = pd.read_csv('./Experiment 3.csv')
 dfs = [df_1, df_2, df_3]
 
 
-range_of_interest = 11
+range_of_interest = 2.58
 range_of_interest2 = 12
 time_of_interest = 300
 default_direction = np.arctan2(1,0)
@@ -54,10 +54,13 @@ for df in dfs:
     # plt.show()
     df_total = pd.concat([df_total, df], axis=0)
 
+# df_total.to_csv('entrie dataset.csv', index = False)
+# exit()
+
 df_clean = df_total.dropna(subset=['Direction Change']) #include the path that contain both features
 df_clean.reset_index(drop=True, inplace=True)
 
-df_file = df_clean[df_clean['Distance']<= 2.58]
+df_file = df_clean[df_clean['Distance']<= 3.28]
 df_file = df_file.dropna(subset=['Direction Change'])
 df_file.reset_index(drop=True, inplace=True)
 df_file = df_file[['ID', 'Trajectory', 'Speed', 'Speed Change', 'Direction Change']]
@@ -72,26 +75,28 @@ df_clean.reset_index(drop=True, inplace=True)
 df_test = pd.DataFrame()
 df_test['Speed Change'] = 2 * (df_clean['Speed Change'] - df_clean['Speed Change'].min()) / (df_clean['Speed Change'].max() - df_clean['Speed Change'].min()) - 1
 df_test['Direction Change'] = 2 * (df_clean['Direction Change'] - df_clean['Direction Change'].min()) / (df_clean['Direction Change'].max() - df_clean['Direction Change'].min()) - 1
+df_test['Direction Change'] = df_test['Direction Change'].abs()
 
 # signal = df_clean['Distance'].values
-signal = df_test[['Speed Change','Direction Change']].values
-models = ["l2",'l1','linear','clinear','rank','ar'] # Change point detection model
-models=['l2']
+signal = df_test[['Speed Change']].values
+models = ["l2",'l1','linear','clinear','rank'] # Change point detection model
+models=['rank']
 for model in models:
     algo = rpt.Window(model=model).fit(signal)
     for i in range(1,2):
-        result = algo.predict(n_bkps=i)
-        # rpt.display(signal, result)
-        # plt.xlabel('Index')
-        # # plt.ylabel('Direction Change')
-        # plt.savefig('Break point.png')
-        # plt.show()
+        result = algo.predict(n_bkps=1)
+        rpt.display(signal, result)
+        plt.xlabel('Index')
+        # plt.ylabel('Direction Change')
+        plt.savefig('Break point.png')
+        plt.show()
 
         print(f'Change points: {result}', model,i)
 
         for k in range(len(result)-1):
 
             print(df_clean.iloc[result[k]]['Distance'])
+
 
 obs, vars = signal.shape
 ranks = stats.mstats.rankdata(signal, axis=0)
@@ -111,7 +116,7 @@ var = signal[result[0]:].var(axis=0)
 
 print(mean, var)
 
-
+exit()
 
 speed_1 = []
 direction_1 = []
@@ -190,24 +195,19 @@ print(p_value, 'Change Direction')
 
 
 
-head_speed = []
-head_speed_change = []
-tail_speed = []
-tail_speed_change = []
-head_direction = []
-head_direction_change = []
-tail_direction = []
-tail_direction_change = []
+
 # Make sure to initialize the lists before the loop
 head_speed, head_speed_change, tail_speed, tail_speed_change = [], [], [], []
 head_direction, head_direction_change, tail_direction, tail_direction_change = [], [], [], []
+near_speed_change, near_direction_change, far_speed_change, far_direction_change = [],[],[],[]
 
-dfs = [df_1]
 for df in dfs:
     t = time_of_interest
     for i in range(df.shape[0]):
         if pd.notna(df.iloc[i]['Speed']):
             if df.iloc[i]['Distance'] <= range_of_interest:
+                if pd.notna(df.iloc[i]['Speed Change']):
+                    near_speed_change.append(df.iloc[i]['Speed Change'])
                 if df.iloc[i]['Time'] <= t:
                     head_speed.append(df.iloc[i]['Speed'])
                     if pd.notna(df.iloc[i]['Speed Change']):
@@ -216,9 +216,13 @@ for df in dfs:
                     tail_speed.append(df.iloc[i]['Speed'])
                     if pd.notna(df.iloc[i]['Speed Change']):
                         tail_speed_change.append(df.iloc[i]['Speed Change'])
-
+            else:
+                if pd.notna(df.iloc[i]['Speed Change']):
+                    far_speed_change.append(df.iloc[i]['Speed Change'])
         if pd.notna(df.iloc[i]['Direction']):
             if df.iloc[i]['Distance'] <= range_of_interest:
+                if pd.notna(df.iloc[i]['Direction Change']):
+                    near_direction_change.append(df.iloc[i]['Direction Change'])
                 if df.iloc[i]['Time'] <= t:
                     head_direction.append(df.iloc[i]['Direction'])
                     if pd.notna(df.iloc[i]['Direction Change']):
@@ -227,7 +231,9 @@ for df in dfs:
                     tail_direction.append(df.iloc[i]['Direction'])
                     if pd.notna(df.iloc[i]['Direction Change']):
                         tail_direction_change.append(df.iloc[i]['Direction Change'])
-
+            else:
+                if pd.notna(df.iloc[i]['Direction Change']):
+                    far_direction_change.append(df.iloc[i]['Direction Change'])
 tt_stat, p_value = stats.mannwhitneyu(np.array(head_speed), np.array(tail_speed))
 
 print(p_value, 'head Speed')
@@ -251,17 +257,17 @@ print(p_value, 'head Direction Change')
 #
 # print(p_value, 'near Speed', np.mean(near_speed), np.mean(far_speed))
 #
-# tt_stat, p_value = stats.mannwhitneyu(np.array(near_speed_change), np.array(far_speed_change))
-#
-# print(p_value, 'near Speed Change', np.mean(near_speed_change), np.mean(far_speed_change))
-#
+tt_stat, p_value = stats.mannwhitneyu(np.array(near_speed_change), np.array(far_speed_change))
+
+print(p_value, 'near Speed Change', np.mean(near_speed_change), np.mean(far_speed_change))
+
 # tt_stat, p_value = stats.mannwhitneyu(np.array(near_direction), np.array(far_direction))
 #
 # print(p_value, 'near Direction')
 #
-# tt_stat, p_value = stats.mannwhitneyu(np.array(near_direction_change), np.array(far_direction_change))
-#
-# print(p_value, 'near Direction Change', np.mean(near_direction_change), np.mean(far_direction_change))
+tt_stat, p_value = stats.mannwhitneyu(np.array(near_direction_change), np.array(far_direction_change))
+
+print(p_value, 'near Direction Change', np.mean(near_direction_change), np.mean(far_direction_change))
 
 
 # plt.hist(np.array(far_direction_change), color='lightgreen', ec='black', bins=30)
