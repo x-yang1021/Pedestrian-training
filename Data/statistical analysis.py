@@ -31,7 +31,7 @@ for df in dfs:
                 if pd.notna(df.iloc[i]['Speed']):
                     df.at[i,'Speed Change'] = df.iloc[i+1]['Speed'] - df.iloc[i]['Speed']
                 else:
-                    df.at[i,'Speed Change'] = np.nan
+                    df.at[i,'Speed Change'] = df.iloc[i]['Speed']
         if pd.notna(df.iloc[i+1]['Direction']):
             diff = df.iloc[i+1]['Direction'] - df.iloc[i]['Direction']
             # Wrap the difference to the range -pi to pi
@@ -60,7 +60,8 @@ for df in dfs:
 df_clean = df_total.dropna(subset=['Direction Change']) #include the path that contain both features
 df_clean.reset_index(drop=True, inplace=True)
 
-# df_file = df_clean[df_clean['Distance']<= 3.28]
+
+# df_file = df_clean[df_clean['Distance']<= range_of_interest]
 # df_file = df_file.dropna(subset=['Direction Change'])
 # df_file.reset_index(drop=True, inplace=True)
 # df_file = df_file[['ID', 'Trajectory', 'Speed', 'Speed Change', 'Direction Change']]
@@ -69,19 +70,19 @@ df_clean.reset_index(drop=True, inplace=True)
 
 # df_clean.loc[:, 'Positionx'] = df_clean['Positionx'].abs()
 df_clean =df_clean.sort_values(by=['Distance'])
-# df_clean = df_clean[df_clean['Distance']<10]
+df_clean = df_clean[df_clean['Distance']<10]
 df_clean.reset_index(drop=True, inplace=True)
 
 df_test = df_clean
-# df_test = pd.DataFrame()
-# df_test['Speed Change'] = 2 * (df_clean['Speed Change'] - df_clean['Speed Change'].min()) / (df_clean['Speed Change'].max() - df_clean['Speed Change'].min()) - 1
-# df_test['Direction Change'] = 2 * (df_clean['Direction Change'] - df_clean['Direction Change'].min()) / (df_clean['Direction Change'].max() - df_clean['Direction Change'].min()) - 1
+df_test = pd.DataFrame()
+df_test['Speed Change'] = 2 * (df_clean['Speed Change'] - df_clean['Speed Change'].min()) / (df_clean['Speed Change'].max() - df_clean['Speed Change'].min()) - 1
+df_test['Direction Change'] = 2 * (df_clean['Direction Change'] - df_clean['Direction Change'].min()) / (df_clean['Direction Change'].max() - df_clean['Direction Change'].min()) - 1
 # df_test['Direction Change'] = df_test['Direction Change'].abs()
 
 # signal = df_clean['Distance'].values
-signal = df_test[['Speed Change']].values
+signal = df_test[['Speed Change','Direction Change']].values
 models = ["l2",'l1','linear','clinear','rank'] # Change point detection model
-models=['rank']
+# models=['l2']
 for model in models:
     algo = rpt.Window(model=model).fit(signal)
     for i in range(1,2):

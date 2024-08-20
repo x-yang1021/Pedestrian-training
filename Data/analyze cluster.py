@@ -22,7 +22,7 @@ Trajectories[ID].append(trajectory)
 
 n_cluster = df['Cluster'].max()
 
-for cluster in range(1, n_cluster+1):
+for cluster in range(1, n_cluster):
     Cluster_IDs = []
     Cluster_Trajectories_num = {}
     df_cluster = df[df['Cluster']==cluster]
