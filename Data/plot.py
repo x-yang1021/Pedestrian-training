@@ -13,7 +13,7 @@ data = pd.concat(dfs, ignore_index=True)
 
 # 清理数据：移除包含缺失值的行
 cleaned_data = data.dropna(subset=['Positionx', 'Positiony'])
-cleaned_data = cleaned_data[cleaned_data['Distance'] <3.28]
+cleaned_data = cleaned_data[cleaned_data['Distance'] <10]
 
 df = data
 

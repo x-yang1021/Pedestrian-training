@@ -125,11 +125,14 @@ print(p_value, 'Near Direction Change')
 dfs = []
 
 df_total = df_total[df_total['Distance']<8]
-
+total_traj = 0
 for ID in Cluster_IDs:
     df_temp = df_total[df_total['ID'] == ID]
     for traj in Cluster_Trajectories[ID]:
         dfs.append(df_temp[df_temp['Trajectory']==traj])
+    total_traj += Cluster_Trajectories_num[ID]
+
+print('number of trajectories', total_traj)
 
 df_2 = pd.concat(dfs,ignore_index=True)
 
@@ -137,19 +140,18 @@ ID = df_2.iloc[0]['ID']
 trajectory = df_2.iloc[0]['Trajectory']
 i = 0
 count = 0
-useful_traj = 0
+useful_traj = []
 while i < df_2.shape[0]:
     if df_2.iloc[i]['ID'] == ID and df_2.iloc[i]['Trajectory'] == trajectory:
         count += 1
     else:
-        count = 0
-    if count == 8:
-        useful_traj += 1
+        useful_traj.append(count)
         count = 0
     ID = df_2.iloc[i]['ID']
     trajectory = df_2.iloc[i]['Trajectory']
     i += 1
-print(useful_traj)
+print(max(useful_traj), min(useful_traj))
 
 df_2['Speed Change'] = df_2['Speed Change'].abs()
 print(df_2['Speed Change'].max(), df_2['Speed Change'].min())
+

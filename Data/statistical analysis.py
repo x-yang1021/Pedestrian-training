@@ -33,7 +33,7 @@ for df in dfs:
                 else:
                     df.at[i,'Speed Change'] = np.nan
         if pd.notna(df.iloc[i+1]['Direction']):
-            diff = df.iloc[i + 1]['Direction'] - df.iloc[i]['Direction']
+            diff = df.iloc[i+1]['Direction'] - df.iloc[i]['Direction']
             # Wrap the difference to the range -pi to pi
             if diff > np.pi:
                 diff -= 2 * np.pi
@@ -41,7 +41,7 @@ for df in dfs:
                 diff += 2 * np.pi
             df.at[i, 'Direction Change'] = diff
         else:
-            diff = df.iloc[i + 1]['Direction'] - default_direction
+            diff = df.iloc[i+1]['Direction'] - default_direction
             if diff > np.pi:
                 diff -= 2 * np.pi
             elif diff < -np.pi:
@@ -67,15 +67,16 @@ df_clean.reset_index(drop=True, inplace=True)
 # df_file.to_csv('Cluster dataset.csv', index=False)
 # exit()
 
-
+# df_clean.loc[:, 'Positionx'] = df_clean['Positionx'].abs()
 df_clean =df_clean.sort_values(by=['Distance'])
 # df_clean = df_clean[df_clean['Distance']<10]
 df_clean.reset_index(drop=True, inplace=True)
 
-df_test = pd.DataFrame()
-df_test['Speed Change'] = 2 * (df_clean['Speed Change'] - df_clean['Speed Change'].min()) / (df_clean['Speed Change'].max() - df_clean['Speed Change'].min()) - 1
-df_test['Direction Change'] = 2 * (df_clean['Direction Change'] - df_clean['Direction Change'].min()) / (df_clean['Direction Change'].max() - df_clean['Direction Change'].min()) - 1
-df_test['Direction Change'] = df_test['Direction Change'].abs()
+df_test = df_clean
+# df_test = pd.DataFrame()
+# df_test['Speed Change'] = 2 * (df_clean['Speed Change'] - df_clean['Speed Change'].min()) / (df_clean['Speed Change'].max() - df_clean['Speed Change'].min()) - 1
+# df_test['Direction Change'] = 2 * (df_clean['Direction Change'] - df_clean['Direction Change'].min()) / (df_clean['Direction Change'].max() - df_clean['Direction Change'].min()) - 1
+# df_test['Direction Change'] = df_test['Direction Change'].abs()
 
 # signal = df_clean['Distance'].values
 signal = df_test[['Speed Change']].values
@@ -97,6 +98,9 @@ for model in models:
 
             print(df_clean.iloc[result[k]]['Distance'])
 
+# df_special = df_clean[df_clean['Distance'] == 3.28]
+#
+# print(df_special['Speed'].mean())
 
 obs, vars = signal.shape
 ranks = stats.mstats.rankdata(signal, axis=0)
