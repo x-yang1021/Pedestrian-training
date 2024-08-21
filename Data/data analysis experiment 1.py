@@ -12,6 +12,7 @@ process_53 = False
 data_length = 1287
 step_length = 0.5
 congestion_range = 3
+default_direction = np.arctan2(1,0)
 
 #concat plyaer 53 due to technical issue
 if process_53:
@@ -370,7 +371,8 @@ for file in all_files:
     for i in range(df.shape[0]):
         if pd.notna(df.iloc[i]['Speed']):
             if df.iloc[i]['Speed'] == 0:
-                df.at[i,'Direction'] = df.iloc[i-1]['Direction']
+                if pd.notna(df.iloc[i-1]['Speed']):
+                    df.at[i,'Direction'] = df.iloc[i-1]['Direction']
             else:
                 x2 = df.iloc[i]['Positionx']
                 y2 = df.iloc[i]["Positiony"]
@@ -381,7 +383,7 @@ for file in all_files:
         if pd.notna(df.iloc[i]['Yaw']):
             df.at[i,'Yaw'] = np.radians(90 - df.iloc[i]['Yaw'])
     if generate_file:
-        df.to_csv('./Experiment 1 data/processed data/%s new.csv' % (ID), index=False)
+        df.to_csv('./processed data/1/%s new.csv' % (ID), index=False)
     entire_data = pd.concat([entire_data,df], ignore_index = True)
 print(total_traj)
 if generate_file:

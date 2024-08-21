@@ -30,23 +30,16 @@ for df in dfs:
         if pd.notna(df.iloc[i+1]['Speed']):
                 if pd.notna(df.iloc[i]['Speed']):
                     df.at[i,'Speed Change'] = df.iloc[i+1]['Speed'] - df.iloc[i]['Speed']
-                else:
-                    df.at[i,'Speed Change'] = df.iloc[i]['Speed']
         if pd.notna(df.iloc[i+1]['Direction']):
-            diff = df.iloc[i+1]['Direction'] - df.iloc[i]['Direction']
-            # Wrap the difference to the range -pi to pi
-            if diff > np.pi:
-                diff -= 2 * np.pi
-            elif diff < -np.pi:
-                diff += 2 * np.pi
-            df.at[i, 'Direction Change'] = diff
-        else:
-            diff = df.iloc[i+1]['Direction'] - default_direction
-            if diff > np.pi:
-                diff -= 2 * np.pi
-            elif diff < -np.pi:
-                diff += 2 * np.pi
-            df.at[i, 'Direction Change'] = diff
+            if pd.notna(df.iloc[i]['Direction']):
+                diff = df.iloc[i+1]['Direction'] - df.iloc[i]['Direction']
+                # Wrap the difference to the range -pi to pi
+                if diff > np.pi:
+                    diff -= 2 * np.pi
+                elif diff < -np.pi:
+                    diff += 2 * np.pi
+                df.at[i, 'Direction Change'] = diff
+
         # if abs(df.iloc[i]['Speed Change']) > 10:
         #     print(df.iloc[i]['ID'], df.iloc[i]['Time'], df.iloc[i]['Speed Change'], df.iloc[i]['Trajectory'])
     # plt.plot(df['speed_change_rate'], df['Distance'],  marker='o', linestyle='-', color='b')
@@ -57,16 +50,22 @@ for df in dfs:
 # df_total.to_csv('entrie dataset.csv', index = False)
 # exit()
 
+# df_yaw = df_total.dropna(subset=['Direction'])
+# angle_diff = df_yaw['Yaw'] - df_yaw['Direction']
+# print(np.mean(angle_diff))
+#
+# exit()
+
 df_clean = df_total.dropna(subset=['Direction Change']) #include the path that contain both features
 df_clean.reset_index(drop=True, inplace=True)
 
 
-# df_file = df_clean[df_clean['Distance']<= range_of_interest]
-# df_file = df_file.dropna(subset=['Direction Change'])
-# df_file.reset_index(drop=True, inplace=True)
-# df_file = df_file[['ID', 'Trajectory', 'Speed', 'Speed Change', 'Direction Change']]
-# df_file.to_csv('Cluster dataset.csv', index=False)
-# exit()
+df_file = df_clean[df_clean['Distance']<= range_of_interest]
+df_file = df_file.dropna(subset=['Direction Change'])
+df_file.reset_index(drop=True, inplace=True)
+df_file = df_file[['ID', 'Trajectory', 'Speed', 'Speed Change', 'Direction Change']]
+df_file.to_csv('Cluster dataset.csv', index=False)
+exit()
 
 # df_clean.loc[:, 'Positionx'] = df_clean['Positionx'].abs()
 df_clean =df_clean.sort_values(by=['Distance'])

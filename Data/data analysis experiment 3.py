@@ -11,6 +11,7 @@ teleport_range = 7
 data_length = 1343
 step_length = 0.5
 congestion_range = 3
+default_direction = np.arctan2(1,0)
 
 all_files = glob.glob(os.path.join('./Experiment 3 data', "*.csv"))
 total_traj = 0
@@ -316,7 +317,8 @@ for file in all_files:
     for i in range(df.shape[0]):
         if pd.notna(df.iloc[i]['Speed']):
             if df.iloc[i]['Speed'] == 0:
-                df.at[i,'Direction'] = df.iloc[i-1]['Direction']
+                if pd.notna(df.iloc[i - 1]['Speed']):
+                    df.at[i, 'Direction'] = df.iloc[i - 1]['Direction']
             else:
                 x2 = df.iloc[i]['Positionx']
                 y2 = df.iloc[i]["Positiony"]
@@ -327,7 +329,7 @@ for file in all_files:
         if pd.notna(df.iloc[i]['Yaw']):
             df.at[i,'Yaw'] = np.radians(90 - df.iloc[i]['Yaw'])
     print(ID, df.shape[0], df.iloc[-1]['Time'])
-    df.to_csv('./Experiment 3 data/processed data/%s new.csv' % (ID), index=False)
+    df.to_csv('./processed data/3/%s new.csv' % (ID), index=False)
     entire_data = pd.concat([entire_data,df], ignore_index = True)
 print(total_traj)
 entire_data.to_csv('./Experiment 3.csv', index=False)

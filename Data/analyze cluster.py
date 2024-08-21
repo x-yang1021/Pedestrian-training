@@ -22,7 +22,7 @@ Trajectories[ID].append(trajectory)
 
 n_cluster = df['Cluster'].max()
 
-for cluster in range(1, n_cluster):
+for cluster in range(1, n_cluster+1):
     Cluster_IDs = []
     Cluster_Trajectories_num = {}
     df_cluster = df[df['Cluster']==cluster]
@@ -68,15 +68,22 @@ for cluster in range(1, n_cluster):
         dist += df_cluster.iloc[j]['Speed'] * 0.5
     Cluster_Trajectories_num[ID] = traj_num
     Cluster_Trajectories[ID].append(trajectory)
-    # for ID in Cluster_IDs:
-    #     print(cluster, ID, Cluster_Trajectories_num[ID], Trajectories[ID], Cluster_Trajectories_num[ID]/Trajectories[ID])
     print(f'cluster {cluster}',
           'Total data points',np.sum(lengths),
           'Number of trajectories', len(lengths),
           'Average Travel Distance',np.mean(dists),
           'Average Speed', np.mean(np.array(dists)/np.array(lengths)/0.5))
 
-
+# Typical_traj = 0
+# total_traj = 0
+# for ID in Cluster_IDs:
+#     if Cluster_Trajectories_num[ID]/len(Trajectories[ID]) > 0:
+#         Typical_traj += Cluster_Trajectories_num[ID]
+#         print(ID)
+#     total_traj += Cluster_Trajectories_num[ID]
+# print(Typical_traj, total_traj)
+#
+# exit()
 
 Far_speed_change = []
 Near_speed_change = []
@@ -124,7 +131,7 @@ print(p_value, 'Near Direction Change')
 
 dfs = []
 
-df_total = df_total[df_total['Distance']<8]
+df_total = df_total[df_total['Distance']<=9]
 total_traj = 0
 for ID in Cluster_IDs:
     df_temp = df_total[df_total['ID'] == ID]
@@ -150,8 +157,8 @@ while i < df_2.shape[0]:
     ID = df_2.iloc[i]['ID']
     trajectory = df_2.iloc[i]['Trajectory']
     i += 1
-print(max(useful_traj), min(useful_traj))
+print(max(useful_traj), min(useful_traj), sum(useful_traj))
 
 df_2['Speed Change'] = df_2['Speed Change'].abs()
-print(df_2['Speed Change'].max(), df_2['Speed Change'].min())
+print(df_2['Speed'].max(), df_2['Speed'].min())
 
