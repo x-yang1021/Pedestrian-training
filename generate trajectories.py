@@ -6,10 +6,25 @@ import pandas as pd
 
 
 cluster = 2
-width = 11
-length = 8
+mapping = { 'ID':0,
+           'Trajectory':1,
+           'Positionx':2,
+           'Positiony':3,
+            'Distance':4,
+            'Up':5,
+            'Right':6,
+            'Down':7,
+            'Left':8,
+            'Speed':9,
+            'Speed Change':10,
+            'Direction':11,
+            'Direction Change':12}
+width = len(mapping)
+traj_length = 9
+distance_threshold = 9
 
 df = pd.read_csv('./Data/clustered.csv')
+
 
 Cluster_IDs = []
 Cluster_Trajectories_num = {}
@@ -64,68 +79,68 @@ trajectories = []
 for dataset in dfs:
     for col in range(2, dataset.shape[1], width):
         data_col = dataset.iloc[:,col:col+width]
-        if data_col.iloc[0]['ID'] not in Cluster_IDs:
+        data_temp = data_col.dropna()
+        if data_temp.shape[0] == 0:
+            print(dataset,col)
+        ID = data_temp.iloc[0][mapping['ID']]
+        if ID not in Cluster_IDs:
             continue
-        ID = data_col.iloc[0]['ID']
         timestep = 0
-        while timestep < dataset.shape[0] - length:
-            if pd.isna(data_col.iloc[timestep]['Speed']):
+        while timestep < dataset.shape[0] - traj_length:
+            if pd.isna(data_col.iloc[timestep][mapping['Speed']]):
                 timestep += 1
                 continue
-            if data_col.iloc[timestep]['Trajectory'] not in Cluster_Trajectories[ID]:
+            if data_col.iloc[timestep][mapping['Trajectory']] not in Cluster_Trajectories[ID]:
                 timestep += 1
                 continue
-            elif pd.isna(data_col.iloc[timestep+length]['Trajectory']):
+            elif pd.isna(data_col.iloc[timestep+traj_length-1][mapping['Trajectory']]):
                 timestep += 1
                 continue
-            elif data_col.iloc[timestep]['Trajectory'] != data_col.iloc[timestep+length]['Trajectory']:
+            elif data_col.iloc[timestep][mapping['Trajectory']] != data_col.iloc[timestep+traj_length-1][mapping['Trajectory']]:
                 timestep += 1
                 continue
-            data_traj = data_col.iloc[timestep:timestep+length]
+            elif data_col.iloc[timestep][mapping['Distance']] > distance_threshold:
+                timestep += 1
+                continue
+            data_traj = data_col.iloc[timestep:timestep+traj_length]
             for i in range(data_traj.shape[0]):
                 ob = []
-                x1 = data_traj.iloc[i]['Positionx']
-                y1 = data_traj.iloc[i]['Positiony']
+                x1 = data_traj.iloc[i][mapping['Positionx']]
+                y1 = data_traj.iloc[i][mapping['Positiony']]
                 ob.append(x1)
                 ob.append(y1)
-                ob.append(data_traj.iloc[timestep+length-1]['Positionx'])
-                ob.append(data_traj.iloc[timestep+length-1]['Positiony'])
-                ob.append(data_traj.iloc[i]['Distance'])
-                ob.append(data_traj.iloc[i]['Speed'])
-                direction = data_traj.iloc[i]['Direction']
+                ob.append(data_traj.iloc[traj_length-1][mapping['Positionx']])
+                ob.append(data_traj.iloc[traj_length-1][mapping['Positiony']])
+                ob.append(data_traj.iloc[i][mapping['Distance']])
+                ob.append(data_traj.iloc[i][mapping['Speed']])
+                direction = data_traj.iloc[i][mapping['Direction']]
                 ob.append(direction)
                 positions = getPositions(dataset, timestep+i, ID, width)
                 front = getFront(dataset,timestep+i,width,positions,x1,y1,direction)
                 density = getDensity(positions,x1,y1,direction)
-                ob.append(front)
+                ob.append(front[0])
+                ob.append(front[1])
                 ob.append(density)
-                up = data_traj.iloc[i]['Up']
-                right = data_traj.iloc[i]['Right']
-                down = data_traj.iloc[i]['Down']
-                left = data_traj.iloc[i]['Left']
-                ob.append([up,right,down,left])
+                up = data_traj.iloc[i][mapping['Up']]
+                right = data_traj.iloc[i][mapping['Right']]
+                down = data_traj.iloc[i][mapping['Down']]
+                left = data_traj.iloc[i][mapping['Left']]
+                ob.append(up)
+                ob.append(right)
+                ob.append(down)
+                ob.append(left)
                 obs.append(ob)
-                if i != length-1:
-                    act = [data_traj.iloc[i]['Speed Change'],
-                           data_traj.iloc[i]['Direction Change']]
-                    acts.append(acts)
-            info = [dataset.iloc[0]['Experiment'], ID, timestep * 0.5]
+                if i != traj_length-1:
+                    act = [data_traj.iloc[i][mapping['Speed Change']],
+                           data_traj.iloc[i][mapping['Direction Change']]]
+                    acts.append(act)
+                    infos.append([dataset.iloc[0][0], ID, timestep])
             trajectory = types.Trajectory(obs=np.array(obs), acts=np.array(acts), infos=np.array(infos), terminal=True)
             trajectories.append(trajectory)
             obs = []
             acts = []
             infos = []
-            timestep += length-1
+            timestep += traj_length-1
 print(trajectories)
 
-
-
-
-
-
-
-
-
-
-
-serialize.save('', trajectories)
+# serialize.save('', trajectories)

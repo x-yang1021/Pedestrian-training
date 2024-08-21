@@ -45,8 +45,8 @@ for exp in exps:
                 elif diff < -np.pi:
                     diff += 2 * np.pi
                 df.at[i, 'Direction Change'] = diff
-        new_order = ['Experiment',"Time", "ID", "Positionx","Positionz","Positiony", "Yaw",
-                     "Up", "Right", "Down", "Left",'Speed','Speed Change',
+        new_order = ['Experiment','Time', 'ID', 'Trajectory', 'Positionx','Positionz','Positiony', 'Yaw',
+                     'Distance', 'Up', 'Right', 'Down', 'Left','Speed','Speed Change',
                      'Direction','Direction Change']
         df = df[new_order]
         df = df.drop(columns=['Yaw','Positionz'])

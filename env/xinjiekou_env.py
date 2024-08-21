@@ -24,7 +24,7 @@ wall_mid2 = (np.array([29738,12525])- sun_unity)/10
 dataset = pd.ExcelFile("./raw data.xlsx")
 dataset2 = pd.read_excel(dataset, 'Group 2')
 dataset3 = pd.read_excel(dataset, "Group 3")
-trajectories = serialize.load('./Data')
+trajectories = serialize.load('./Xinjiekou_Data')
 episode_length = 5
 
 exit()

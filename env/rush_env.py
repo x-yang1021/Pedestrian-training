@@ -8,6 +8,20 @@ from imitation.data import serialize
 import gym
 from gym import spaces
 
+mapping = { 'ID':0,
+           'Trajectory':1,
+           'Positionx':2,
+           'Positiony':3,
+            'Distance':4,
+            'Up':5,
+            'Right':6,
+            'Down':7,
+            'Left':8,
+            'Speed':9,
+            'Speed Change':10,
+            'Direction':11,
+            'Direction Change':12}
+
 def withinSight(x1, y1, direction, x2, y2, sight_radius=10, central_angle=np.pi):
     dx = x2 - x1
     dy = y2 - y1
@@ -26,11 +40,11 @@ def withinSight(x1, y1, direction, x2, y2, sight_radius=10, central_angle=np.pi)
 def getPositions(dataset, timestep, ID, width):
     positions = []
     row = dataset.iloc[timestep]
-    for col in range(2, row.shape[1], width):
-        data_col = row.iloc[:,col:col+width]
-        if data_col['ID'] == ID:
+    for col in range(2, row.shape[0], width):
+        data_col = row.iloc[col:col+width]
+        if data_col.iloc[mapping['ID']] == ID:
             continue
-        positions.append([data_col['Positionx'], data_col['Positiony']])
+        positions.append([data_col.iloc[mapping['Positionx']], data_col.iloc[mapping['Positiony']]])
     return positions
 
 def getDensity(positions,x1,y1,direction):
@@ -58,10 +72,11 @@ def getFront(dataset, timestep, width, positions,x1,y1,direction):
     else:
         front_action = []
         row = dataset.iloc[timestep]
-        for col in range(2, row.shape[1], width):
-            data_col = row.iloc[:, col:col + width]
-            if data_col['Positionx'] == front[0] and data_col['Positiony'] == front[1]:
-                front_action.append([data_col['Speed'], data_col['Direction']])
+        for col in range(2, row.shape[0], width):
+            data_col = row.iloc[col:col + width]
+            if data_col.iloc[mapping['Positionx']] == front[0] and data_col.iloc[mapping['Positiony']] == front[1]:
+                front_action.append(data_col.iloc[mapping['Speed']])
+                front_action.append(data_col.iloc[mapping['Direction']])
         return front_action
 
 class Xinjiekou(gym.Env):
