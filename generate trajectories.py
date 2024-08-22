@@ -105,31 +105,27 @@ for dataset in dfs:
                 continue
             data_traj = data_col.iloc[timestep:timestep+traj_length]
             for i in range(data_traj.shape[0]):
-                ob = []
+                ob = {}
                 x1 = data_traj.iloc[i][mapping['Positionx']]
                 y1 = data_traj.iloc[i][mapping['Positiony']]
-                ob.append(x1)
-                ob.append(y1)
-                ob.append(data_traj.iloc[traj_length-1][mapping['Positionx']])
-                ob.append(data_traj.iloc[traj_length-1][mapping['Positiony']])
-                ob.append(data_traj.iloc[i][mapping['Distance']])
-                ob.append(data_traj.iloc[i][mapping['Speed']])
+                ob['position'] = np.array([x1,y1])
+                dest_x = data_traj.iloc[traj_length-1][mapping['Positionx']]
+                dest_y = data_traj.iloc[traj_length-1][mapping['Positiony']]
+                ob['destination'] = np.array([dest_x,dest_y])
+                ob['distance'] = np.array([data_traj.iloc[i][mapping['Distance']]])
+                speed = data_traj.iloc[i][mapping['Speed']]
                 direction = data_traj.iloc[i][mapping['Direction']]
-                ob.append(direction)
+                ob['self movement'] = np.array([speed,direction])
                 positions = getPositions(dataset, timestep+i, ID, width)
                 front = getFront(dataset,timestep+i,width,positions,x1,y1,direction)
                 density = getDensity(positions,x1,y1,direction)
-                ob.append(front[0])
-                ob.append(front[1])
-                ob.append(density)
+                ob['front movement'] = np.array(front)
+                ob['density'] = np.array([density])
                 up = data_traj.iloc[i][mapping['Up']]
                 right = data_traj.iloc[i][mapping['Right']]
                 down = data_traj.iloc[i][mapping['Down']]
                 left = data_traj.iloc[i][mapping['Left']]
-                ob.append(up)
-                ob.append(right)
-                ob.append(down)
-                ob.append(left)
+                ob['contact'] = np.array([up,right,down,left])
                 obs.append(ob)
                 if i != traj_length-1:
                     act = [data_traj.iloc[i][mapping['Speed Change']],

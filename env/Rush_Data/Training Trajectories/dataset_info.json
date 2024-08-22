@@ -2,16 +2,59 @@
   "citation": "",
   "description": "",
   "features": {
-    "obs": {
-      "feature": {
-        "feature": {
-          "dtype": "float64",
-          "_type": "Value"
+    "obs": [
+      {
+        "contact": {
+          "feature": {
+            "dtype": "float64",
+            "_type": "Value"
+          },
+          "_type": "Sequence"
         },
-        "_type": "Sequence"
-      },
-      "_type": "Sequence"
-    },
+        "density": {
+          "feature": {
+            "dtype": "int64",
+            "_type": "Value"
+          },
+          "_type": "Sequence"
+        },
+        "destination": {
+          "feature": {
+            "dtype": "float64",
+            "_type": "Value"
+          },
+          "_type": "Sequence"
+        },
+        "distance": {
+          "feature": {
+            "dtype": "float64",
+            "_type": "Value"
+          },
+          "_type": "Sequence"
+        },
+        "front movement": {
+          "feature": {
+            "dtype": "float64",
+            "_type": "Value"
+          },
+          "_type": "Sequence"
+        },
+        "position": {
+          "feature": {
+            "dtype": "float64",
+            "_type": "Value"
+          },
+          "_type": "Sequence"
+        },
+        "self movement": {
+          "feature": {
+            "dtype": "float64",
+            "_type": "Value"
+          },
+          "_type": "Sequence"
+        }
+      }
+    ],
     "acts": {
       "feature": {
         "feature": {

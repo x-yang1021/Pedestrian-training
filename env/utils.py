@@ -15,7 +15,7 @@ mapping = { 'ID':0,
             'Direction':11,
             'Direction Change':12}
 
-def withinSight(x1, y1, direction, x2, y2, sight_radius=10, central_angle=np.pi):
+def withinSight(x1, y1, direction, x2, y2, sight_radius=3, central_angle=np.pi):
     dx = x2 - x1
     dy = y2 - y1
     dist = np.sqrt(dx ** 2 + dy ** 2)
@@ -61,7 +61,7 @@ def getFront(dataset, timestep, width, positions,x1,y1,direction):
                 min_distance = dist
                 front = (x2, y2)
     if not front:
-        return [0,0]
+        return [0.0,0.0]
     else:
         front_action = []
         row = dataset.iloc[timestep]

@@ -160,5 +160,5 @@ while i < df_2.shape[0]:
 print(max(useful_traj), min(useful_traj), sum(useful_traj))
 
 df_2['Speed Change'] = df_2['Speed Change'].abs()
-print(df_2['Speed'].max(), df_2['Speed'].min())
+print(df_2['Speed'].max(), df_2['Speed Change'].max())
 

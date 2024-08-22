@@ -9,26 +9,26 @@ import gym
 from gym import spaces
 
 class Xinjiekou(gym.Env):
-
     def __init__(self):
         # normalization
-        self.max_speed = 1
-        # actually pi before normalization
-        self.max_direction = 1
+        self.max_speed = 6
+        self.max_direction = np.pi
         action_high = np.array([self.max_speed,self.max_direction])
         self.action_space = spaces.Box(low=-action_high, high=action_high, dtype=np.float32)
-        movement_high = np.array([1,1])
-        movement_low = np.array([0,-1])
-        position_high = np.array([1,0])
-        position_low = np.array([-1,-1])
+        movement_high = np.array([9,self.max_direction])
+        movement_low = np.array([0,-self.max_direction])
+        self.max_distance = 10
+        self.attendant = 25
+        position_high = np.array([self.max_distance,0])
+        position_low = np.array([-self.max_distance,-self.max_distance])
         self.observation_space = spaces.Dict(
             {
                 "position":spaces.Box(low=position_low,high=position_high,dtype=np.float32),
                 "destination":spaces.Box(low=position_low,high=position_high,dtype=np.float32),
-                'distance':spaces.Box(low=0, high=1, dtype=np.float32),
+                'distance':spaces.Box(low=0, high=self.max_distance, dtype=np.float32),
                 'self movement':spaces.Box(low=movement_low,high=movement_high,dtype=np.float32),
                 'front movement':spaces.Box(low=movement_low, high=movement_high, dtype=np.float32),
-                'density':spaces.Box(low=0, high=1, dtype=np.float32),
+                'density':spaces.Discrete(self.attendant),
                 'contact':spaces.MultiBinary(4)
             }
         )
