@@ -27,6 +27,7 @@ dataset3 = pd.read_excel(dataset, "Group 3")
 trajectories = serialize.load('./Xinjiekou_Data')
 episode_length = 5
 
+print(trajectories[0].infos[0])
 exit()
 def withinSight(x1, y1, direction, x2, y2, sight_radius=10, central_angle=np.pi):
     dx = x2 - x1

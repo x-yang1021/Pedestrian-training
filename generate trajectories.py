@@ -1,8 +1,9 @@
 import imitation.data.types as types
 from imitation.data import serialize
 import numpy as np
-from env.rush_env import withinSight, getPositions,getDensity, getFront
+from env.utils import withinSight, getPositions,getDensity, getFront
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 
 cluster = 2
@@ -141,6 +142,8 @@ for dataset in dfs:
             acts = []
             infos = []
             timestep += traj_length-1
-print(trajectories)
 
-# serialize.save('', trajectories)
+train_traj, test_traj = train_test_split(trajectories, test_size=0.2, random_state=42)
+
+serialize.save('./env/Rush_Data/Training Trajectories', train_traj)
+serialize.save('./env/Rush_Data/Testing Trajectories', test_traj)
