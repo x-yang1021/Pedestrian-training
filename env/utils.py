@@ -71,3 +71,27 @@ def getFront(dataset, timestep, width, positions,x1,y1,direction):
                 front_action.append(data_col.iloc[mapping['Speed']])
                 front_action.append(data_col.iloc[mapping['Direction']])
         return front_action
+
+def getContact(dataset, timestep, width, positions, x1, y1, direction):
+    contact = [0, 0, 0, 0]  # up, right, down, left
+
+    # Define directions
+    directions = {
+        0: direction,  # straight
+        1: (direction + np.pi / 2) % (2 * np.pi),  # right
+        2: (direction + np.pi) % (2 * np.pi),  # down
+        3: (direction - np.pi / 2) % (2 * np.pi)  # left
+    }
+
+    # Define sight radius and central angle
+    sight_radius = 0.4
+    central_angle = np.pi / 2
+
+    # Check for contact in each direction
+    for idx, dir in directions.items():
+        for position in positions:
+            x2, y2 = position
+            if withinSight(x1, y1, dir, x2, y2, sight_radius=sight_radius, central_angle=central_angle):
+                contact[idx] = 1
+
+    return contact

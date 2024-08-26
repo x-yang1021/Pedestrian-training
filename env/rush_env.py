@@ -7,14 +7,18 @@ import pandas as pd
 from imitation.data import serialize
 import gym
 from gym import spaces
+from utils import withinSight, getPositions,getDensity, getFront, getContact
 
+width = 13
 class Rush(gym.Env):
-    def __init__(self, datasets, trajectories, episode_length = 9):
+    def __init__(self, datasets_paths, trajectories_path, episode_length = 9):
         # normalization
+        self.datasets = self.load_datasets(datasets_paths)
+        self.trajectories = self.load_trajectories(trajectories_path)
+        self.episode_length = episode_length
+
         self.max_speed = 6
         self.max_direction = np.pi
-        action_high = np.array([self.max_speed,self.max_direction])
-        self.action_space = spaces.Box(low=-action_high, high=action_high, dtype=np.float32)
         movement_high = np.array([9,self.max_direction])
         movement_low = np.array([0,-self.max_direction])
         self.max_distance = 10
@@ -32,11 +36,29 @@ class Rush(gym.Env):
                 'contact':spaces.MultiBinary(4)
             }
         )
-        self.datasets = datasets
-        self.trajectories = trajectories
-        self.episode_length = episode_length
+        action_high = np.array([self.max_speed, self.max_direction])
+        self.action_space = spaces.Box(low=-action_high, high=action_high, dtype=np.float32)
 
-    # def step(self, action):
+    def load_datasets(self, datasets_paths):
+        datasets = []
+        for dataset_path in datasets_paths:
+            dataset = pd.read_csv(dataset_path)
+            datasets.append(dataset)
+        return datasets
+
+    def load_trajectories(self, trajectories_path):
+        trajectories = serialize.load(trajectories_path)
+        return trajectories
+
+    def step(self, action):
+        self.change_speed, self.change_direction = action
+        self.state = self.__getstate__()
+        out_of_bounds = self.state['distance'] > self.max_distance
+        done = self.step >= self.episode_length or out_of_bounds
+        reward = 0
+        self.step += 1
+        return self.state, reward, done, self.info
+
 
     def reset(self, seed=None, options=None):
         # Call the parent class's reset method to initialize self.np_random
@@ -46,9 +68,31 @@ class Rush(gym.Env):
         self.current_trajectory = self.np_random.choice(self.trajectories)
         self.state = self.current_trajectory.obs[0]
         self.info = self.current_trajectory.infos[0]
-        self.time_step = 0
+        self.dataset = self.datasets[self.info[0]-1] #identify to which experiment it belongs
+        self.ID = self.info[1]
+        self.time_step = self.info[2]
+        self.step = 1
 
         return self.state, self.info
+
+    def __getstate__(self):
+        speed = self.state['self movement'][0] + self.change_speed
+        direction = self.state['self movement'][1] + self.change_direction
+        x1 = self.state['position'][0] + speed*np.cos(direction)*0.5 #half second
+        y1 = self.state['position'][1] + speed*np.sin(direction)*0.5 #half second
+        dist = np.sqrt((x1)**2 + (y1)**2)
+        positions = getPositions(self.dataset, self.time_step+self.step, self.ID, width=width)
+        front = getFront(self.dataset, self.time_step+self.step, width, positions, x1, y1, direction)
+        density = getDensity(positions, x1, y1, direction)
+        contact = getContact(self.dataset, self.time_step+self.step, width, x1, y1)
+        return {'position':np.array([x1,y1]),
+                'destination':self.state['destination'],
+                'distance':np.array([dist]),
+                'self movement':np.array([speed,direction]),
+                'front movement':np.array(front),
+                'density':np.array([density]),
+                'contact':np.array(contact)}
+
 
     # def close(self):
 

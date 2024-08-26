@@ -36,8 +36,6 @@ trajectory = 0
 traj_num = 1
 lengths = []
 length = 0
-dists = []
-dist = 0
 for j in range(df_cluster.shape[0]):
     if ID not in Cluster_IDs:
         Cluster_IDs.append(ID)
@@ -45,13 +43,10 @@ for j in range(df_cluster.shape[0]):
         Cluster_Trajectories_num[ID] = traj_num
         if length:
             lengths.append(length)
-        if dist:
-            dists.append(dist)
         ID = df_cluster.iloc[j]['ID']
         Cluster_Trajectories[ID] = []
         traj_num = 0
         length = 0
-        dist = 0
         trajectory = 0
     if df_cluster.iloc[j]['Trajectory'] != trajectory:
         trajectory = df_cluster.iloc[j]['Trajectory']
@@ -60,11 +55,7 @@ for j in range(df_cluster.shape[0]):
         if length:
             lengths.append(length)
             length = 0
-        if dist:
-            dists.append(dist)
-            dist = 0
     length += 1
-    dist += df_cluster.iloc[j]['Speed'] * 0.5
 Cluster_Trajectories_num[ID] = traj_num
 Cluster_Trajectories[ID].append(trajectory)
 
@@ -131,7 +122,7 @@ for dataset in dfs:
                     act = [data_traj.iloc[i][mapping['Speed Change']],
                            data_traj.iloc[i][mapping['Direction Change']]]
                     acts.append(act)
-                    infos.append([dataset.iloc[0][0], ID, timestep])
+                    infos.append([dataset.iloc[0][0], ID, timestep]) #experiment, ID, timestep
             trajectory = types.Trajectory(obs=np.array(obs), acts=np.array(acts), infos=np.array(infos), terminal=True)
             trajectories.append(trajectory)
             obs = []
