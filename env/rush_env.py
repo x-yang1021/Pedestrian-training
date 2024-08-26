@@ -8,8 +8,8 @@ from imitation.data import serialize
 import gym
 from gym import spaces
 
-class Xinjiekou(gym.Env):
-    def __init__(self):
+class Rush(gym.Env):
+    def __init__(self, datasets, trajectories, episode_length = 9):
         # normalization
         self.max_speed = 6
         self.max_direction = np.pi
@@ -32,12 +32,25 @@ class Xinjiekou(gym.Env):
                 'contact':spaces.MultiBinary(4)
             }
         )
-        # self.dataset = dataset2
-        # self.data = trajectories
+        self.datasets = datasets
+        self.trajectories = trajectories
+        self.episode_length = episode_length
 
     # def step(self, action):
 
-    # def reset(self):
+    def reset(self, seed=None, options=None):
+        # Call the parent class's reset method to initialize self.np_random
+        super().reset(seed=seed)
+
+        # Randomly choose a trajectory
+        self.current_trajectory = self.np_random.choice(self.trajectories)
+        self.state = self.current_trajectory.obs[0]
+        self.info = self.current_trajectory.infos[0]
+        self.time_step = 0
+
+        return self.state, self.info
+
+    # def close(self):
 
 
 
