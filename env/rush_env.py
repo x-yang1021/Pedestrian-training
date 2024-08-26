@@ -5,9 +5,9 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from imitation.data import serialize
-import gym
-from gym import spaces
-from utils import withinSight, getPositions,getDensity, getFront, getContact
+import gymnasium as gym
+from gymnasium import spaces
+from env.utils import withinSight, getPositions,getDensity, getFront, getContact
 
 width = 13
 class Rush(gym.Env):
@@ -19,12 +19,12 @@ class Rush(gym.Env):
 
         self.max_speed = 6
         self.max_direction = np.pi
-        movement_high = np.array([9,self.max_direction])
-        movement_low = np.array([0,-self.max_direction])
+        movement_high = np.array([9,self.max_direction], dtype=np.float32)
+        movement_low = np.array([0,-self.max_direction], dtype=np.float32)
         self.max_distance = 10
         self.attendant = 25
-        position_high = np.array([self.max_distance,0])
-        position_low = np.array([-self.max_distance,-self.max_distance])
+        position_high = np.array([self.max_distance,0], dtype=np.float32)
+        position_low = np.array([-self.max_distance,-self.max_distance], dtype=np.float32)
         self.observation_space = spaces.Dict(
             {
                 "position":spaces.Box(low=position_low,high=position_high,dtype=np.float32),
@@ -36,7 +36,7 @@ class Rush(gym.Env):
                 'contact':spaces.MultiBinary(4)
             }
         )
-        action_high = np.array([self.max_speed, self.max_direction])
+        action_high = np.array([self.max_speed, self.max_direction], dtype=np.float32)
         self.action_space = spaces.Box(low=-action_high, high=action_high, dtype=np.float32)
 
     def load_datasets(self, datasets_paths):
@@ -68,7 +68,7 @@ class Rush(gym.Env):
         self.current_trajectory = self.np_random.choice(self.trajectories)
         self.state = self.current_trajectory.obs[0]
         self.info = self.current_trajectory.infos[0]
-        self.dataset = self.datasets[self.info[0]-1] #identify to which experiment it belongs
+        self.dataset = self.datasets[int(self.info[0]-1)] #identify to which experiment it belongs
         self.ID = self.info[1]
         self.time_step = self.info[2]
         self.step = 1

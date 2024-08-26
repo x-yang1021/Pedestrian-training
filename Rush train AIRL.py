@@ -12,6 +12,7 @@ from imitation.policies.serialize import load_policy
 from imitation.rewards.reward_nets import BasicShapedRewardNet
 from imitation.util.networks import RunningNorm
 from imitation.util.util import make_vec_env
+from env import register_env
 
 SEED = 42
 
