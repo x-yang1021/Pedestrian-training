@@ -13,6 +13,8 @@ from imitation.rewards.reward_nets import BasicShapedRewardNet
 from imitation.util.networks import RunningNorm
 from imitation.util.util import make_vec_env
 from env import register_env
+from env import rush_env
+
 
 SEED = 42
 
@@ -21,13 +23,41 @@ env = make_vec_env(
     rng=np.random.default_rng(SEED),
     n_envs=1,
     parallel=False,
-    log_dir='./log'
+    log_dir='./log')
+
+# env = gym.make("Rush-v0")
+
+
+rollouts = rush_env.Rush.load_trajectories('./env/Rush_Data/Training Trajectories')
+
+learner = PPO(
+    env=env,
+    policy=MlpPolicy,
+    batch_size=64,
+    ent_coef=0.0,
+    learning_rate=0.0005,
+    gamma=0.95,
+    clip_range=0.1,
+    vf_coef=0.1,
+    n_epochs=5,
+    seed=SEED,
+)
+reward_net = BasicShapedRewardNet(
+    observation_space=env.observation_space,
+    action_space=env.action_space,
+    normalize_input_layer=RunningNorm,
 )
 
-for episode in range(1):  # Test one episode
-    obs = env.reset()
-    done = False
-    while not done:
-        action = env.action_space.sample()  # Sample a random action
-        obs, reward, done, info = env.step(action)
-        print(f"Step: Observation: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
+print(env.observation_space, env.action_space.shape)
+
+airl_trainer = AIRL(
+    demonstrations=rollouts,
+    demo_batch_size=2048,
+    gen_replay_buffer_capacity=512,
+    n_disc_updates_per_round=16,
+    venv=env,
+    gen_algo=learner,
+    reward_net=reward_net,
+)
+
+airl_trainer.train(20000)

@@ -96,33 +96,39 @@ for dataset in dfs:
                 continue
             data_traj = data_col.iloc[timestep:timestep+traj_length]
             for i in range(data_traj.shape[0]):
-                ob = {}
                 x1 = data_traj.iloc[i][mapping['Positionx']]
                 y1 = data_traj.iloc[i][mapping['Positiony']]
-                ob['position'] = np.array([x1,y1])
                 dest_x = data_traj.iloc[traj_length-1][mapping['Positionx']]
                 dest_y = data_traj.iloc[traj_length-1][mapping['Positiony']]
-                ob['destination'] = np.array([dest_x,dest_y])
-                ob['distance'] = np.array([data_traj.iloc[i][mapping['Distance']]])
                 speed = data_traj.iloc[i][mapping['Speed']]
                 direction = data_traj.iloc[i][mapping['Direction']]
-                ob['self movement'] = np.array([speed,direction])
                 positions = getPositions(dataset, timestep+i, ID, width)
                 front = getFront(dataset,timestep+i,width,positions,x1,y1,direction)
                 density = getDensity(positions,x1,y1,direction)
-                ob['front movement'] = np.array(front)
-                ob['density'] = np.array([density])
                 up = data_traj.iloc[i][mapping['Up']]
                 right = data_traj.iloc[i][mapping['Right']]
                 down = data_traj.iloc[i][mapping['Down']]
                 left = data_traj.iloc[i][mapping['Left']]
-                ob['contact'] = np.array([up,right,down,left])
+                ob = {
+                    'position': np.array([x1,y1]),
+                    'destination': np.array([dest_x,dest_y]),
+                    'distance': np.array([data_traj.iloc[i][mapping['Distance']]]),
+                    'self movement': np.array([speed,direction]),
+                    'front movement': np.array(front),
+                    'density': np.array([density]),
+                    'contact': np.array([up,right,down,left])
+                }
                 obs.append(ob)
                 if i != traj_length-1:
                     act = [data_traj.iloc[i][mapping['Speed Change']],
                            data_traj.iloc[i][mapping['Direction Change']]]
                     acts.append(act)
-                    infos.append([dataset.iloc[0][0], ID, timestep]) #experiment, ID, timestep
+                    info = {
+                        'experiment': dataset.iloc[0][0],
+                        'ID': ID,
+                        'timestep': timestep
+                    }
+                    infos.append(info)
             trajectory = types.Trajectory(obs=np.array(obs), acts=np.array(acts), infos=np.array(infos), terminal=True)
             trajectories.append(trajectory)
             obs = []
@@ -131,6 +137,7 @@ for dataset in dfs:
             timestep += traj_length-1
 
 train_traj, test_traj = train_test_split(trajectories, test_size=0.2, random_state=42)
+
 
 serialize.save('./env/Rush_Data/Training Trajectories', train_traj)
 serialize.save('./env/Rush_Data/Testing Trajectories', test_traj)

@@ -46,7 +46,7 @@ def getDensity(positions,x1,y1,direction):
         x2, y2 = position
         if withinSight(x1, y1, direction, x2, y2):
             density += 1
-    return density
+    return int(density)
 
 def getFront(dataset, timestep, width, positions,x1,y1,direction):
     min_distance = float('inf')
@@ -72,7 +72,7 @@ def getFront(dataset, timestep, width, positions,x1,y1,direction):
                 front_action.append(data_col.iloc[mapping['Direction']])
         return front_action
 
-def getContact(dataset, timestep, width, positions, x1, y1, direction):
+def getContact(positions, x1, y1, direction):
     contact = [0, 0, 0, 0]  # up, right, down, left
 
     # Define directions
