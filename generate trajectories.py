@@ -98,26 +98,31 @@ for dataset in dfs:
             for i in range(data_traj.shape[0]):
                 x1 = data_traj.iloc[i][mapping['Positionx']]
                 y1 = data_traj.iloc[i][mapping['Positiony']]
-                dest_x = data_traj.iloc[traj_length-1][mapping['Positionx']]
-                dest_y = data_traj.iloc[traj_length-1][mapping['Positiony']]
+                dest_x = data_traj.iloc[traj_length - 1][mapping['Positionx']]
+                dest_y = data_traj.iloc[traj_length - 1][mapping['Positiony']]
                 speed = data_traj.iloc[i][mapping['Speed']]
                 direction = data_traj.iloc[i][mapping['Direction']]
-                positions = getPositions(dataset, timestep+i, ID, width)
-                front = getFront(dataset,timestep+i,width,positions,x1,y1,direction)
-                density = getDensity(positions,x1,y1,direction)
+
+                # Get additional data
+                positions = getPositions(dataset, timestep + i, ID, width)
+                front = getFront(dataset, timestep + i, width, positions, x1, y1, direction)
+                density = getDensity(positions, x1, y1, direction)
                 up = data_traj.iloc[i][mapping['Up']]
                 right = data_traj.iloc[i][mapping['Right']]
                 down = data_traj.iloc[i][mapping['Down']]
                 left = data_traj.iloc[i][mapping['Left']]
-                ob = {
-                    'position': np.array([x1,y1]),
-                    'destination': np.array([dest_x,dest_y]),
-                    'distance': np.array([data_traj.iloc[i][mapping['Distance']]]),
-                    'self movement': np.array([speed,direction]),
-                    'front movement': np.array(front),
-                    'density': np.array([density]),
-                    'contact': np.array([up,right,down,left])
-                }
+
+                # Flattened observation
+                ob = np.concatenate([
+                    np.array([x1, y1]),  # position
+                    np.array([dest_x, dest_y]),  # destination
+                    np.array([data_traj.iloc[i][mapping['Distance']]]),  # distance
+                    np.array([speed, direction]),  # self movement
+                    np.array(front),  # front movement
+                    np.array([density]),  # density
+                    np.array([up, right, down, left])  # contact
+                ])
+
                 obs.append(ob)
                 if i != traj_length-1:
                     act = [data_traj.iloc[i][mapping['Speed Change']],

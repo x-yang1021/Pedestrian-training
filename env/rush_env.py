@@ -11,42 +11,65 @@ from env.utils import withinSight, getPositions,getDensity, getFront, getContact
 
 width = 13
 class Rush(gym.Env):
-    def __init__(self, datasets_path1,datasets_path2,datasets_path3, trajectories_path, episode_length = 9):
-        # normalization
-        datasets_paths = [datasets_path1,datasets_path2,datasets_path3]
+    def __init__(self, datasets_path1, datasets_path2, datasets_path3, trajectories_path, episode_length=9):
+        # Load datasets and trajectories
+        datasets_paths = [datasets_path1, datasets_path2, datasets_path3]
         self.datasets = Rush.load_datasets(datasets_paths)
         self.trajectories = Rush.load_trajectories(trajectories_path)
         self.episode_length = episode_length
 
+        # Define normalization parameters
         self.max_speed = 9
         self.max_direction = np.pi
         self.max_distance = 10
-        movement_high = np.array([self.max_speed,self.max_direction], dtype=np.float32)
-        movement_low = np.array([0,-self.max_direction], dtype=np.float32)
-        self.attendant = 25
-        position_high = np.array([self.max_distance,0], dtype=np.float32)
-        position_low = np.array([-self.max_distance,-self.max_distance], dtype=np.float32)
-        self.observation_space = spaces.Dict(
-            {
-                "contact": spaces.MultiBinary(4),
-                "density": spaces.Discrete(self.attendant),
-                "destination": spaces.Box(low=position_low, high=position_high, dtype=np.float32),
-                "distance": spaces.Box(low=0, high=self.max_distance, dtype=np.float32),
-                "front movement": spaces.Box(low=movement_low, high=movement_high, dtype=np.float32),
-                "position": spaces.Box(low=position_low, high=position_high, dtype=np.float32),
-                "self movement": spaces.Box(low=movement_low, high=movement_high, dtype=np.float32)
-            }
-        )
+
+        # Define action space
         self.max_speed_change = 6
         self.max_direction_change = np.pi
         action_high = np.array([self.max_speed_change, self.max_direction_change], dtype=np.float32)
         self.action_space = spaces.Box(low=-action_high, high=action_high, dtype=np.float32)
 
+        # Define observation space components
+        contact_shape = (4,)  # MultiBinary space with 4 elements
+        density_shape = (1,)  # Discrete space as single value
+        destination_shape = (2,)  # Position (x, y)
+        distance_shape = (1,)  # Single value distance
+        front_movement_shape = (2,)  # Speed and direction
+        position_shape = (2,)  # Position (x, y)
+        self_movement_shape = (2,)  # Speed and direction
+
+        # Flattened state space shapes in the new order
+        self.observation_space = spaces.Box(
+            low=np.concatenate([
+                np.full(position_shape, -self.max_distance, dtype=np.float32),
+                np.full(destination_shape, -self.max_distance, dtype=np.float32),
+                np.zeros(distance_shape, dtype=np.float32),
+                np.full(self_movement_shape, -self.max_speed, dtype=np.float32),
+                np.full(front_movement_shape, -self.max_speed, dtype=np.float32),
+                np.zeros(density_shape, dtype=np.float32),
+                np.zeros(contact_shape, dtype=np.float32)
+            ]),
+            high=np.concatenate([
+                np.full(position_shape, self.max_distance, dtype=np.float32),
+                np.full(destination_shape, self.max_distance, dtype=np.float32),
+                np.full(distance_shape, self.max_distance, dtype=np.float32),
+                np.full(self_movement_shape, self.max_speed, dtype=np.float32),
+                np.full(front_movement_shape, self.max_speed, dtype=np.float32),
+                np.full(density_shape, self.attendant, dtype=np.float32),
+                np.ones(contact_shape, dtype=np.float32)
+            ]),
+            dtype=np.float32
+        )
+
     def step(self, actions):
         self.change_speed = actions[0]
         self.change_direction = actions[1]
         self.state = self.__getstate__()
-        out_of_bounds = self.state['distance'] > self.max_distance or self.state['position'][1] > 0
+        # Access the new position and distance
+        new_pos_x, new_pos_y = self.state[:2]
+        new_dist = self.state[4]
+        # Check if out of bounds
+        out_of_bounds = (new_dist > self.max_distance) or (new_pos_y > 0)
         done = self.train_step >= self.episode_length or out_of_bounds
         reward = 0
         self.train_step += 1
@@ -59,17 +82,7 @@ class Rush(gym.Env):
 
         # Randomly choose a trajectory
         self.current_trajectory = self.np_random.choice(self.trajectories)
-        self.current_ob = self.current_trajectory.obs[0]
-        self.state ={
-            'contact': np.array(self.current_ob['contact']),
-            'density': np.array(self.current_ob['density']),
-            'destination': np.array(self.current_ob['destination']),
-            'distance': np.array(self.current_ob['distance']),
-            'front movement': np.array(self.current_ob['front movement']),
-            'position': np.array(self.current_ob['position']),
-            'self movement': np.array(self.current_ob['self movement'])
-
-        }
+        self.state = np.array(self.current_trajectory.obs[0])
         self.info = self.current_trajectory.infos[0]
         self.dataset = self.datasets[int(self.info['experiment']-1)] #identify to which experiment it belongs
         self.ID = self.info['ID']
@@ -79,24 +92,32 @@ class Rush(gym.Env):
         return self.state, self.info
 
     def __getstate__(self):
-        speed = self.state['self movement'][0] + self.change_speed
-        direction = self.state['self movement'][1] + self.change_direction
-        x1 = self.state['position'][0] + speed*np.cos(direction)*0.5 #half second
-        y1 = self.state['position'][1] + speed*np.sin(direction)*0.5 #half second
-        dist = np.sqrt((x1)**2 + (y1)**2)
-        positions = getPositions(self.dataset, self.time_step+self.train_step, self.ID, width=width)
-        front = getFront(self.dataset, self.time_step+self.train_step, width, positions, x1, y1, direction)
+        # Retrieve the current state values
+        pos = self.state[:2]  # position (x, y)
+        self_movement = self.state[5:7]  # self movement (speed, direction)
+        # Calculate new state values based on actions
+        speed = self_movement[0] + self.change_speed
+        direction = self_movement[1] + self.change_direction
+        x1 = pos[0] + speed * np.cos(direction) * 0.5  # Half second
+        y1 = pos[1] + speed * np.sin(direction) * 0.5  # Half second
+        dist = np.sqrt(x1 ** 2 + y1 ** 2)
+
+        # Update other state components
+        positions = getPositions(self.dataset, self.time_step + self.train_step, self.ID, width=width)
+        front = getFront(self.dataset, self.time_step + self.train_step, width, positions, x1, y1, direction)
         density = getDensity(positions, x1, y1, direction)
         contact = getContact(positions, x1, y1, direction)
-        return {
-            'contact': np.array(contact),
-            'density': np.array([density]),
-            'destination': self.state['destination'],
-            'distance': np.array([dist]),
-            'front movement': np.array(front),
-            'position': np.array([x1, y1]),
-            'self movement': np.array([speed, direction])
-        }
+
+        # Construct the flattened state array in the specified order
+        state_array = np.concatenate([
+            np.array([x1, y1]),  # position (2 values)
+            np.array(self.state[2:4]),  # destination (2 values)
+            np.array([dist]),  # distance (1 value)
+            np.array([speed, direction]),  # self movement (2 values)
+            np.array(front),  # front movement (3 values)
+            np.array([density]),  # density (1 value)
+            np.array(contact)  # contact (4 values)
+        ])
 
     @staticmethod
     def load_datasets(datasets_paths):
