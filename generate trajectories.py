@@ -79,7 +79,7 @@ for dataset in dfs:
             continue
         timestep = 0
         while timestep < dataset.shape[0] - traj_length:
-            if pd.isna(data_col.iloc[timestep][mapping['Speed']]):
+            if pd.isna(data_col.iloc[timestep][mapping['Direction']]):
                 timestep += 1
                 continue
             if data_col.iloc[timestep][mapping['Trajectory']] not in Cluster_Trajectories[ID]:

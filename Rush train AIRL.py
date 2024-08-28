@@ -15,7 +15,6 @@ from imitation.util.util import make_vec_env
 from env import register_env
 from env import rush_env
 
-
 SEED = 42
 
 env = make_vec_env(
@@ -47,8 +46,6 @@ reward_net = BasicShapedRewardNet(
     action_space=env.action_space,
     normalize_input_layer=RunningNorm,
 )
-
-print(env.observation_space, env.action_space.shape)
 
 airl_trainer = AIRL(
     demonstrations=rollouts,

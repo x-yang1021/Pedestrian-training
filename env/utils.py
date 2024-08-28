@@ -1,5 +1,5 @@
 import numpy as np
-
+import pandas as pd
 
 mapping = { 'ID':0,
            'Trajectory':1,
@@ -68,8 +68,8 @@ def getFront(dataset, timestep, width, positions,x1,y1,direction):
         for col in range(2, row.shape[0], width):
             data_col = row.iloc[col:col + width]
             if data_col.iloc[mapping['Positionx']] == front[0] and data_col.iloc[mapping['Positiony']] == front[1]:
-                front_action.append(data_col.iloc[mapping['Speed']])
-                front_action.append(data_col.iloc[mapping['Direction']])
+                front_action.append(data_col.iloc[mapping['Speed']] if pd.notna(data_col.iloc[mapping['Speed']]) else 0.0)
+                front_action.append(data_col.iloc[mapping['Direction']] if pd.notna(data_col.iloc[mapping['Direction']]) else 0.0)
         return front_action
 
 def getContact(positions, x1, y1, direction):

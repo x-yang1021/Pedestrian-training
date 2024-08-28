@@ -12,7 +12,7 @@ trajectories_path = './env/Rush_Data/Training Trajectories'
 
 # trajectories_path = './Rush_Data/Training Trajectories'
 # traj = Rush.load_trajectories(trajectories_path)
-# print(traj[0].obs[0]['contact'])
+# print(traj[0].obs)
 # exit()
 
 gym.register(

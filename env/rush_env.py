@@ -22,6 +22,7 @@ class Rush(gym.Env):
         self.max_speed = 9
         self.max_direction = np.pi
         self.max_distance = 10
+        self.attendant = 25
 
         # Define action space
         self.max_speed_change = 6
@@ -62,18 +63,20 @@ class Rush(gym.Env):
         )
 
     def step(self, actions):
+        # print('actions:', actions)
         self.change_speed = actions[0]
         self.change_direction = actions[1]
         self.state = self.__getstate__()
+        # print('state:', self.state)
         # Access the new position and distance
         new_pos_x, new_pos_y = self.state[:2]
         new_dist = self.state[4]
         # Check if out of bounds
-        out_of_bounds = (new_dist > self.max_distance) or (new_pos_y > 0)
-        done = self.train_step >= self.episode_length or out_of_bounds
+        # out_of_bounds = (new_dist > self.max_distance) or (new_pos_y > 0)
+        done = self.train_step >= self.episode_length
         reward = 0
         self.train_step += 1
-        return self.state, reward, done, self.info
+        return self.state, reward, done, False, self.info
 
 
     def reset(self, seed=None, options=None):
@@ -118,6 +121,8 @@ class Rush(gym.Env):
             np.array([density]),  # density (1 value)
             np.array(contact)  # contact (4 values)
         ])
+
+        return state_array
 
     @staticmethod
     def load_datasets(datasets_paths):
