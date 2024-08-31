@@ -33,6 +33,7 @@ class Rush(gym.Env):
         # Define observation space components
         contact_shape = (4,)  # MultiBinary space with 4 elements
         density_shape = (1,)  # Discrete space as single value
+        destination_shape = (2,)
         distance_shape = (1,)  # Single value distance
         front_movement_shape = (2,)  # Speed and direction
         position_shape = (2,)  # Position (x, y)
@@ -42,6 +43,7 @@ class Rush(gym.Env):
         self.observation_space = spaces.Box(
             low=np.concatenate([
                 np.full(position_shape, -self.max_distance, dtype=np.float32),
+                np.full(destination_shape, -self.max_distance, dtype=np.float32),
                 np.zeros(distance_shape, dtype=np.float32),
                 np.full(self_movement_shape, -self.max_speed, dtype=np.float32),
                 np.full(front_movement_shape, -self.max_speed, dtype=np.float32),
@@ -50,6 +52,7 @@ class Rush(gym.Env):
             ]),
             high=np.concatenate([
                 np.full(position_shape, self.max_distance, dtype=np.float32),
+                np.full(destination_shape, self.max_distance, dtype=np.float32),
                 np.full(distance_shape, self.max_distance, dtype=np.float32),
                 np.full(self_movement_shape, self.max_speed, dtype=np.float32),
                 np.full(front_movement_shape, self.max_speed, dtype=np.float32),
@@ -117,6 +120,7 @@ class Rush(gym.Env):
         # Construct the flattened state array in the specified order
         state_array = np.concatenate([
             np.array([x1, y1], dtype=np.float32),  # position (2 values)
+            np.array(self.state[2:4]),  # destination (2 values)
             np.array([dist]),  # distance (1 value)
             np.array([speed, direction], dtype=np.float32),  # self movement (2 values)
             np.array(front, dtype=np.float32),  # front movement (2 values)

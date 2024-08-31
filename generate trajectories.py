@@ -115,6 +115,7 @@ for dataset in dfs:
                 # Flattened observation
                 ob = np.concatenate([
                     np.array([x1, y1]),  # position
+                    np.array([dest_x, dest_y]),  # destination
                     np.array([data_traj.iloc[i][mapping['Distance']]]),  # distance
                     np.array([speed, direction]),  # self movement
                     np.array(front),  # front movement
