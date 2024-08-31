@@ -11,7 +11,7 @@ from env.utils import withinSight, getPositions,getDensity, getFront, getContact
 
 width = 13
 class Rush(gym.Env):
-    def __init__(self, datasets_path1, datasets_path2, datasets_path3, trajectories_path, episode_length=9):
+    def __init__(self, datasets_path1, datasets_path2, datasets_path3, trajectories_path, episode_length=10):
         # Load datasets and trajectories
         datasets_paths = [datasets_path1, datasets_path2, datasets_path3]
         self.datasets = Rush.load_datasets(datasets_paths)
@@ -33,7 +33,6 @@ class Rush(gym.Env):
         # Define observation space components
         contact_shape = (4,)  # MultiBinary space with 4 elements
         density_shape = (1,)  # Discrete space as single value
-        destination_shape = (2,)  # Position (x, y)
         distance_shape = (1,)  # Single value distance
         front_movement_shape = (2,)  # Speed and direction
         position_shape = (2,)  # Position (x, y)
@@ -43,7 +42,6 @@ class Rush(gym.Env):
         self.observation_space = spaces.Box(
             low=np.concatenate([
                 np.full(position_shape, -self.max_distance, dtype=np.float32),
-                np.full(destination_shape, -self.max_distance, dtype=np.float32),
                 np.zeros(distance_shape, dtype=np.float32),
                 np.full(self_movement_shape, -self.max_speed, dtype=np.float32),
                 np.full(front_movement_shape, -self.max_speed, dtype=np.float32),
@@ -52,7 +50,6 @@ class Rush(gym.Env):
             ]),
             high=np.concatenate([
                 np.full(position_shape, self.max_distance, dtype=np.float32),
-                np.full(destination_shape, self.max_distance, dtype=np.float32),
                 np.full(distance_shape, self.max_distance, dtype=np.float32),
                 np.full(self_movement_shape, self.max_speed, dtype=np.float32),
                 np.full(front_movement_shape, self.max_speed, dtype=np.float32),
@@ -67,15 +64,16 @@ class Rush(gym.Env):
         self.change_speed = actions[0]
         self.change_direction = actions[1]
         self.state = self.__getstate__()
-        # print('state:', self.state)
-        # Access the new position and distance
-        new_pos_x, new_pos_y = self.state[:2]
-        new_dist = self.state[4]
+        # if self.state.shape == (16,):
+        #     print('state:', self.state)
+        # # Access the new position and distance
+        # new_pos_x, new_pos_y = self.state[:2]
+        # new_dist = self.state[4]
         # Check if out of bounds
         # out_of_bounds = (new_dist > self.max_distance) or (new_pos_y > 0)
+        self.train_step += 1
         done = self.train_step >= self.episode_length
         reward = 0
-        self.train_step += 1
         return self.state, reward, done, False, self.info
 
 
@@ -101,6 +99,11 @@ class Rush(gym.Env):
         # Calculate new state values based on actions
         speed = self_movement[0] + self.change_speed
         direction = self_movement[1] + self.change_direction
+        # Normalize direction to [-pi, pi]
+        if direction > np.pi:
+            direction -= 2 * np.pi
+        elif direction < -np.pi:
+            direction += 2 * np.pi
         x1 = pos[0] + speed * np.cos(direction) * 0.5  # Half second
         y1 = pos[1] + speed * np.sin(direction) * 0.5  # Half second
         dist = np.sqrt(x1 ** 2 + y1 ** 2)
@@ -113,11 +116,10 @@ class Rush(gym.Env):
 
         # Construct the flattened state array in the specified order
         state_array = np.concatenate([
-            np.array([x1, y1]),  # position (2 values)
-            np.array(self.state[2:4]),  # destination (2 values)
+            np.array([x1, y1], dtype=np.float32),  # position (2 values)
             np.array([dist]),  # distance (1 value)
-            np.array([speed, direction]),  # self movement (2 values)
-            np.array(front),  # front movement (3 values)
+            np.array([speed, direction], dtype=np.float32),  # self movement (2 values)
+            np.array(front, dtype=np.float32),  # front movement (2 values)
             np.array([density]),  # density (1 value)
             np.array(contact)  # contact (4 values)
         ])

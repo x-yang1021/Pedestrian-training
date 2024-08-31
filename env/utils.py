@@ -70,6 +70,9 @@ def getFront(dataset, timestep, width, positions,x1,y1,direction):
             if data_col.iloc[mapping['Positionx']] == front[0] and data_col.iloc[mapping['Positiony']] == front[1]:
                 front_action.append(data_col.iloc[mapping['Speed']] if pd.notna(data_col.iloc[mapping['Speed']]) else 0.0)
                 front_action.append(data_col.iloc[mapping['Direction']] if pd.notna(data_col.iloc[mapping['Direction']]) else 0.0)
+        if len(front_action) > 2:
+            print('Error: More than one front action found', dataset, timestep, front)
+            return front_action[:2]
         return front_action
 
 def getContact(positions, x1, y1, direction):

@@ -21,7 +21,7 @@ mapping = { 'ID':0,
             'Direction':11,
             'Direction Change':12}
 width = len(mapping)
-traj_length = 9
+traj_length = 10
 distance_threshold = 9
 
 df = pd.read_csv('./Data/clustered.csv')
@@ -115,7 +115,6 @@ for dataset in dfs:
                 # Flattened observation
                 ob = np.concatenate([
                     np.array([x1, y1]),  # position
-                    np.array([dest_x, dest_y]),  # destination
                     np.array([data_traj.iloc[i][mapping['Distance']]]),  # distance
                     np.array([speed, direction]),  # self movement
                     np.array(front),  # front movement
