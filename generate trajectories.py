@@ -111,7 +111,10 @@ for dataset in dfs:
                 right = data_traj.iloc[i][mapping['Right']]
                 down = data_traj.iloc[i][mapping['Down']]
                 left = data_traj.iloc[i][mapping['Left']]
-
+                if left or right or down:
+                    rest = 1
+                else:
+                    rest = 0
                 # Flattened observation
                 ob = np.concatenate([
                     np.array([x1, y1]),  # position
@@ -120,7 +123,7 @@ for dataset in dfs:
                     np.array([speed, direction]),  # self movement
                     np.array(front),  # front movement
                     np.array([density]),  # density
-                    np.array([up, right, down, left])  # contact
+                    np.array([up, rest])  # contact
                 ])
 
                 obs.append(ob)
