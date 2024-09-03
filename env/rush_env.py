@@ -31,7 +31,7 @@ class Rush(gym.Env):
         self.action_space = spaces.Box(low=-action_high, high=action_high, dtype=np.float32)
 
         # Define observation space components
-        contact_shape = (4,)  # MultiBinary space with 4 elements
+        contact_shape = (2,)  # MultiBinary space with 4 elements
         density_shape = (1,)  # Discrete space as single value
         distance_shape = (1,)  # Single value distance
         front_movement_shape = (2,)  # Speed and direction
@@ -121,7 +121,7 @@ class Rush(gym.Env):
             np.array([speed, direction], dtype=np.float32),  # self movement (2 values)
             np.array(front, dtype=np.float32),  # front movement (2 values)
             np.array([density]),  # density (1 value)
-            np.array(contact)  # contact (4 values)
+            np.array(contact)  # contact (2 values)
         ])
 
         return state_array

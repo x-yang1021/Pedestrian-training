@@ -15,7 +15,7 @@ mapping = { 'ID':0,
             'Direction':11,
             'Direction Change':12}
 
-def withinSight(x1, y1, direction, x2, y2, sight_radius=3, central_angle=np.pi):
+def withinSight(x1, y1, direction, x2, y2, sight_radius=3.0, central_angle=np.pi):
     dx = x2 - x1
     dy = y2 - y1
     dist = np.sqrt(dx ** 2 + dy ** 2)
@@ -76,25 +76,31 @@ def getFront(dataset, timestep, width, positions,x1,y1,direction):
         return front_action
 
 def getContact(positions, x1, y1, direction):
-    contact = [0, 0, 0, 0]  # up, right, down, left
+    # Initialize contact: 0 for front, 1 for the rest
+    contact = [0, 0]  # [front, rest]
 
     # Define directions
-    directions = {
-        0: direction,  # straight
-        1: (direction + np.pi / 2) % (2 * np.pi),  # right
-        2: (direction + np.pi) % (2 * np.pi),  # down
-        3: (direction - np.pi / 2) % (2 * np.pi)  # left
-    }
+    front_direction = direction  # front (straight)
+    other_directions = [
+        (direction + np.pi / 2) % (2 * np.pi),  # right
+        (direction + np.pi) % (2 * np.pi),      # down (backward)
+        (direction - np.pi / 2) % (2 * np.pi)   # left
+    ]
 
     # Define sight radius and central angle
     sight_radius = 0.4
     central_angle = np.pi / 2
 
-    # Check for contact in each direction
-    for idx, dir in directions.items():
-        for position in positions:
-            x2, y2 = position
-            if withinSight(x1, y1, dir, x2, y2, sight_radius=sight_radius, central_angle=central_angle):
-                contact[idx] = 1
+    # Check for contact in the front direction
+    for x2, y2 in positions:
+        if withinSight(x1, y1, front_direction, x2, y2, sight_radius=sight_radius, central_angle=central_angle):
+            contact[0] = 1  # contact in the front
+            break  # No need to check further if contact is found
+
+    # Check for contact in the other three directions
+    for x2, y2 in positions:
+        if any(withinSight(x1, y1, dir, x2, y2, sight_radius=sight_radius, central_angle=central_angle) for dir in other_directions):
+            contact[1] = 1  # contact in the rest (right, down, left)
+            break  # No need to check further if contact is found
 
     return contact
