@@ -21,11 +21,14 @@ dataset3 = pd.read_csv('./Data/Experiment 3.csv')
 datasets = [dataset1, dataset2, dataset3]
 
 
+rng = np.random.default_rng(SEED)  # For newer versions of NumPy (recommended)
+
 avg_mses = []
 final_mses = []
 total_rewards = []
-for _ in range(400):
-    obs, info = env.reset()
+for _ in range(500):
+    new_seed = int(rng.integers(0, high=2**32 - 1))
+    obs, info = env.reset(seed=new_seed)
     dataset = datasets[int(info['experiment'] - 1)]
     ID = info['ID']
     time_step = info['timestep']
@@ -46,13 +49,16 @@ for _ in range(400):
     actual_traj = retrieveOriginalTrajectory(dataset=dataset,timestep=time_step, ID=ID)
     predict_traj = np.array(predict_traj)
     actual_traj = np.array(actual_traj)
-    # print('Predicted Trajectory:', predict_traj)
-    # print('Actual Trajectory:', actual_traj)
     avg_mse = np.mean((predict_traj - actual_traj) **2)
     final_mse = np.mean((predict_traj[-1] - actual_traj[-1]) **2)
-    avg_mses.append(avg_mse)
-    final_mses.append(final_mse)
-    total_rewards.append(total_reward)
-print('Average MSE:', np.mean(avg_mses))
-print('Final MSE:', np.mean(final_mses))
+    if final_mse>5:
+        print(ID, time_step)
+        print('Predicted Trajectory:', predict_traj)
+        print('Actual Trajectory:', actual_traj)
+    else:
+        avg_mses.append(avg_mse)
+        final_mses.append(final_mse)
+        total_rewards.append(total_reward)
+print('Average MSE:', 'Mean', np.mean(avg_mses), 'Min', np.min(avg_mses), 'Max', np.max(avg_mses), '25th', np.percentile(avg_mses, 25), '75th', np.percentile(avg_mses, 75))
+print('Final MSE:', 'Mean', np.mean(final_mses), 'Min', np.min(final_mses), 'Max', np.max(final_mses), '25th', np.percentile(final_mses, 25), '75th', np.percentile(final_mses, 75))
 print('Total Reward:', np.mean(total_rewards), total_rewards)
