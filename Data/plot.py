@@ -55,11 +55,12 @@ y = cleaned_data['Positiony']
 # 绘制轨迹点图
 plt.figure(figsize=(10, 8))
 plt.scatter(x, y, c='orange', s=1, alpha=0.5)
-plt.title('Raw Track Points')
+# plt.title('Raw Track Points')
 plt.xlabel('Positionx')
 plt.ylabel('Positiony')
+plt.savefig('Raw Track Points.png')
 plt.show()
-
+exit()
 # 绘制密度表面图
 plt.figure(figsize=(10, 8))
 sns.kdeplot(x=x, y=y, cmap='Blues', fill=True, bw_adjust=0.5)
