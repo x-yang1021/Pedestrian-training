@@ -11,8 +11,8 @@ SEED = 1
 setup_env(mode='eval', eval_trajectories_path='./env/Rush_Data/Testing Trajectories')
 env = gym.make("Rush-v0")
 
-policy = PPO.load('./model/Rush Policy.zip', env=env)
-reward_net = torch.load('./model/Rush Reward.pth')
+policy = PPO.load('./model/success/Rush Policy.zip', env=env)
+reward_net = torch.load('./model/success/Rush Reward.pth')
 reward_net.eval()
 
 dataset1 = pd.read_csv('./Data/Experiment 1.csv')
@@ -51,10 +51,11 @@ for _ in range(500):
     actual_traj = np.array(actual_traj)
     avg_mse = np.sqrt(np.mean((predict_traj - actual_traj) **2))
     final_mse = np.sqrt(np.mean((predict_traj[-1] - actual_traj[-1]) **2))
-    if final_mse>5:
+    if final_mse>4.5:
         print(ID, time_step)
         print('Predicted Trajectory:', predict_traj)
         print('Actual Trajectory:', actual_traj)
+    # else:
     avg_mses.append(avg_mse)
     final_mses.append(final_mse)
     total_rewards.append(total_reward)
