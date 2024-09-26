@@ -26,7 +26,7 @@ rng = np.random.default_rng(SEED)  # For newer versions of NumPy (recommended)
 avg_mses = []
 final_mses = []
 total_rewards = []
-for _ in range(500):
+for _ in range(250):
     new_seed = int(rng.integers(0, high=2**32 - 1))
     obs, info = env.reset(seed=new_seed)
     dataset = datasets[int(info['experiment'] - 1)]
@@ -43,9 +43,9 @@ for _ in range(500):
         action = torch.tensor(action, dtype=torch.float32).unsqueeze(0)
         next_state = torch.tensor([]).unsqueeze(0)  # Empty tensor or a dummy tensor
         done_tensor = torch.tensor([]).unsqueeze(0)  # Dummy tensor for 'done', assuming done is a single scalar
-        with torch.no_grad():
-            base_reward = reward_net._base(state, action, next_state, done_tensor)
-        total_reward += base_reward.item()
+        # with torch.no_grad():
+        #     base_reward = reward_net._base(state, action, next_state, done_tensor)
+        # total_reward += base_reward.item()
     actual_traj = retrieveOriginalTrajectory(dataset=dataset,timestep=time_step, ID=ID)
     predict_traj = np.array(predict_traj)
     actual_traj = np.array(actual_traj)
@@ -58,7 +58,7 @@ for _ in range(500):
     # else:
     avg_mses.append(avg_mse)
     final_mses.append(final_mse)
-    total_rewards.append(total_reward)
+    # total_rewards.append(total_reward)
 print('Average MSE:', 'Mean', np.mean(avg_mses), 'Min', np.min(avg_mses), 'Max', np.max(avg_mses), '25th', np.percentile(avg_mses, 25), '75th', np.percentile(avg_mses, 75))
 print('Final MSE:', 'Mean', np.mean(final_mses), 'Min', np.min(final_mses), 'Max', np.max(final_mses), '25th', np.percentile(final_mses, 25), '75th', np.percentile(final_mses, 75))
-print('Total Reward:', np.mean(total_rewards), total_rewards)
+# print('Total Reward:', np.mean(total_rewards), total_rewards)
