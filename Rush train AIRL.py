@@ -54,7 +54,7 @@ airl_trainer = AIRL(
     reward_net=reward_net,
 )
 
-airl_trainer.train(700000)
+airl_trainer.train(800000)
 
 
 # Save the trained model
