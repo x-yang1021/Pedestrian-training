@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 
-cluster = 2
+cluster = 1
 mapping = { 'ID':0,
            'Trajectory':1,
            'Positionx':2,
@@ -22,7 +22,7 @@ mapping = { 'ID':0,
             'Direction Change':12}
 width = len(mapping)
 traj_length = 10
-distance_threshold = 9
+distance_threshold = 2.58
 
 df = pd.read_csv('./Data/clustered.csv')
 

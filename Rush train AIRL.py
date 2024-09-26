@@ -54,9 +54,9 @@ airl_trainer = AIRL(
     reward_net=reward_net,
 )
 
-airl_trainer.train(700000)
+airl_trainer.train(800000)
 
-
+# 0.41 0.55 0.58 0.80
 # Save the trained model
 learner.save('./model/Rush Policy')
 torch.save(reward_net, './model/Rush Reward.pth')
