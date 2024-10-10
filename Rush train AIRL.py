@@ -34,7 +34,7 @@ learner = PPO(
     learning_rate=0.0005,
     gamma=0.95,
     clip_range=0.1,
-    vf_coef=0.5,
+    vf_coef=0.7,
     n_epochs=25,
     seed=SEED,
 )
@@ -54,7 +54,7 @@ airl_trainer = AIRL(
     reward_net=reward_net,
 )
 
-airl_trainer.train(800000)
+airl_trainer.train(1000000)
 
 # 0.41 0.55 0.58 0.80
 # Save the trained model

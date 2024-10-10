@@ -15,7 +15,7 @@ mapping = { 'ID':0,
             'Direction':11,
             'Direction Change':12}
 
-def withinSight(x1, y1, direction, x2, y2, sight_radius=3.0, central_angle=np.pi):
+def withinSight(x1, y1, direction, x2, y2, sight_radius=4.0, central_angle=np.pi):
     dx = x2 - x1
     dy = y2 - y1
     dist = np.sqrt(dx ** 2 + dy ** 2)
