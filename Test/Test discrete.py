@@ -40,6 +40,7 @@ rollouts = rollout.rollout(
 )
 
 model = torch.load('Reward/experiment-cartpole.pt')
+model = model._base
 model.eval()
 
 # print('obs', rollouts[0].obs, 'acts', rollouts[0].acts,
@@ -78,6 +79,7 @@ ob_baseline = ob_baseline.repeat(tensor_dim,1)
 act_baseline1 = np.average(acts[0])
 act_baseline2 = np.average(acts[1])
 act_baseline = torch.tensor([act_baseline1,act_baseline2]).float()
+act_baseline = torch.tensor([0,0]).float()
 act_baseline = act_baseline.repeat(tensor_dim,1)
 
 next_baseline = torch.tensor([np.average(next_obs[:,i]) for i in range(next_obs.shape[1])])
@@ -100,7 +102,6 @@ X_test = obs, acts, next_obs, dones = RewardNet.preprocess(model,
 )
 
 
-
 fa = FeatureAblation(model)
 fp = FeaturePermutation(model)
 sv = ShapleyValueSampling(model)
@@ -118,14 +119,13 @@ ks_attr_test = ks.attribute(X_test)
 
 
 #
-x_axis_data = np.arange(10)
+x_axis_data = np.arange(6)
 
 # x_axis = np.arange(1,501)
 # plt.plot(x_axis,fa_attr_test[0][:,3])
 # plt.show()
 
-x_axis_data_labels = ['Position', 'Velocity','Angle', 'Angular','Left', 'Right',
-                      'Next Position', 'Next Velocity','Next Angle', 'Next Angular']
+x_axis_data_labels = ['Position', 'Velocity','Angle', 'Angular','Left', 'Right']
 
 
 
@@ -158,13 +158,13 @@ plt.rc('axes', titlesize=FONT_SIZE)       # fontsize of the axes title
 plt.rc('axes', labelsize=FONT_SIZE)       # fontsize of the x and y labels
 plt.rc('legend', fontsize=FONT_SIZE - 4)  # fontsize of the legend
 
-ax.bar(x_axis_data, fa_attr_test_norm_sum, width, align='center', alpha=0.8, color='#eb5e7c')
+ax.bar(x_axis_data, fa_attr_test_norm_sum[:6], width, align='center', alpha=0.8, color='#eb5e7c')
 # ax.bar(x_axis_data + width, fp_attr_test_norm_sum, width, align='center', alpha=0.7, color='#A90000')
 # ax.bar(x_axis_data + 2 * width, dl_attr_test_norm_sum, width, align='center', alpha=0.6, color='#34b8e0')
 # ax.bar(x_axis_data + 3 * width, fp_attr_test_norm_sum, width, align='center',  alpha=0.8, color='#4260f5')
-ax.bar(x_axis_data +  width, sv_attr_test_norm_sum, width, align='center', alpha=1.0, color='#49ba81')
+ax.bar(x_axis_data +  width, sv_attr_test_norm_sum[:6], width, align='center', alpha=1.0, color='#49ba81')
 # ax.bar(x_axis_data + 3 * width, y_axis_lin_weight, width, align='center', alpha=1.0, color='grey')
-ax.bar(x_axis_data + 2 * width, ks_attr_test_norm_sum, width, align='center', alpha=1.0, color='grey')
+ax.bar(x_axis_data + 2 * width, ks_attr_test_norm_sum[:6], width, align='center', alpha=1.0, color='grey')
 ax.autoscale_view()
 plt.tight_layout()
 
@@ -172,8 +172,6 @@ ax.set_xticks(x_axis_data+0.2)
 ax.set_xticklabels(x_axis_data_labels, fontsize="18")
 ax.tick_params(axis='y', labelsize=FONT_SIZE)
 
-plt.legend(legends, loc="upper left", fontsize="22")
+plt.legend(legends, loc="upper center", fontsize="22")
 plt.savefig('Input attribution-Cartpole.png')
 plt.show()
-
-
