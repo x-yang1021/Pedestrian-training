@@ -51,20 +51,25 @@ model.eval()
 
 # X_test = RewardNet.preprocess(model, state=rollouts[0].obs[:-1], action=rollouts[0].acts,
 #                      next_state=rollouts[1].obs[:-1], done=np.array([1]))
-# obs = []
-# acts = []
-# next_obs = []
-# dones = []
-# for i in range(len(rollouts)-1):
-#     obs.append(rollouts[i]['obs'])
-#     acts.append(rollouts[i]['acts'])
-#     next_obs.append(rollouts[i+1]['obs'])
-#     dones.append(rollouts[i]['dones'])
+obs = []
+acts = []
+next_obs = []
+dones = []
+for i in range(len(rollouts)):
+    obs.append(rollouts[i].obs[:-1])
+    acts.append(rollouts[i].acts)
+    next_obs.append(rollouts[i].obs[1:])
+    dones.append(np.zeros(len(obs)))
 
-obs = np.array(rollouts[0].obs[:-1])
-acts = np.array(rollouts[0].acts)
-next_obs = np.array(rollouts[0].obs[1:])
-dones = np.zeros(len(obs))
+obs = np.concatenate(obs)
+acts = np.concatenate(acts)
+next_obs = np.concatenate(next_obs)
+dones = np.concatenate(dones)
+
+# obs = np.array(rollouts[0].obs[:-1])
+# acts = np.array(rollouts[0].acts)
+# next_obs = np.array(rollouts[0].obs[1:])
+# dones = np.zeros(len(obs))
 
 tensor_dim = len(obs)
 
