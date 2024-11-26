@@ -98,8 +98,6 @@ for dataset in dfs:
             for i in range(data_traj.shape[0]):
                 x1 = data_traj.iloc[i][mapping['Positionx']]
                 y1 = data_traj.iloc[i][mapping['Positiony']]
-                dest_x = data_traj.iloc[traj_length - 1][mapping['Positionx']]
-                dest_y = data_traj.iloc[traj_length - 1][mapping['Positiony']]
                 speed = data_traj.iloc[i][mapping['Speed']]
                 direction = data_traj.iloc[i][mapping['Direction']]
 
@@ -118,7 +116,6 @@ for dataset in dfs:
                 # Flattened observation
                 ob = np.concatenate([
                     np.array([x1, y1]),  # position
-                    np.array([dest_x, dest_y]),  # destination
                     np.array([data_traj.iloc[i][mapping['Distance']]]),  # distance
                     np.array([speed, direction]),  # self movement
                     np.array(front),  # front movement
