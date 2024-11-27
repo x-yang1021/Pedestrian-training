@@ -81,7 +81,7 @@ df_test['Direction Change'] = 2 * (df_clean['Direction Change'] - df_clean['Dire
 # signal = df_clean['Distance'].values
 signal = df_test[['Speed Change','Direction Change']].values
 models = ["l2",'l1','linear','clinear','rank'] # Change point detection model
-# models=['l2']
+models=['l2']
 for model in models:
     algo = rpt.Window(model=model).fit(signal)
     for i in range(1,2):

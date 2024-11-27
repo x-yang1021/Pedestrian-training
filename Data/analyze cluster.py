@@ -22,6 +22,13 @@ Trajectories[ID].append(trajectory)
 
 n_cluster = df['Cluster'].max()
 
+# df_1 = df[df['Cluster']==1]
+# df_2 = df[df['Cluster']==2]
+# tt_stat, p_value = stats.mannwhitneyu(df_1['Speed Change'].to_numpy(),df_2['Speed Change'].to_numpy())
+# print(p_value, 'Speed Change')
+# tt_stat, p_value = stats.mannwhitneyu(df_1['Direction Change'].to_numpy(),df_2['Direction Change'].to_numpy())
+# print(p_value, 'Direction Change')
+
 for cluster in range(1, n_cluster+1):
     Cluster_IDs = []
     Cluster_Trajectories_num = {}
