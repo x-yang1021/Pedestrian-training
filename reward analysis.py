@@ -215,5 +215,5 @@ ax.tick_params(axis='y', labelsize=FONT_SIZE)
 plt.legend(legends, loc="upper right", fontsize=24)
 
 # Saving and showing the plot
-plt.savefig('Patient decision making.png', dpi=300)
+plt.savefig('./graph/Patient decision making.png', dpi=300)
 plt.show()
