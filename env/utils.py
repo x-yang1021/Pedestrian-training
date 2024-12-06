@@ -40,6 +40,18 @@ def getPositions(dataset, timestep, ID, width):
         positions.append([data_col.iloc[mapping['Positionx']], data_col.iloc[mapping['Positiony']]])
     return positions
 
+def getUsefulPositions(dataset, timestep, ID, width):
+    positions = []
+    row = dataset.iloc[timestep]
+    for col in range(2, row.shape[0], width):
+        data_col = row.iloc[col:col+width]
+        if data_col.iloc[mapping['ID']] == ID:
+            continue
+        if pd.isna(data_col.iloc[mapping['Positionx']]):
+            continue
+        positions.append([data_col.iloc[mapping['Positionx']], data_col.iloc[mapping['Positiony']]])
+    return positions
+
 def getDensity(positions,x1,y1,direction):
     density = 0
     for position in positions:
