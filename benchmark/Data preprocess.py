@@ -1,12 +1,11 @@
-import imitation.data.types as types
-from imitation.data import serialize
 import numpy as np
+import torch
 from env.utils import getUsefulPositions
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
 
-cluster = 1
+cluster = 2
 mapping = { 'ID':0,
            'Trajectory':1,
            'Positionx':2,
@@ -22,7 +21,7 @@ mapping = { 'ID':0,
             'Direction Change':12}
 width = len(mapping)
 traj_length = 15
-distance_threshold = 2.58
+distance_threshold = 9 #2.58
 
 df = pd.read_csv('../Data/clustered.csv')
 
@@ -98,9 +97,11 @@ for dataset in dfs:
                 x1 = data_traj.iloc[i,mapping['Positionx']]
                 y1 = data_traj.iloc[i,mapping['Positiony']]
                 self_position.append([x1,y1])
-                positions = getUsefulPositions(dataset, timestep, ID, width)
-                other_position.append(positions)
+                other_position.append(getUsefulPositions(dataset, timestep, ID, width))
             positions.append([self_position,other_position])
             timestep += traj_length - 1
-print(len(positions))
 
+train_position, test_position = train_test_split(positions, test_size=0.2, random_state=42)
+
+torch.save(train_position,'./Impatient/train_position.pt')
+torch.save(test_position, './Impatient/test_position.pt')
