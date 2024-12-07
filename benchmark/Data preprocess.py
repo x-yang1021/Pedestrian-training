@@ -21,8 +21,8 @@ mapping = { 'ID':0,
             'Direction Change':12}
 width = len(mapping)
 traj_length = 15
-distance_threshold = 9 #2.58
-
+# distance_threshold = 2.58
+distance_threshold = 9
 df = pd.read_csv('../Data/clustered.csv')
 
 
@@ -102,6 +102,5 @@ for dataset in dfs:
             timestep += traj_length - 1
 
 train_position, test_position = train_test_split(positions, test_size=0.2, random_state=42)
-
 torch.save(train_position,'./Impatient/train_position.pt')
 torch.save(test_position, './Impatient/test_position.pt')

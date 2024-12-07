@@ -11,8 +11,8 @@ SEED = 1
 setup_env(mode='eval', eval_trajectories_path='./env/Rush_Data/Testing Trajectories')
 env = gym.make("Rush-v0")
 
-policy = PPO.load('./model/patient/Rush Policy.zip', env=env)
-reward_net = torch.load('./model/patient/Rush Reward.pth')
+policy = PPO.load('./model/impatient/Rush Policy.zip', env=env)
+reward_net = torch.load('./model/impatient/Rush Reward.pth')
 reward_net.eval()
 
 dataset1 = pd.read_csv('./Data/Experiment 1.csv')
