@@ -11,10 +11,10 @@ hidden_size = 64
 grid_size = (4, 4)
 neighborhood_size = 4.0
 dropout = 0.1
-epochs = 5
+epochs = 4
 learning_rate = 0.001
 
-patient = False
+patient = True
 
 # Load train_data, which is a list of samples
 # Each element in train_data is of the form:

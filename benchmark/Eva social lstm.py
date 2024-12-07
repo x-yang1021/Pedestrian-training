@@ -36,9 +36,6 @@ model.eval()  # Switch to evaluation mode
 
 mse_loss = nn.MSELoss(reduction='none')  # 'none' to compute per element
 
-total_ade = 0.0  # For average displacement error (average MSE over all timesteps)
-total_fde = 0.0  # For final displacement error (MSE at final timestep)
-count = 0
 
 avg_mses = []
 final_mses = []
