@@ -5,8 +5,14 @@ from env.utils import withinSight, getPositions,getDensity, getFront
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+Patient = False
 
-cluster = 2
+if not Patient:
+    cluster = 2
+    distance_threshold = 9
+else:
+    cluster = 1
+    distance_threshold = 2.58
 mapping = { 'ID':0,
            'Trajectory':1,
            'Positionx':2,
@@ -22,7 +28,6 @@ mapping = { 'ID':0,
             'Direction Change':12}
 width = len(mapping)
 traj_length = 10
-distance_threshold = 9 #2.58
 
 df = pd.read_csv('./Data/clustered.csv')
 
@@ -143,6 +148,9 @@ for dataset in dfs:
 
 train_traj, test_traj = train_test_split(trajectories, test_size=0.2, random_state=42)
 
-
-serialize.save('./env/Rush_Data/Training Trajectories', train_traj)
-serialize.save('./env/Rush_Data/Testing Trajectories', test_traj)
+if not Patient:
+    serialize.save('./env/Rush_Data/Impatient/Training Trajectories', train_traj)
+    serialize.save('./env/Rush_Data/Impatient/Testing Trajectories', test_traj)
+else:
+    serialize.save('./env/Rush_Data/Patient/Training Trajectories', train_traj)
+    serialize.save('./env/Rush_Data/Patient/Testing Trajectories', test_traj)

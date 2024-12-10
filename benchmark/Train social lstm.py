@@ -41,7 +41,6 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 model.train()  # Set the model to training mode
-# model.cuda()
 
 for epoch in range(epochs):
     epoch_loss = 0.0
@@ -56,10 +55,6 @@ for epoch in range(epochs):
         observed_trajectory_target = torch.tensor(observed_trajectory_target, dtype=torch.float)
         observed_trajectory_others = torch.tensor(observed_trajectory_others, dtype=torch.float)
         observed_trajectory_target = observed_trajectory_target.unsqueeze(1)
-
-        # Ensure the data is on the correct device if using GPU
-        # observed_trajectory_target = observed_trajectory_target.cuda()
-        # observed_trajectory_others = observed_trajectory_others.cuda()
 
         optimizer.zero_grad()
 

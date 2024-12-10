@@ -8,17 +8,25 @@ from env.register_env import setup_env
 from utils import retrieveOriginalTrajectory
 
 SEED = 1
-setup_env(mode='eval', eval_trajectories_path='./env/Rush_Data/Testing Trajectories')
-env = gym.make("Rush-v0")
-
-policy = PPO.load('./model/impatient/Rush Policy.zip', env=env)
-reward_net = torch.load('./model/impatient/Rush Reward.pth')
-reward_net.eval()
+patient = True
 
 dataset1 = pd.read_csv('./Data/Experiment 1.csv')
 dataset2 = pd.read_csv('./Data/Experiment 2.csv')
 dataset3 = pd.read_csv('./Data/Experiment 3.csv')
 datasets = [dataset1, dataset2, dataset3]
+
+if not patient:
+    setup_env(mode='eval', eval_trajectories_path='./env/Rush_Data/Impatient/Testing Trajectories')
+    env = gym.make("Rush-v0")
+    policy = PPO.load('./model/impatient/Rush Policy.zip', env=env)
+    reward_net = torch.load('./model/impatient/Rush Reward.pth')
+else:
+    setup_env(mode='eval', eval_trajectories_path='./env/Rush_Data/Patient/Testing Trajectories')
+    env = gym.make("Rush-v0")
+    policy = PPO.load('./model/patient/Rush Policy.zip', env=env)
+    reward_net = torch.load('./model/patient/Rush Reward.pth')
+
+reward_net.eval()
 
 
 rng = np.random.default_rng(SEED)  # For newer versions of NumPy (recommended)

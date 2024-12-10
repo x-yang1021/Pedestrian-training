@@ -12,7 +12,7 @@ grid_size = (4, 4)
 neighborhood_size = 4.0
 dropout = 0.1
 
-patient = False
+patient = True
 # Load the trained model
 if not patient:
     model_path = './Impatient/social_lstm.pth'
@@ -33,8 +33,6 @@ model = SocialLSTM(
 model.load_state_dict(torch.load(model_path))
 model.eval()  # Switch to evaluation mode
 
-
-mse_loss = nn.MSELoss(reduction='none')  # 'none' to compute per element
 
 
 avg_mses = []
