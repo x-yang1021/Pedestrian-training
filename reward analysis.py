@@ -118,7 +118,7 @@ for _ in range(2):
         show=False  # Prevent SHAP from automatically displaying the plot
     )
 
-    plt.savefig(f'./graph/Beeswarm_Plot_for_{model_type}.png', dpi=300)
+    plt.savefig(f'./graph/{model_type} Beeswarm Plot.png', dpi=300)
 
     plt.show()
 

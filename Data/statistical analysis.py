@@ -199,8 +199,6 @@ print(p_value, 'Change Direction')
 
 
 
-
-# Make sure to initialize the lists before the loop
 head_speed, head_speed_change, tail_speed, tail_speed_change = [], [], [], []
 head_direction, head_direction_change, tail_direction, tail_direction_change = [], [], [], []
 near_speed_change, near_direction_change, far_speed_change, far_direction_change = [],[],[],[]

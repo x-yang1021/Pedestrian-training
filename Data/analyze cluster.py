@@ -7,7 +7,7 @@ df = pd.read_csv('./clustered.csv')
 IDs = []
 ID = df.iloc[0]['ID']
 Trajectories = {ID:[]}
-trajectory = 1
+trajectory = 0
 
 for i in range(df.shape[0]):
     if ID not in IDs:
