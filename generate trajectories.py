@@ -5,7 +5,7 @@ from env.utils import withinSight, getPositions,getDensity, getFront
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-Patient = False
+Patient = True
 
 if not Patient:
     cluster = 2
