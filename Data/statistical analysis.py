@@ -120,7 +120,7 @@ var = signal[result[0]:].var(axis=0)
 
 print(mean, var)
 
-exit()
+# exit()
 
 speed_1 = []
 direction_1 = []
@@ -172,14 +172,14 @@ for i in range(df_3.shape[0]):
             change_direction_3.append(df_3.iloc[i]['Direction Change'])
 
 
-# shapiro_test = stats.shapiro(np.array(change_direction_1))
-# print(shapiro_test.pvalue)
-#
-# shapiro_test = stats.shapiro(np.array(change_direction_2))
-# print(shapiro_test.pvalue)
-#
-# shapiro_test = stats.shapiro(np.array(change_direction_3))
-# print(shapiro_test.pvalue)
+shapiro_test = stats.shapiro(np.array(change_direction_1))
+print(shapiro_test.pvalue)
+
+shapiro_test = stats.shapiro(np.array(change_direction_2))
+print(shapiro_test.pvalue)
+
+shapiro_test = stats.shapiro(np.array(change_direction_3))
+print(shapiro_test.pvalue)
 
 tt_stat, p_value = stats.kruskal(np.array(speed_1), np.array(speed_2), np.array(speed_3))
 
