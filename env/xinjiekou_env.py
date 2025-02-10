@@ -9,96 +9,143 @@ import gym
 from gym import spaces
 
 
-sun_unity = np.array([29375,8785])
-green_start1 = (np.array([29536, 9352]) - sun_unity)/10
-green_end1 = (np.array([29536,10510]) - sun_unity)/10
-edge_start1 = (np.array([29920,9547]) - sun_unity)/10
-edge_end1 = (np.array([29688,9734]) - sun_unity)/10
-wall_start1 = (np.array([29688,9734]) - sun_unity)/10
-wall_end1 = (np.array([29688,10392]) - sun_unity)/10
-wall_start2 = (np.array([29735,10778]) - sun_unity)/10
-wall_end2 = (np.array([29738,12794]) - sun_unity)/10
-wall_mid1 = (np.array([29688,10076]) - sun_unity)/10
-wall_mid2 = (np.array([29738,12525])- sun_unity)/10
+North_wall = [(-474,52468),(-474,52322)]
+North_green = [(-455,52468),(-455,52322)]
+North_transparent = [(52407,52401),(52344,52337)]
 
-dataset = pd.ExcelFile("./raw data.xlsx")
-dataset2 = pd.read_excel(dataset, 'Group 2')
-dataset3 = pd.read_excel(dataset, "Group 3")
-trajectories = serialize.load('./Xinjiekou_Data')
 episode_length = 5
-
-print(np.random.choice(trajectories).infos[0])
-exit()
-def withinSight(x1, y1, direction, x2, y2, sight_radius=10, central_angle=np.pi):
-    dx = x2 - x1
-    dy = y2 - y1
-    dist = np.sqrt(dx ** 2 + dy ** 2)
-    if dist > sight_radius:
-        return False
-    direction = (direction + 2 * np.pi) % (2 * np.pi)
-    angle = np.arctan2(dy, dx)
-    angle = (angle + 2 * np.pi) % (2 * np.pi)
-    angle_diff = min(abs(angle - direction), 2 * np.pi - abs(angle - direction))
-    if angle_diff > central_angle / 2:
-        return False
-    else:
-        return True
-
-
-def get_surrounding(x, y, direction, timestep, dataset, number, threshold = 1):
-    order = 0
-    fast = 0
-    slow = 0
-    data_row = dataset.iloc[timestep:timestep + 1, :]
-    for crowd in range(1, dataset.shape[1], 5):
-        if order != number:
-            x2 = data_row.iloc[0, crowd+1]
-            y2 = data_row.iloc[0, crowd+2]
-            if withinSight(x, y, direction, x2, y2):
-                if data_row.iloc[0, crowd+3] > threshold: #comparing speed
-                    fast += 1
-                else:
-                    slow += 1
-        order += 1
-    return np.array([fast,slow])
-
-def get_wall(y):
-    if y < wall_start1[1] or y > wall_mid1[1] and y <wall_end1[1] or y > wall_mid2[1]:
-        return np.array([1])
-    else:
-        return np.array([0])
-
-def get_green_space(y):
-    if y < wall_end1[1]:
-        return np.array([1])
-    else:
-        return np.array([0])
 
 class Xinjiekou(gym.Env):
 
-    def __init__(self):
-        self.max_speed = 2
-        self.max_change = np.pi
-        action_high = np.array([self.max_speed,self.max_change])
+    def __init__(self, North=True):
+        if North:
+            self.wall = North_wall
+            self.green = North_green
+            self.transparencies = North_transparent
+
+        self.max_speed = 9
+        self.max_direction = np.pi
+        self.max_distance = 10
+
+        # Define action space
+        self.max_speed_change = 6
+        self.max_direction_change = np.pi
+        action_high = np.array([self.max_speed_change, self.max_direction_change], dtype=np.float32)
         self.action_space = spaces.Box(low=-action_high, high=action_high, dtype=np.float32)
-        position_high = np.array([edge_start1[0]+10,wall_end2[1]+10])
-        position_low = np.array([0, 0])
-        self.observation_space = spaces.Dict(
-            {
-                "position":spaces.Box(low=position_low,high=position_high,dtype=np.float32),
-                "destination":spaces.Box(low=position_low,high=position_high,dtype=np.float32),
-                "surrounding":spaces.MultiDiscrete([7,7]),
-                "Wall":spaces.Discrete(2),
-                "Greenspace":spaces.Discrete(2),
-            }
+
+        # Define observation space components
+        position_shape = (2,)  # Position (x, y)
+        self_movement_shape = (2,)  # Speed and direction
+        regular_shape = (1,)  # Single value
+
+        self.observation_space = spaces.Box(
+            low=np.concatenate([
+                np.full(position_shape, -self.max_distance, dtype=np.float32),
+                np.array([-self.max_speed, -self.max_direction], dtype=np.float32),
+                np.full(regular_shape,0, dtype=np.float32),
+                np.full(regular_shape, 0,dtype=np.float32),
+                np.ones(regular_shape, dtype=np.float32)
+            ]),
+            high=np.concatenate([
+                np.full(position_shape, self.max_distance, dtype=np.float32),
+                np.array([-self.max_speed, -self.max_direction], dtype=np.float32),
+                np.full(regular_shape, self.max_speed, dtype=np.float32),
+                np.full(regular_shape, self.attendant, dtype=np.float32),
+                np.ones(regular_shape, dtype=np.float32)
+            ]),
+            dtype=np.float32
         )
-        self.dataset = dataset2
-        self.data = trajectories
 
-    # def step(self, action):
+        self.episode_length = episode_length
 
-    # def reset(self):
 
+
+            # Flattened state space shapes in the new order
+            self.observation_space = spaces.Box(
+                low=np.concatenate([
+                    np.full(position_shape, -self.max_distance, dtype=np.float32),
+                    np.zeros(distance_shape, dtype=np.float32),
+                    np.full(self_movement_shape, -self.max_speed, dtype=np.float32),
+                    np.full(front_movement_shape, -self.max_speed, dtype=np.float32),
+                    np.zeros(density_shape, dtype=np.float32),
+                    np.zeros(contact_shape, dtype=np.float32)
+                ]),
+                high=np.concatenate([
+                    np.full(position_shape, self.max_distance, dtype=np.float32),
+                    np.full(distance_shape, self.max_distance, dtype=np.float32),
+                    np.full(self_movement_shape, self.max_speed, dtype=np.float32),
+                    np.full(front_movement_shape, self.max_speed, dtype=np.float32),
+                    np.full(density_shape, self.attendant, dtype=np.float32),
+                    np.ones(contact_shape, dtype=np.float32)
+                ]),
+                dtype=np.float32
+            )
+
+        def step(self, actions):
+            # print('actions:', actions)
+            self.change_speed = actions[0]
+            self.change_direction = actions[1]
+            self.state = self.__getstate__()
+            # if self.state.shape == (16,):
+            #     print('state:', self.state)
+            # # Access the new position and distance
+            # new_pos_x, new_pos_y = self.state[:2]
+            # new_dist = self.state[4]
+            # Check if out of bounds
+            # out_of_bounds = (new_dist > self.max_distance) or (new_pos_y > 0)
+            self.train_step += 1
+            done = self.train_step >= self.episode_length
+            reward = 0
+            return self.state, reward, done, False, self.info
+
+        def reset(self, seed=None, options=None):
+            # Call the parent class's reset method to initialize self.np_random
+            super().reset(seed=seed)
+
+            # Randomly choose a trajectory
+            self.current_trajectory = self.np_random.choice(self.trajectories)
+            self.state = np.array(self.current_trajectory.obs[0])
+            self.info = self.current_trajectory.infos[0]
+            self.dataset = self.datasets[int(self.info['experiment'] - 1)]  # identify to which experiment it belongs
+            self.ID = self.info['ID']
+            self.time_step = self.info['timestep']
+            self.train_step = 1
+
+            return self.state, self.info
+
+        def __getstate__(self):
+            # Retrieve the current state values
+            pos = self.state[:2]  # position (x, y)
+            self_movement = self.state[5:7]  # self movement (speed, direction)
+            # Calculate new state values based on actions
+            speed = self_movement[0] + self.change_speed
+            direction = self_movement[1] + self.change_direction
+            # Normalize direction to [-pi, pi]
+            if direction > np.pi:
+                direction -= 2 * np.pi
+            elif direction < -np.pi:
+                direction += 2 * np.pi
+            x1 = pos[0] + speed * np.cos(direction) * 0.5  # Half second
+            y1 = pos[1] + speed * np.sin(direction) * 0.5  # Half second
+            dist = np.sqrt(x1 ** 2 + y1 ** 2)
+
+            # Update other state components
+            positions = getPositions(self.dataset, self.time_step + self.train_step, self.ID, width=width)
+            front = getFront(self.dataset, self.time_step + self.train_step, width, positions, x1, y1, direction)
+            density = getDensity(positions, x1, y1, direction)
+            contact = getContact(positions, x1, y1, direction)
+
+            # Construct the flattened state array in the specified order
+            state_array = np.concatenate([
+                np.array([x1, y1], dtype=np.float32),  # position (2 values)
+                np.array([dist]),  # distance (1 value)
+                np.array([speed, direction], dtype=np.float32),  # self movement (2 values)
+                np.array(front, dtype=np.float32),  # front movement (2 values)
+                np.array([density]),  # density (1 value)
+                np.array(contact)  # contact (2 values)
+            ])
+
+            return state_array
 
 
 """
