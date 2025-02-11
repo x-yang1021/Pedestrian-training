@@ -7,145 +7,106 @@ import pandas as pd
 from imitation.data import serialize
 import gym
 from gym import spaces
+from env.utils import get_transparency,get_green_distance,get_wall_distance
 
 
-North_wall = [(-474,52468),(-474,52322)]
-North_green = [(-455,52468),(-455,52322)]
-North_transparent = [(52407,52401),(52344,52337)]
+origin = [-474,52322]
+North_wall = [(-474 - origin[0],52322-origin[1]), (-474 - origin[0],52468-origin[1])]
+North_green = [(-455 - origin[0],52322-origin[1]), (-455 - origin[0],52468-origin[1])]
+North_transparent = [(52337-origin[1],52344-origin[1]), (52401-origin[1], 52407-origin[1])]
 
-episode_length = 5
 
 class Xinjiekou(gym.Env):
 
-    def __init__(self, North=True):
+    def __init__(self, North=True, trajectory_path, episode_length=13):
         if North:
             self.wall = North_wall
             self.green = North_green
             self.transparencies = North_transparent
 
+        self.trajectories = serialize.load(trajectory_path)
+        self.episode_length = episode_length
+
         self.max_speed = 9
         self.max_direction = np.pi
-        self.max_distance = 10
+        self.position_high = np.array([self.green[0][0], self.green[0][1]], dtype=np.float32)
+        self.position_low = np.array([self.wall[0][0], self.wall[1][1]], dtype=np.float32)
+        self.max_width = self.green[0][0] - self.wall[0][0]
 
         # Define action space
-        self.max_speed_change = 6
-        self.max_direction_change = np.pi
-        action_high = np.array([self.max_speed_change, self.max_direction_change], dtype=np.float32)
+        action_high = np.array([self.max_speed, self.max_direction], dtype=np.float32)
         self.action_space = spaces.Box(low=-action_high, high=action_high, dtype=np.float32)
 
         # Define observation space components
-        position_shape = (2,)  # Position (x, y)
-        self_movement_shape = (2,)  # Speed and direction
         regular_shape = (1,)  # Single value
 
         self.observation_space = spaces.Box(
             low=np.concatenate([
-                np.full(position_shape, -self.max_distance, dtype=np.float32),
-                np.array([-self.max_speed, -self.max_direction], dtype=np.float32),
-                np.full(regular_shape,0, dtype=np.float32),
-                np.full(regular_shape, 0,dtype=np.float32),
-                np.ones(regular_shape, dtype=np.float32)
+                self.position_low,
+                np.full(regular_shape, 0, dtype=np.float32),  # Wall distance (≥ 0)
+                np.zeros(regular_shape, dtype=np.float32),  # Transparency (0 stands for opaque)
+                np.zeros(regular_shape, dtype=np.float32)  # heading (0 stands for south)
             ]),
             high=np.concatenate([
-                np.full(position_shape, self.max_distance, dtype=np.float32),
-                np.array([-self.max_speed, -self.max_direction], dtype=np.float32),
-                np.full(regular_shape, self.max_speed, dtype=np.float32),
-                np.full(regular_shape, self.attendant, dtype=np.float32),
-                np.ones(regular_shape, dtype=np.float32)
+                self.position_high,
+                np.full(regular_shape, self.max_width, dtype=np.float32),  # Wall distance
+                np.ones(regular_shape, dtype=np.float32), # Transparency (1 stands for transparent)
+                np.ones(regular_shape, dtype=np.float32)  # heading (1 stands for north)
             ]),
             dtype=np.float32
         )
 
-        self.episode_length = episode_length
 
 
+    def step(self, actions):
+        self.speed = actions[0]
+        self.direction = actions[1]
+        self.state = self.__getstate__()
+        self.train_step += 1
+        done = self.train_step >= self.episode_length
+        reward = 0
+        return self.state, reward, done, False, {}
 
-            # Flattened state space shapes in the new order
-            self.observation_space = spaces.Box(
-                low=np.concatenate([
-                    np.full(position_shape, -self.max_distance, dtype=np.float32),
-                    np.zeros(distance_shape, dtype=np.float32),
-                    np.full(self_movement_shape, -self.max_speed, dtype=np.float32),
-                    np.full(front_movement_shape, -self.max_speed, dtype=np.float32),
-                    np.zeros(density_shape, dtype=np.float32),
-                    np.zeros(contact_shape, dtype=np.float32)
-                ]),
-                high=np.concatenate([
-                    np.full(position_shape, self.max_distance, dtype=np.float32),
-                    np.full(distance_shape, self.max_distance, dtype=np.float32),
-                    np.full(self_movement_shape, self.max_speed, dtype=np.float32),
-                    np.full(front_movement_shape, self.max_speed, dtype=np.float32),
-                    np.full(density_shape, self.attendant, dtype=np.float32),
-                    np.ones(contact_shape, dtype=np.float32)
-                ]),
-                dtype=np.float32
-            )
+    def reset(self, seed=None, options=None):
+        # Call the parent class's reset method to initialize self.np_random
+        super().reset(seed=seed)
 
-        def step(self, actions):
-            # print('actions:', actions)
-            self.change_speed = actions[0]
-            self.change_direction = actions[1]
-            self.state = self.__getstate__()
-            # if self.state.shape == (16,):
-            #     print('state:', self.state)
-            # # Access the new position and distance
-            # new_pos_x, new_pos_y = self.state[:2]
-            # new_dist = self.state[4]
-            # Check if out of bounds
-            # out_of_bounds = (new_dist > self.max_distance) or (new_pos_y > 0)
-            self.train_step += 1
-            done = self.train_step >= self.episode_length
-            reward = 0
-            return self.state, reward, done, False, self.info
+        # Randomly choose a trajectory
+        self.current_trajectory = self.np_random.choice(self.trajectories)
+        self.state = np.array(self.current_trajectory.obs[0])
+        self.heading = self.state[-1]
+        self.train_step = 1
 
-        def reset(self, seed=None, options=None):
-            # Call the parent class's reset method to initialize self.np_random
-            super().reset(seed=seed)
+        return self.state, {}
 
-            # Randomly choose a trajectory
-            self.current_trajectory = self.np_random.choice(self.trajectories)
-            self.state = np.array(self.current_trajectory.obs[0])
-            self.info = self.current_trajectory.infos[0]
-            self.dataset = self.datasets[int(self.info['experiment'] - 1)]  # identify to which experiment it belongs
-            self.ID = self.info['ID']
-            self.time_step = self.info['timestep']
-            self.train_step = 1
+    def __getstate__(self):
+        # Retrieve the current state values
+        pos = self.state[:2]  # position (x, y)
+        # Calculate new state values based on actions
+        speed = self.speed
+        direction = self.direction
+        # Normalize direction to [-pi, pi]
+        if direction > np.pi:
+            direction -= 2 * np.pi
+        elif direction < -np.pi:
+            direction += 2 * np.pi
+        x1 = pos[0] + speed * np.cos(direction) * 0.4  # 0.4 second
+        y1 = pos[1] + speed * np.sin(direction) * 0.4  # 0.4 second
 
-            return self.state, self.info
+        # Update other state components
+        wall_dist = get_wall_distance(x1, self.wall)
+        transparency = get_transparency(y1, self.transparencies)
 
-        def __getstate__(self):
-            # Retrieve the current state values
-            pos = self.state[:2]  # position (x, y)
-            self_movement = self.state[5:7]  # self movement (speed, direction)
-            # Calculate new state values based on actions
-            speed = self_movement[0] + self.change_speed
-            direction = self_movement[1] + self.change_direction
-            # Normalize direction to [-pi, pi]
-            if direction > np.pi:
-                direction -= 2 * np.pi
-            elif direction < -np.pi:
-                direction += 2 * np.pi
-            x1 = pos[0] + speed * np.cos(direction) * 0.5  # Half second
-            y1 = pos[1] + speed * np.sin(direction) * 0.5  # Half second
-            dist = np.sqrt(x1 ** 2 + y1 ** 2)
+        # Construct the flattened state array in the specified order
+        state_array = np.concatenate([
+            np.array([x1, y1], dtype=np.float32),  # position (2 values)
+            np.array([speed, direction], dtype=np.float32),  # self movement (2 values)
+            np.array([wall_dist], dtype=np.float32),  # wall_dist (2 values)
+            np.array([transparency], dtype=np.float32),  # transparency (1 values)
+            np.array([self.heading], dtype=np.float32)  # heading (1 values)
+        ])
 
-            # Update other state components
-            positions = getPositions(self.dataset, self.time_step + self.train_step, self.ID, width=width)
-            front = getFront(self.dataset, self.time_step + self.train_step, width, positions, x1, y1, direction)
-            density = getDensity(positions, x1, y1, direction)
-            contact = getContact(positions, x1, y1, direction)
-
-            # Construct the flattened state array in the specified order
-            state_array = np.concatenate([
-                np.array([x1, y1], dtype=np.float32),  # position (2 values)
-                np.array([dist]),  # distance (1 value)
-                np.array([speed, direction], dtype=np.float32),  # self movement (2 values)
-                np.array(front, dtype=np.float32),  # front movement (2 values)
-                np.array([density]),  # density (1 value)
-                np.array(contact)  # contact (2 values)
-            ])
-
-            return state_array
+        return state_array
 
 
 """
