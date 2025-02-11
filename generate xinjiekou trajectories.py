@@ -6,8 +6,8 @@ import imitation.data.types as types
 from imitation.data import serialize
 from sklearn.model_selection import train_test_split
 
-origin = [-474,52322]
-North_wall = [(-474 - origin[0],52322-origin[1]), (-474 - origin[0],52468-origin[1])]
+origin = [-455,52322]
+North_wall = [(abs(-474 - origin[0]),52322-origin[1]), (abs(-474 - origin[0]),52468-origin[1])]
 North_green = [(-455 - origin[0],52322-origin[1]), (-455 - origin[0],52468-origin[1])]
 North_transparent = [(52337-origin[1],52344-origin[1]), (52401-origin[1], 52407-origin[1])]
 
@@ -20,8 +20,8 @@ if North:
     wall = North_wall
     green = North_green
     transparencies = North_transparent
-position_high = np.array([green[0][0], green[0][1]], dtype=np.float32)
-position_low = np.array([wall[0][0], wall[1][1]], dtype=np.float32)
+position_high = np.array([wall[1][0], wall[1][1]], dtype=np.float32)
+position_low = np.array([green[0][0], green[0][1]], dtype=np.float32)
 
 trajectories = []
 
@@ -30,20 +30,20 @@ for file in all_files:
     df = pd.read_csv(file,sep="\t", header=None)
     if df.shape[0] < 48:
         continue
-    distance = np.sqrt((df.iloc[-1, 1] - df.iloc[0, 1]) ** 2 + (df.iloc[-1, 2] - df.iloc[0, 2]) ** 2)
+    distance = np.sqrt((df.iloc[-1, 2] - df.iloc[0, 2]) ** 2 + (df.iloc[-1, 4] - df.iloc[0, 4]) ** 2)
     if distance < 1:
         continue
-    heading = int(df.iloc[-1, 1] - df.iloc[0, 1] > 0)
+    heading = int(df.iloc[-1, 4] - df.iloc[0, 4] > 0)
     cycle = 0
     while cycle < step_length:
         i = cycle
-        prev_x = df.iloc[i, 1]
-        prev_y = df.iloc[i, 2]
+        prev_x = abs(df.iloc[i, 2] - origin[0])
+        prev_y = df.iloc[i, 4] - origin[1]
         obs = []
         acts = []
         while i < df.shape[0] - 48:
-            x = df.iloc[i, 1]
-            y = df.iloc[i, 2]
+            x = abs(df.iloc[i, 2] - origin[0])
+            y = df.iloc[i, 4] - origin[1]
             if x < position_low[0] or x > position_high[0] or y < position_low[1] or y > position_high[1]:
                 i += step_length
                 obs = []
@@ -53,7 +53,7 @@ for file in all_files:
             transparency = get_transparency(y, transparencies)
             ob = np.concatenate([np.array([x, y]), np.array([wall_distance]), np.array([transparency]), np.array([heading])])
             obs.append(ob)
-            if len(obs) >= 1:
+            if len(obs) > 1:
                 dist = np.sqrt((x - prev_x) ** 2 + (y - prev_y) ** 2)
                 speed = dist / 0.4
                 direction = np.arctan2(y - prev_y, x - prev_x)
@@ -71,11 +71,11 @@ for file in all_files:
             i += step_length
         cycle += 1
 
-    train_traj, test_traj = train_test_split(trajectories, test_size=0.2, random_state=42)
+train_traj, test_traj = train_test_split(trajectories, test_size=0.2, random_state=42)
 
-    if North:
-        serialize.save('./env/Xinjiekou_Data_Data/North/Training Trajectories', train_traj)
-        serialize.save('./env/Xinjiekou_Data_Data/North/Testing Trajectories', test_traj)
+if North:
+    serialize.save('./env/Xinjiekou_Data/North/Training Trajectories', train_traj)
+    serialize.save('./env/Xinjiekou_Data/North/Testing Trajectories', test_traj)
 
 
 
