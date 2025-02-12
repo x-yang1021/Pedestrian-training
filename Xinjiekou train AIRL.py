@@ -16,7 +16,7 @@ SEED = 42
 North = True
 
 if North:
-   traj_path = './env/Xinjiekou_Data/Training Trajectories'
+   traj_path = './env/Xinjiekou_Data/North/Training Trajectories'
 
 setup_env(North=North)
 

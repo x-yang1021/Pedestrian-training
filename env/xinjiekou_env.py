@@ -5,20 +5,20 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from imitation.data import serialize
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 from env.utils import get_transparency,get_green_distance,get_wall_distance
 
 
-origin = [-474,52322]
-North_wall = [(-474 - origin[0],52322-origin[1]), (-474 - origin[0],52468-origin[1])]
+origin = [-455,52322]
+North_wall = [(abs(-474 - origin[0]),52322-origin[1]), (abs(-474 - origin[0]),52468-origin[1])]
 North_green = [(-455 - origin[0],52322-origin[1]), (-455 - origin[0],52468-origin[1])]
 North_transparent = [(52337-origin[1],52344-origin[1]), (52401-origin[1], 52407-origin[1])]
 
 
 class Xinjiekou(gym.Env):
 
-    def __init__(self, North=True, trajectory_path, episode_length=13):
+    def __init__(self, trajectory_path,North=True,  episode_length=13):
         if North:
             self.wall = North_wall
             self.green = North_green
@@ -29,9 +29,10 @@ class Xinjiekou(gym.Env):
 
         self.max_speed = 9
         self.max_direction = np.pi
-        self.position_high = np.array([self.green[0][0], self.green[0][1]], dtype=np.float32)
-        self.position_low = np.array([self.wall[0][0], self.wall[1][1]], dtype=np.float32)
-        self.max_width = self.green[0][0] - self.wall[0][0]
+        self.position_high = np.array([self.wall[1][0], self.wall[1][1]], dtype=np.float32)
+        self.position_low = np.array([self.green[0][0], self.green[0][1]], dtype=np.float32)
+
+        self.max_width = self.wall[0][0] - self.green[0][0]
 
         # Define action space
         action_high = np.array([self.max_speed, self.max_direction], dtype=np.float32)
@@ -100,7 +101,6 @@ class Xinjiekou(gym.Env):
         # Construct the flattened state array in the specified order
         state_array = np.concatenate([
             np.array([x1, y1], dtype=np.float32),  # position (2 values)
-            np.array([speed, direction], dtype=np.float32),  # self movement (2 values)
             np.array([wall_dist], dtype=np.float32),  # wall_dist (2 values)
             np.array([transparency], dtype=np.float32),  # transparency (1 values)
             np.array([self.heading], dtype=np.float32)  # heading (1 values)
