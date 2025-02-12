@@ -7,7 +7,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.ppo import MlpPolicy
 import matplotlib.pyplot as plt
 from env.register_env import setup_env
-from env.rush_env import Rush
+from env.xinjiekou_env import Xinjiekou
 from imitation.algorithms.adversarial.airl import AIRL
 from imitation.data import rollout, types
 from imitation.data.wrappers import RolloutInfoWrapper
@@ -37,11 +37,13 @@ for _ in range(1):
         env = gym.make("Xinjiekou-v0")
         policy = PPO.load('./model/North/Policy.zip', env=env)
         reward_net = torch.load('./model/North/Reward.pth')
+        rollouts = Xinjiekou.load_trajectories('./env/Xinjiekou_Data/North/Testing Trajectories')
     else:
         setup_env(mode='eval', North=North, eval_trajectories_path='./env/Xinjiekou_Data/South/Testing Trajectories')
         env = gym.make("Xinjiekou-v0")
         policy = PPO.load('./model/South/Policy.zip', env=env)
         reward_net = torch.load('./model/South/Reward.pth')
+        rollouts = Xinjiekou.load_trajectories('./env/Xinjiekou_Data/South/Testing Trajectories')
 
     reward_net = reward_net._base
     reward_net.eval()
@@ -103,7 +105,7 @@ for _ in range(1):
     # Combine observations and actions into a single feature matrix
     features = np.concatenate([obs, acts], axis=1)
     shap_value = np.concatenate(shap_values_list, axis=1)
-    # Define the title based on whether it's "Impatient" or "Patient"
+
     model_type = "North" if North else "South"
 
     plt.figure(figsize=(16, 8))  # Adjust size as needed
