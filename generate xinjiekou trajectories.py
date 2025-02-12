@@ -20,6 +20,11 @@ if North:
     wall = North_wall
     green = North_green
     transparencies = North_transparent
+    origin = origin
+else:
+    path = './Data/Xinjiekou/South'
+
+
 position_high = np.array([wall[1][0], wall[1][1]], dtype=np.float32)
 position_low = np.array([green[0][0], green[0][1]], dtype=np.float32)
 

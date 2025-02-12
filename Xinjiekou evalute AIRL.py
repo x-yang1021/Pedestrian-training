@@ -5,21 +5,20 @@ import numpy as np
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 from env.register_env import setup_env
-from utils import retrieveOriginalTrajectory
 
 SEED = 1
-patient = True
+North = True
 
-if not patient:
-    setup_env(mode='eval', eval_trajectories_path='./env/Rush_Data/Impatient/Testing Trajectories')
-    env = gym.make("Rush-v0")
-    policy = PPO.load('./model/impatient/Rush Policy.zip', env=env)
-    reward_net = torch.load('./model/impatient/Rush Reward.pth')
+if North:
+    setup_env(mode='eval', North=North, eval_trajectories_path='./env/Xinjiekou_Data/North/Testing Trajectories')
+    env = gym.make("Xinjiekou-v0")
+    policy = PPO.load('./model/North/Policy.zip', env=env)
+    reward_net = torch.load('./model/North/Reward.pth')
 else:
-    setup_env(mode='eval', eval_trajectories_path='./env/Rush_Data/Patient/Testing Trajectories')
-    env = gym.make("Rush-v0")
-    policy = PPO.load('./model/patient/Rush Policy.zip', env=env)
-    reward_net = torch.load('./model/patient/Rush Reward.pth')
+    setup_env(mode='eval', North=North, eval_trajectories_path='./env/Xinjiekou_Data/South/Testing Trajectories')
+    env = gym.make("Xinjiekou-v0")
+    policy = PPO.load('./model/South/Policy.zip', env=env)
+    reward_net = torch.load('./model/South/Reward.pth')
 
 reward_net.eval()
 
@@ -32,11 +31,12 @@ total_rewards = []
 for _ in range(250):
     new_seed = int(rng.integers(0, high=2**32 - 1))
     obs, info = env.reset(seed=new_seed)
-    dataset = datasets[int(info['experiment'] - 1)]
-    ID = info['ID']
-    time_step = info['timestep']
     done = False
     predict_traj = [obs[:2]]
+    actual_trajectory = env.current_trajectory.obs
+    actual_traj = []
+    for i in range(len(actual_trajectory)):
+        actual_traj.append(actual_trajectory[i][:2])
     total_reward = 0
     while not done:
         action, _states = policy.predict(obs)
@@ -49,7 +49,6 @@ for _ in range(250):
         # with torch.no_grad():
         #     base_reward = reward_net._base(state, action, next_state, done_tensor)
         # total_reward += base_reward.item()
-    actual_traj = retrieveOriginalTrajectory(dataset=dataset,timestep=time_step, ID=ID)
     predict_traj = np.array(predict_traj)
     actual_traj = np.array(actual_traj)
     avg_mse = np.mean(np.sqrt(np.sum((predict_traj - actual_traj) ** 2, axis=1)))
