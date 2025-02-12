@@ -108,6 +108,11 @@ class Xinjiekou(gym.Env):
 
         return state_array
 
+    @staticmethod
+    def load_trajectories(trajectories_path):
+        trajectories = serialize.load(trajectories_path)
+        return trajectories
+
 
 """
     # Initialize Pygame
