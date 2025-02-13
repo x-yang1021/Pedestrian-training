@@ -11,6 +11,11 @@ North_wall = [(abs(-474 - origin[0]),52322-origin[1]), (abs(-474 - origin[0]),52
 North_green = [(-455 - origin[0],52322-origin[1]), (-455 - origin[0],52468-origin[1])]
 North_transparent = [(52337-origin[1],52344-origin[1]), (52401-origin[1], 52407-origin[1])]
 
+South_origin = [-455, 52546]
+South_wall = [(abs(-467 - South_origin[0]),52546-South_origin[1]), (abs(-467 - South_origin[0]), 52512-South_origin[1])]
+South_green = [(-455-South_origin[0], 52546-South_origin[1]), (-455-South_origin[0], 52612-South_origin[1])]
+South_transparent = [(52546-South_origin[1], 52581-South_origin[1])]
+
 North = True
 step_length = 4
 episode_length = 13
@@ -23,6 +28,11 @@ if North:
     origin = origin
 else:
     path = './Data/Xinjiekou/South'
+    wall = South_wall
+    green = South_green
+    transparencies = South_transparent
+    origin = South_origin
+
 
 
 position_high = np.array([wall[1][0], wall[1][1]], dtype=np.float32)
@@ -81,6 +91,9 @@ train_traj, test_traj = train_test_split(trajectories, test_size=0.2, random_sta
 if North:
     serialize.save('./env/Xinjiekou_Data/North/Training Trajectories', train_traj)
     serialize.save('./env/Xinjiekou_Data/North/Testing Trajectories', test_traj)
+else:
+    serialize.save('./env/Xinjiekou_Data/South/Training Trajectories', train_traj)
+    serialize.save('./env/Xinjiekou_Data/South/Testing Trajectories', test_traj)
 
 
 
