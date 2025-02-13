@@ -15,7 +15,7 @@ South_green = [(-455-South_origin[0], 52546-South_origin[1]), (-455-South_origin
 South_transparent = [(52546-South_origin[1], 52581-South_origin[1])]
 
 # Hyperparameters
-North = True
+North = False
 obs_len = 8   # Length of observed trajectory
 pred_len = 12  # Length of predicted trajectory
 epochs = 4
@@ -60,7 +60,7 @@ for epoch in range(epochs):
     # If you want to batch them, you'd need to create batches from train_data.
     # For simplicity, let's iterate sample by sample.
     for observed_trajectory in train_data:
-
+        observed_trajectory = torch.tensor(observed_trajectory, dtype=torch.float)
         observed_trajectory = observed_trajectory.unsqueeze(1)
 
         optimizer.zero_grad()
@@ -76,7 +76,7 @@ for epoch in range(epochs):
         # outputs shape: (obs_len+pred_len, 1, 2)
         # If observed_trajectory_target includes the full (obs_len+pred_len) trajectory,
         # we can compute loss directly:
-        loss = criterion(outputs, observed_trajectory_target)
+        loss = criterion(outputs, observed_trajectory)
 
         # Backpropagation
         loss.backward()
