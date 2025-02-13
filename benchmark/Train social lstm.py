@@ -48,8 +48,7 @@ for epoch in range(epochs):
     # Here we assume train_data is already a list of samples.
     # If you want to batch them, you'd need to create batches from train_data.
     # For simplicity, let's iterate sample by sample.
-    for sample in train_data:
-        observed_trajectory_target, observed_trajectory_others = sample
+    for observed_trajectory in train_data:
 
         # Convert lists to tensors
         observed_trajectory_target = torch.tensor(observed_trajectory_target, dtype=torch.float)
