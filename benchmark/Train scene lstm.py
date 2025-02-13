@@ -89,7 +89,7 @@ for epoch in range(epochs):
 
 # Save the model
 if North:
-    torch.save(model.state_dict(), './North/social_lstm.pth')
+    torch.save(model.state_dict(), './North/scene_lstm.pth')
 else:
-    torch.save(model.state_dict(), './South/social_lstm.pth')
+    torch.save(model.state_dict(), './South/scene_lstm.pth')
 print("Training complete.")
