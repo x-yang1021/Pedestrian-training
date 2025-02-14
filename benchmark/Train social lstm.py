@@ -25,7 +25,6 @@ if not patient:
     train_data = torch.load('./Impatient/train_position.pt')
 else:
     train_data = torch.load('./Patient/train_position.pt')
-
 # Instantiate the model
 model = SocialLSTM(
     input_size=input_size,
@@ -48,8 +47,8 @@ for epoch in range(epochs):
     # Here we assume train_data is already a list of samples.
     # If you want to batch them, you'd need to create batches from train_data.
     # For simplicity, let's iterate sample by sample.
-    for observed_trajectory in train_data:
-
+    for sample in train_data:
+        observed_trajectory_target, observed_trajectory_others = sample
         # Convert lists to tensors
         observed_trajectory_target = torch.tensor(observed_trajectory_target, dtype=torch.float)
         observed_trajectory_others = torch.tensor(observed_trajectory_others, dtype=torch.float)

@@ -13,10 +13,12 @@ from env.register_env import setup_env
 from env.xinjiekou_env import Xinjiekou
 
 SEED = 42
-North = True
+North = False
 
 if North:
    traj_path = './env/Xinjiekou_Data/North/Training Trajectories'
+else:
+    traj_path = './env/Xinjiekou_Data/South/Training Trajectories'
 
 setup_env(North=North)
 
@@ -65,3 +67,6 @@ airl_trainer.train(1000000)
 if North:
     learner.save('./model/North/Policy')
     torch.save(reward_net, './model/North/Reward.pth')
+else:
+    learner.save('./model/South/Policy')
+    torch.save(reward_net, './model/South/Reward.pth')

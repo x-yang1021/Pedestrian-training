@@ -69,7 +69,9 @@ for file in all_files:
             i += step_length
         cycle += 1
 
-train_traj, test_traj = train_test_split(trajectories, test_size=0.2, random_state=42)
+train_traj, test_traj = train_test_split(trajectories, test_size=0.2, random_state=1)
+
+exit()
 
 if North:
     torch.save(train_traj, './North/train_trajectory.pt')

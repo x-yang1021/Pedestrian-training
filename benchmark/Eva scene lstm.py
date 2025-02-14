@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 from Scene_LSTM import SceneLSTM
@@ -34,15 +35,15 @@ else:
     model_path = './South/scene_lstm.pth'
     test_data = torch.load('./South/test_trajectory.pt')
 
-num_cols = wall[0][0] + 1
-num_rows = wall[1][1] + 1
+num_cols = (wall[0][0] + 1)//2
+num_rows = (wall[1][1] + 1)//2
 grid_size = (num_rows, num_cols)
 
 grid = torch.zeros(num_rows, num_cols, dtype=torch.float32)
 grid[:,0] = 1
 grid[:,-1] = 2
 for transparent in transparencies:
-    grid[transparent[0]:transparent[1]+1, -1] = 3
+    grid[transparent[0]//2:(transparent[1]+1)//2, -1] = 3
 
 model = SceneLSTM(
     grid_size=grid_size,

@@ -16,7 +16,7 @@ South_wall = [(abs(-467 - South_origin[0]),52546-South_origin[1]), (abs(-467 - S
 South_green = [(-455-South_origin[0], 52546-South_origin[1]), (-455-South_origin[0], 52612-South_origin[1])]
 South_transparent = [(52546-South_origin[1], 52581-South_origin[1])]
 
-North = True
+North = False
 step_length = 4
 episode_length = 13
 # Load the data
