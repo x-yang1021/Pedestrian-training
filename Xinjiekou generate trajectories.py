@@ -16,7 +16,7 @@ South_wall = [(abs(-467 - South_origin[0]),52546-South_origin[1]), (abs(-467 - S
 South_green = [(-455-South_origin[0], 52546-South_origin[1]), (-455-South_origin[0], 52612-South_origin[1])]
 South_transparent = [(52546-South_origin[1], 52581-South_origin[1])]
 
-North = False
+North = True
 step_length = 4
 episode_length = 13
 # Load the data
@@ -34,9 +34,8 @@ else:
     origin = South_origin
 
 
-
 position_high = np.array([wall[1][0], wall[1][1]], dtype=np.float32)
-position_low = np.array([green[0][0], green[0][1]], dtype=np.float32)
+position_low = np.array([green[0][0], transparencies[1][1]], dtype=np.float32)
 
 trajectories = []
 
@@ -50,7 +49,8 @@ for file in all_files:
         continue
     heading = int(df.iloc[-1, 4] - df.iloc[0, 4] > 0)
     cycle = 0
-    while cycle < step_length:
+    # while cycle < step_length:
+    while cycle < 1:
         i = cycle
         prev_x = abs(df.iloc[i, 2] - origin[0])
         prev_y = df.iloc[i, 4] - origin[1]

@@ -52,7 +52,7 @@ reward_net = BasicShapedRewardNet(
 
 airl_trainer = AIRL(
     demonstrations=rollouts,
-    demo_batch_size=4096,
+    demo_batch_size=2048,
     gen_replay_buffer_capacity=2048,
     n_disc_updates_per_round=4,
     venv=env,
