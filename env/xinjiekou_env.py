@@ -54,13 +54,11 @@ class Xinjiekou(gym.Env):
                 self.position_low,
                 np.full(regular_shape, 0, dtype=np.float32),  # Wall distance (≥ 0)
                 np.zeros(regular_shape, dtype=np.float32),  # Transparency (0 stands for opaque)
-                np.zeros(regular_shape, dtype=np.float32)  # heading (0 stands for south)
             ]),
             high=np.concatenate([
                 self.position_high,
                 np.full(regular_shape, self.max_width, dtype=np.float32),  # Wall distance
                 np.ones(regular_shape, dtype=np.float32), # Transparency (1 stands for transparent)
-                np.ones(regular_shape, dtype=np.float32)  # heading (1 stands for north)
             ]),
             dtype=np.float32
         )
@@ -81,7 +79,7 @@ class Xinjiekou(gym.Env):
         # Randomly choose a trajectory
         self.current_trajectory = self.np_random.choice(self.trajectories)
         self.state = np.array(self.current_trajectory.obs[0])
-        self.heading = self.state[-1]
+        # self.heading = self.state[-1]
         self.train_step = 1
 
         return self.state, {}
@@ -109,7 +107,6 @@ class Xinjiekou(gym.Env):
             np.array([x1, y1], dtype=np.float32),  # position (2 values)
             np.array([wall_dist], dtype=np.float32),  # wall_dist (2 values)
             np.array([transparency], dtype=np.float32),  # transparency (1 values)
-            np.array([self.heading], dtype=np.float32)  # heading (1 values)
         ])
 
         return state_array

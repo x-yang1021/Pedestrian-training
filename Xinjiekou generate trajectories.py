@@ -16,7 +16,8 @@ South_wall = [(abs(-467 - South_origin[0]),52546-South_origin[1]), (abs(-467 - S
 South_green = [(-455-South_origin[0], 52546-South_origin[1]), (-455-South_origin[0], 52612-South_origin[1])]
 South_transparent = [(52546-South_origin[1], 52581-South_origin[1])]
 
-North = True
+North = False
+Heading = 1
 step_length = 4
 episode_length = 13
 # Load the data
@@ -47,7 +48,9 @@ for file in all_files:
     distance = np.sqrt((df.iloc[-1, 2] - df.iloc[0, 2]) ** 2 + (df.iloc[-1, 4] - df.iloc[0, 4]) ** 2)
     if distance < 1:
         continue
-    heading = int(df.iloc[-1, 4] - df.iloc[0, 4] > 0)
+    heading = int(df.iloc[-1, 4] - df.iloc[0, 4] > 0) #1 for South, 0 for North
+    if heading != Heading:
+        continue
     cycle = 0
     # while cycle < step_length:
     while cycle < 1:
@@ -66,7 +69,7 @@ for file in all_files:
                 continue
             wall_distance = get_wall_distance(x, wall)
             transparency = get_transparency(y, transparencies)
-            ob = np.concatenate([np.array([x, y]), np.array([wall_distance]), np.array([transparency]), np.array([heading])])
+            ob = np.concatenate([np.array([x, y]), np.array([wall_distance]), np.array([transparency])])
             obs.append(ob)
             if len(obs) > 1:
                 dist = np.sqrt((x - prev_x) ** 2 + (y - prev_y) ** 2)
@@ -92,8 +95,12 @@ if North:
     serialize.save('./env/Xinjiekou_Data/North/Training Trajectories', train_traj)
     serialize.save('./env/Xinjiekou_Data/North/Testing Trajectories', test_traj)
 else:
-    serialize.save('./env/Xinjiekou_Data/South/Training Trajectories', train_traj)
-    serialize.save('./env/Xinjiekou_Data/South/Testing Trajectories', test_traj)
+    if Heading:
+        serialize.save('./env/Xinjiekou_Data/South/Southbound/Training Trajectories', train_traj)
+        serialize.save('./env/Xinjiekou_Data/South/Southbound/Testing Trajectories', test_traj)
+    else:
+        serialize.save('./env/Xinjiekou_Data/South/Northbound/Training Trajectories', train_traj)
+        serialize.save('./env/Xinjiekou_Data/South/Northbound/Testing Trajectories', test_traj)
 
 
 
