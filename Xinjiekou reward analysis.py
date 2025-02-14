@@ -22,7 +22,7 @@ from captum.attr import (IntegratedGradients, GradientShap, Saliency,InputXGradi
 import shap
 
 SEED = 1
-North = True
+North = False
 
 x_axis_data_labels = [
     'green distance', 'position y', 'wall distance', 'transparency', 'heading',

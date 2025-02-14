@@ -52,8 +52,6 @@ for file in all_files:
     cycle = 0
     while cycle < step_length:
         i = cycle
-        prev_x = abs(df.iloc[i, 2] - origin[0])
-        prev_y = df.iloc[i, 4] - origin[1]
         traj = []
         while i < df.shape[0] - step_length*episode_length:
             x = abs(df.iloc[i, 2] - origin[0])
