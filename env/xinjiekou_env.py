@@ -11,7 +11,7 @@ from env.utils import get_transparency,get_green_distance,get_wall_distance
 
 
 origin = [-455,52322]
-North_wall = [(abs(-474 - origin[0]),52322-origin[1]), (abs(-474 - origin[0]),52468-origin[1])]
+North_wall = [(-(-474 - origin[0]),52322-origin[1]), (-(-474 - origin[0]),52468-origin[1])]
 North_green = [(-455 - origin[0],52322-origin[1]), (-455 - origin[0],52468-origin[1])]
 North_transparent = [(52337-origin[1],52344-origin[1]), (52401-origin[1], 52407-origin[1])]
 

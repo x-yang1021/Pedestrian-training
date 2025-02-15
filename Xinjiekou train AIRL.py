@@ -13,7 +13,7 @@ from env.register_env import setup_env
 from env.xinjiekou_env import Xinjiekou
 
 SEED = 42
-North = False
+North = True
 
 if North:
    traj_path = './env/Xinjiekou_Data/North/Training Trajectories'
