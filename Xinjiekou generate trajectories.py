@@ -66,8 +66,8 @@ for file in all_files:
     if heading != Heading:
         continue
     cycle = 0
-    while cycle < step_length:
-    # while cycle < 1:
+    # while cycle < step_length:
+    while cycle < 1:
         i = cycle
         if Heading:
             prev_x = df.iloc[i, 2] - origin[0]
