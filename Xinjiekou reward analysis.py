@@ -1,6 +1,7 @@
 import numpy as np
 import gymnasium as gym
 import torch
+from rich.markdown import Heading
 from stable_baselines3 import PPO
 import pandas as pd
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -23,9 +24,9 @@ import shap
 
 SEED = 1
 North = False
-
+Heading = 0
 x_axis_data_labels = [
-    'green distance', 'position y', 'wall distance', 'transparency', 'heading',
+    'green distance', 'position y', 'wall distance', 'transparency',
     'speed', 'direction'
 ]
 
@@ -39,11 +40,18 @@ for _ in range(1):
         reward_net = torch.load('./model/North/Reward.pth')
         rollouts = Xinjiekou.load_trajectories('./env/Xinjiekou_Data/North/Testing Trajectories')
     else:
-        setup_env(mode='eval', North=North, eval_trajectories_path='./env/Xinjiekou_Data/South/Testing Trajectories')
-        env = gym.make("Xinjiekou-v0")
-        policy = PPO.load('./model/South/Policy.zip', env=env)
-        reward_net = torch.load('./model/South/Reward.pth')
-        rollouts = Xinjiekou.load_trajectories('./env/Xinjiekou_Data/South/Testing Trajectories')
+        if Heading:
+            setup_env(mode='eval', North=North, Heading=Heading, eval_trajectories_path='./env/Xinjiekou_Data/South/Southbound/Testing Trajectories')
+            env = gym.make("Xinjiekou-v0")
+            policy = PPO.load('./model/South/Southbound/Policy.zip', env=env)
+            reward_net = torch.load('./model/South/Southbound/Reward.pth')
+            rollouts = Xinjiekou.load_trajectories('./env/Xinjiekou_Data/South/Southbound/Testing Trajectories')
+        else:
+            setup_env(mode='eval', North=North, Heading=Heading, eval_trajectories_path='./env/Xinjiekou_Data/South/Northbound/Testing Trajectories')
+            env = gym.make("Xinjiekou-v0")
+            policy = PPO.load('./model/South/Northbound/Policy.zip', env=env)
+            reward_net = torch.load('./model/South/Northbound/Reward.pth')
+            rollouts = Xinjiekou.load_trajectories('./env/Xinjiekou_Data/South/Northbound/Testing Trajectories')
 
     reward_net = reward_net._base
     reward_net.eval()
@@ -106,7 +114,13 @@ for _ in range(1):
     features = np.concatenate([obs, acts], axis=1)
     shap_value = np.concatenate(shap_values_list, axis=1)
 
-    model_type = "North" if North else "South"
+    if North:
+        model_type = "North"
+    else:
+        if Heading:
+            model_type = "South-Southbound"
+        else:
+            model_type = "South-Northbound"
 
     plt.figure(figsize=(16, 8))  # Adjust size as needed
     shap.summary_plot(
@@ -122,6 +136,7 @@ for _ in range(1):
     plt.show()
 
     North = False
+    Heading = 0
 #
 #
 #

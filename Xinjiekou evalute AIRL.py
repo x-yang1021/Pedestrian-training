@@ -16,10 +16,16 @@ if North:
     policy = PPO.load('./model/North/Policy.zip', env=env)
     reward_net = torch.load('./model/North/Reward.pth')
 else:
-    setup_env(mode='eval', North=North, eval_trajectories_path='./env/Xinjiekou_Data/South/Testing Trajectories')
-    env = gym.make("Xinjiekou-v0")
-    policy = PPO.load('./model/South/Policy.zip', env=env)
-    reward_net = torch.load('./model/South/Reward.pth')
+    if Heading:
+        setup_env(mode='eval', North=North, Heading=Heading, eval_trajectories_path='./env/Xinjiekou_Data/South/Southbound/Testing Trajectories')
+        env = gym.make("Xinjiekou-v0")
+        policy = PPO.load('./model/South/Southbound/Policy.zip', env=env)
+        reward_net = torch.load('./model/South/Southbound/Reward.pth')
+    else:
+        setup_env(mode='eval', North=North, Heading=Heading, eval_trajectories_path='./env/Xinjiekou_Data/South/Northbound/Testing Trajectories')
+        env = gym.make("Xinjiekou-v0")
+        policy = PPO.load('./model/South/Northbound/Policy.zip', env=env)
+        reward_net = torch.load('./model/South/Northbound/Reward.pth')
 
 reward_net.eval()
 
