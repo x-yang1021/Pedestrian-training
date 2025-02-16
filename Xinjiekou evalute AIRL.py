@@ -8,7 +8,7 @@ from env.register_env import setup_env
 
 SEED = 1
 North = False
-Heading = 1
+Heading = 0
 
 if North:
     setup_env(mode='eval', North=North, eval_trajectories_path='./env/Xinjiekou_Data/North/Testing Trajectories')

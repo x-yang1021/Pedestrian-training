@@ -32,7 +32,7 @@ x_axis_data_labels = [
 
 feature_sums =[]
 feature_stds = []
-for _ in range(1):
+for _ in range(2):
     if North:
         setup_env(mode='eval', North=North, eval_trajectories_path='./env/Xinjiekou_Data/North/Testing Trajectories')
         env = gym.make("Xinjiekou-v0")
@@ -135,8 +135,7 @@ for _ in range(1):
 
     plt.show()
 
-    North = False
-    Heading = 0
+    Heading += 1
 #
 #
 #

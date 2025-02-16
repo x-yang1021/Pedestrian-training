@@ -16,16 +16,10 @@ North_transparent = [(52337-origin[1],52344-origin[1]), (52401-origin[1], 52407-
 Heading = 0
 
 
-if Heading:
-    South_origin = [-467, 52546]
-    South_wall = [(-467-South_origin[0],52546-South_origin[1]), (-467-South_origin[0], 52612-South_origin[1])]
-    South_green = [(-455-South_origin[0], 52546-South_origin[1]), (-455-South_origin[0], 52612-South_origin[1])]
-    South_transparent = [(52546-South_origin[1], 52581-South_origin[1])]
-else:
-    South_origin = [-455, 52612]
-    South_wall = [(-(-467 - South_origin[0]),52612-South_origin[1]), (-(-467 - South_origin[0]), -(52546-South_origin[1]))]
-    South_green = [(-455-South_origin[0], 52612-South_origin[1]), (-455-South_origin[0], -(52546-South_origin[1]))]
-    South_transparent = [(-(52581-South_origin[1]),-(52546-South_origin[1]))]
+South_origin = [-455, 52612]
+South_wall = [(-(-467 - South_origin[0]),52612-South_origin[1]), (-(-467 - South_origin[0]), -(52546-South_origin[1]))]
+South_green = [(-455-South_origin[0], 52612-South_origin[1]), (-455-South_origin[0], -(52546-South_origin[1]))]
+South_transparent = [(-(52581-South_origin[1]),-(52546-South_origin[1]))]
 
 North = False
 step_length = 4
@@ -45,12 +39,8 @@ else:
     transparencies = South_transparent
     origin = South_origin
 
-if Heading:
-    position_high = np.array([green[1][0], green[1][1]], dtype=np.float32)
-    position_low = np.array([wall[0][0], wall[0][1]], dtype=np.float32)
-else:
-    position_high = np.array([wall[1][0], wall[1][1]], dtype=np.float32)
-    position_low = np.array([green[0][0], green[0][1]], dtype=np.float32)
+position_high = np.array([wall[1][0], wall[1][1]], dtype=np.float32)
+position_low = np.array([green[0][0], green[0][1]], dtype=np.float32)
 
 trajectories = []
 
@@ -69,30 +59,27 @@ for file in all_files:
     # while cycle < step_length:
     while cycle < 1:
         i = cycle
-        if Heading:
-            prev_x = df.iloc[i, 2] - origin[0]
+        if North:
+            prev_x = -(df.iloc[i, 2] - origin[0])
             prev_y = df.iloc[i, 4] - origin[1]
         else:
-            prev_x = -(df.iloc[i, 2] - origin[0])
+            prev_x = df.iloc[i, 2] - origin[0]
             prev_y = -(df.iloc[i, 4] - origin[1])
         obs = []
         acts = []
         while i < df.shape[0] - 48:
-            if Heading:
-                x = df.iloc[i, 2] - origin[0]
+            if North:
+                x = -(df.iloc[i, 2] - origin[0])
                 y = df.iloc[i, 4] - origin[1]
             else:
-                x = -(df.iloc[i, 2] - origin[0])
+                x = df.iloc[i, 2] - origin[0]
                 y = -(df.iloc[i, 4] - origin[1])
             if x < position_low[0] or x > position_high[0] or y < position_low[1] or y > position_high[1]:
                 i += step_length
                 obs = []
                 acts = []
                 continue
-            if not Heading:
-                wall_distance = get_wall_distance(x, wall)
-            else:
-                wall_distance = get_wall_distance(x, green)
+            wall_distance = get_wall_distance(x, wall)
             transparency = get_transparency(y, transparencies)
             ob = np.concatenate([np.array([x, y]), np.array([wall_distance]), np.array([transparency])])
             obs.append(ob)
