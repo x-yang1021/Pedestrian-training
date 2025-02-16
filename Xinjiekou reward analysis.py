@@ -25,6 +25,7 @@ import shap
 SEED = 1
 North = False
 Heading = 0
+selected_features = True
 x_axis_data_labels = [
     'green distance', 'position y', 'wall distance', 'transparency',
     'speed', 'direction'
@@ -122,18 +123,40 @@ for _ in range(2):
         else:
             model_type = "South-Northbound"
 
-    plt.figure(figsize=(16, 8))  # Adjust size as needed
-    shap.summary_plot(
-        shap_value,
-        features=features,
-        feature_names=x_axis_data_labels,  # Use your combined feature names here
-        plot_type="dot",
-        show=False  # Prevent SHAP from automatically displaying the plot
-    )
+    if not selected_features:
+        plt.figure(figsize=(16, 8))  # Adjust size as needed
+        shap.summary_plot(
+            shap_value,
+            features=features,
+            feature_names=x_axis_data_labels,  # Use your combined feature names here
+            plot_type="dot",
+            show=False  # Prevent SHAP from automatically displaying the plot
+        )
 
-    plt.savefig(f'./graph/{model_type} Beeswarm Plot.png', dpi=300)
+        plt.savefig(f'./graph/{model_type} Beeswarm Plot.png', dpi=300)
 
-    plt.show()
+        plt.show()
+    else:
+        # Select only the columns for 'green distance' (index 0), 'wall distance' (index 2), and 'transparency' (index 3)
+        selected_columns = [0, 2, 3]
+        features_selected = features[:, selected_columns]
+        shap_value_selected = shap_value[:, selected_columns]
+
+        # Define the new feature names list
+        selected_feature_names = ['green distance', 'wall distance', 'transparency']
+
+        # Plot the beeswarm plot using only the selected features
+        plt.figure(figsize=(16, 8))  # Adjust size as needed
+        shap.summary_plot(
+            shap_value_selected,
+            features=features_selected,
+            feature_names=selected_feature_names,
+            plot_type="dot",
+            show=False  # Prevent SHAP from automatically displaying the plot
+        )
+
+        plt.savefig(f'./graph/{model_type} Beeswarm Plot.png', dpi=300)
+        plt.show()
 
     Heading += 1
 #
