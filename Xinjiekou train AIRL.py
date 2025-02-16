@@ -13,7 +13,7 @@ from env.register_env import setup_env
 from env.xinjiekou_env import Xinjiekou
 
 SEED = 42
-North = True
+North = False
 
 if North:
    traj_path = './env/Xinjiekou_Data/North/Training Trajectories'
@@ -35,13 +35,13 @@ rollouts = Xinjiekou.load_trajectories(traj_path)
 learner = PPO(
     env=env,
     policy=MlpPolicy,
-    batch_size=256,
-    ent_coef=0.04,
-    learning_rate=0.0005,
-    gamma=0.95,
-    clip_range=0.1,
-    vf_coef=0.7,
-    n_epochs=25,
+    batch_size=512,
+    ent_coef=0.02,
+    learning_rate=0.001,
+    gamma=0.98,
+    clip_range=0.2,
+    vf_coef=0.5,
+    n_epochs=50,
     seed=SEED,
 )
 reward_net = BasicShapedRewardNet(
@@ -52,14 +52,13 @@ reward_net = BasicShapedRewardNet(
 
 airl_trainer = AIRL(
     demonstrations=rollouts,
-    demo_batch_size=2048,
-    gen_replay_buffer_capacity=2048,
-    n_disc_updates_per_round=4,
+    demo_batch_size=1024,
+    gen_replay_buffer_capacity=1024,
+    n_disc_updates_per_round=6,
     venv=env,
     gen_algo=learner,
     reward_net=reward_net,
 )
-
 airl_trainer.train(1000000)
 
 # 0.41 0.55 0.58 0.80
