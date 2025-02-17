@@ -35,13 +35,13 @@ rollouts = Xinjiekou.load_trajectories(traj_path)
 learner = PPO(
     env=env,
     policy=MlpPolicy,
-    batch_size=512,
+    batch_size=256,
     ent_coef=0.02,
-    learning_rate=0.001,
+    learning_rate=0.0001,
     gamma=0.98,
-    clip_range=0.2,
+    clip_range=0.1,
     vf_coef=0.5,
-    n_epochs=50,
+    n_epochs=20,
     seed=SEED,
 )
 reward_net = BasicShapedRewardNet(
@@ -52,14 +52,14 @@ reward_net = BasicShapedRewardNet(
 
 airl_trainer = AIRL(
     demonstrations=rollouts,
-    demo_batch_size=1024,
+    demo_batch_size=512,
     gen_replay_buffer_capacity=1024,
-    n_disc_updates_per_round=6,
+    n_disc_updates_per_round=1,
     venv=env,
     gen_algo=learner,
     reward_net=reward_net,
 )
-airl_trainer.train(1000000)
+airl_trainer.train(500000)
 
 # 0.41 0.55 0.58 0.80
 # Save the trained model

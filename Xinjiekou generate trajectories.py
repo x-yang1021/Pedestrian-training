@@ -16,7 +16,7 @@ South_wall = [(-(-467 - South_origin[0]),52612-South_origin[1]), (-(-467 - South
 South_green = [(-455-South_origin[0], 52612-South_origin[1]), (-455-South_origin[0], -(52546-South_origin[1]))]
 South_transparent = [(-(52581-South_origin[1]),-(52546-South_origin[1]))]
 
-North = True
+North = False
 step_length = 4
 episode_length = 13
 # Load the data
@@ -27,7 +27,7 @@ if North:
     transparencies = North_transparent
     origin = origin
 else:
-    path = './Data/Xinjiekou/South'
+    path = './Data/Xinjiekou/South New'
     wall = South_wall
     green = South_green
     transparencies = South_transparent
@@ -56,7 +56,7 @@ for file in all_files:
             prev_x = -(df.iloc[i, 2] - origin[0])
             prev_y = df.iloc[i, 4] - origin[1]
         else:
-            prev_x = df.iloc[i, 2] - origin[0]
+            prev_x = -(df.iloc[i, 2] - origin[0])
             prev_y = -(df.iloc[i, 4] - origin[1])
         obs = []
         acts = []
@@ -65,7 +65,7 @@ for file in all_files:
                 x = -(df.iloc[i, 2] - origin[0])
                 y = df.iloc[i, 4] - origin[1]
             else:
-                x = df.iloc[i, 2] - origin[0]
+                x = -(df.iloc[i, 2] - origin[0])
                 y = -(df.iloc[i, 4] - origin[1])
             if x < position_low[0] or x > position_high[0] or y < position_low[1] or y > position_high[1]:
                 i += step_length
