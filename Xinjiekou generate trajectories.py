@@ -8,10 +8,21 @@ from sklearn.model_selection import train_test_split
 
 from env.xinjiekou_env import Xinjiekou
 
-origin = [-455,52322]
-North_wall = [(-(-474 - origin[0]),52322-origin[1]), (-(-474 - origin[0]),52468-origin[1])]
-North_green = [(-455 - origin[0],52322-origin[1]), (-455 - origin[0],52468-origin[1])]
-North_transparent = [(52337-origin[1],52344-origin[1]), (52401-origin[1], 52407-origin[1])]
+North = True
+Heading = 0
+step_length = 4
+episode_length = 13
+
+if Heading:
+    origin = [-474,52322]
+    North_wall = [(-474 - origin[0],52322-origin[1]), (-474 - origin[0],52468-origin[1])]
+    North_green = [(-455 - origin[0],52322-origin[1]), (-455 - origin[0],52468-origin[1])]
+else:
+    origin = [-455, 52468]
+    North_wall = [(-(-474 - origin[0]), 52468 - origin[1]),(-(-474 - origin[0]), -(52322 - origin[1]))]
+    North_green = [(-455 - origin[0], 52468 - origin[1]),(-455 - origin[0],-(52322 - origin[1]))]
+
+
 
 
 South_origin = [-455, 52612]
@@ -20,17 +31,13 @@ South_green = [(-455-South_origin[0], 52612-South_origin[1]), (-455-South_origin
 South_transparent = [(-(52581-South_origin[1]),-(52546-South_origin[1]))]
 
 
-North = True
-Heading = 1
-step_length = 4
-episode_length = 13
+
 
 # Load the data
 if North:
     path = './Data/Xinjiekou/North'
     wall = North_wall
     green = North_green
-    transparencies = North_transparent
     origin = origin
 else:
     path = './Data/Xinjiekou/South'
@@ -39,8 +46,12 @@ else:
     transparencies = South_transparent
     origin = South_origin
 
-position_high = np.array([wall[1][0], wall[1][1]], dtype=np.float32)
-position_low = np.array([green[0][0], green[0][1]], dtype=np.float32)
+if not Heading:
+    position_high = np.array([wall[1][0], wall[1][1]], dtype=np.float32)
+    position_low = np.array([green[0][0], green[0][1]], dtype=np.float32)
+else:
+    position_high = np.array([green[1][0], green[1][1]], dtype=np.float32)
+    position_low = np.array([wall[0][0], wall[0][1]], dtype=np.float32)
 
 trajectories = []
 
@@ -60,8 +71,12 @@ for file in all_files:
     while cycle < 1:
         i = cycle
         if North:
-            prev_x = -(df.iloc[i, 2] - origin[0])
-            prev_y = df.iloc[i, 4] - origin[1]
+            if Heading:
+                prev_x = df.iloc[i, 2] - origin[0]
+                prev_y = df.iloc[i, 4] - origin[1]
+            else:
+                prev_x = -(df.iloc[i, 2] - origin[0])
+                prev_y = -(df.iloc[i, 4] - origin[1])
         else:
             prev_x = df.iloc[i, 2] - origin[0]
             prev_y = -(df.iloc[i, 4] - origin[1])
@@ -69,8 +84,12 @@ for file in all_files:
         acts = []
         while i < df.shape[0] - 48:
             if North:
-                x = -(df.iloc[i, 2] - origin[0])
-                y = df.iloc[i, 4] - origin[1]
+                if Heading:
+                    x = df.iloc[i, 2] - origin[0]
+                    y = df.iloc[i, 4] - origin[1]
+                else:
+                    x = -(df.iloc[i, 2] - origin[0])
+                    y = -(df.iloc[i, 4] - origin[1])
             else:
                 x = df.iloc[i, 2] - origin[0]
                 y = -(df.iloc[i, 4] - origin[1])
@@ -79,9 +98,11 @@ for file in all_files:
                 obs = []
                 acts = []
                 continue
-            wall_distance = get_wall_distance(x, wall)
-            transparency = get_transparency(y, transparencies)
-            ob = np.concatenate([np.array([x, y]), np.array([wall_distance]), np.array([transparency])])
+            if Heading:
+                wall_distance = get_wall_distance(x, green)
+            else:
+                wall_distance = get_wall_distance(x, wall)
+            ob = np.concatenate([np.array([x, y]), np.array([wall_distance])])
             obs.append(ob)
             if len(obs) > 1:
                 dist = np.sqrt((x - prev_x) ** 2 + (y - prev_y) ** 2)

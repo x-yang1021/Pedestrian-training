@@ -23,11 +23,12 @@ from captum.attr import (IntegratedGradients, GradientShap, Saliency,InputXGradi
 import shap
 
 SEED = 1
-North = False
+North = True
 Heading = 0
-selected_features = True
+selected_features = False
+
 x_axis_data_labels = [
-    'green distance', 'position y', 'wall distance', 'transparency',
+    'green distance', 'position y', 'wall distance',
     'speed', 'direction'
 ]
 
@@ -35,11 +36,20 @@ feature_sums =[]
 feature_stds = []
 for _ in range(2):
     if North:
-        setup_env(mode='eval', North=North, eval_trajectories_path='./env/Xinjiekou_Data/North/Testing Trajectories')
-        env = gym.make("Xinjiekou-v0")
-        policy = PPO.load('./model/North/Policy.zip', env=env)
-        reward_net = torch.load('./model/North/Reward.pth')
-        rollouts = Xinjiekou.load_trajectories('./env/Xinjiekou_Data/North/Testing Trajectories')
+        if Heading:
+            setup_env(mode='eval', North=North, Heading=Heading,
+                      eval_trajectories_path='./env/Xinjiekou_Data/North/Southbound/Testing Trajectories')
+            env = gym.make("Xinjiekou-v0")
+            policy = PPO.load('./model/North/Southbound/Policy.zip', env=env)
+            reward_net = torch.load('./model/North/Southbound/Reward.pth')
+            rollouts = Xinjiekou.load_trajectories('./env/Xinjiekou_Data/North/Southbound/Testing Trajectories')
+        else:
+            setup_env(mode='eval', North=North, Heading=Heading,
+                      eval_trajectories_path='./env/Xinjiekou_Data/North/Northbound/Testing Trajectories')
+            env = gym.make("Xinjiekou-v0")
+            policy = PPO.load('./model/North/Northbound/Policy.zip', env=env)
+            reward_net = torch.load('./model/North/Northbound/Reward.pth')
+            rollouts = Xinjiekou.load_trajectories('./env/Xinjiekou_Data/North/Northbound/Testing Trajectories')
     else:
         if Heading:
             setup_env(mode='eval', North=North, Heading=Heading, eval_trajectories_path='./env/Xinjiekou_Data/South/Southbound/Testing Trajectories')
@@ -116,7 +126,10 @@ for _ in range(2):
     shap_value = np.concatenate(shap_values_list, axis=1)
 
     if North:
-        model_type = "North"
+        if Heading:
+            model_type = "North-Southbound"
+        else:
+            model_type = "North-Northbound"
     else:
         if Heading:
             model_type = "South-Southbound"
@@ -138,12 +151,12 @@ for _ in range(2):
         plt.show()
     else:
         # Select only the columns for 'green distance' (index 0), 'wall distance' (index 2), and 'transparency' (index 3)
-        selected_columns = [0, 2, 3]
+        selected_columns = [0, 2]
         features_selected = features[:, selected_columns]
         shap_value_selected = shap_value[:, selected_columns]
 
         # Define the new feature names list
-        selected_feature_names = ['green distance', 'wall distance', 'transparency']
+        selected_feature_names = ['green distance', 'wall distance']
 
         # Plot the beeswarm plot using only the selected features
         plt.figure(figsize=(16, 8))  # Adjust size as needed

@@ -86,11 +86,11 @@ for model in models:
     algo = rpt.Window(model=model).fit(signal)
     for i in range(1,2):
         result = algo.predict(n_bkps=1)
-        rpt.display(signal, result)
-        plt.xlabel('Index')
-        # plt.ylabel('Direction Change')
-        plt.savefig('Break point.png')
-        plt.show()
+        # rpt.display(signal, result)
+        # plt.xlabel('Index')
+        # # plt.ylabel('Direction Change')
+        # plt.savefig('Break point.png')
+        # plt.show()
 
         print(f'Change points: {result}', model,i)
 
@@ -102,25 +102,24 @@ for model in models:
 #
 # print(df_special['Speed'].mean())
 
-obs, vars = signal.shape
-ranks = stats.mstats.rankdata(signal, axis=0)
-ranks = ranks - ((obs + 1) / 2)
-cov = np.cov(ranks, rowvar=False, bias=True).reshape(vars, vars)
-inv_cov = np.linalg.pinv(cov)
+# obs, vars = signal.shape
+# ranks = stats.mstats.rankdata(signal, axis=0)
+# ranks = ranks - ((obs + 1) / 2)
+# cov = np.cov(ranks, rowvar=False, bias=True).reshape(vars, vars)
+# inv_cov = np.linalg.pinv(cov)
+#
+# mean = df_clean.iloc[:result[0]].abs().mean()
+#
+# var = df_clean.iloc[:result[0]].abs().var()
+#
+# print(mean, var)
+#
+# mean = df_clean.iloc[result[0]:].abs().mean()
+#
+# var = df_clean.iloc[result[0]:].abs().var()
+#
+# print(mean, var)
 
-mean = np.reshape(np.mean(ranks[:result[0]], axis=0), (-1, 1))
-
-var = signal[:result[0]].var(axis=0)
-
-print(mean, var)
-
-mean = np.reshape(np.mean(ranks[result[0]:], axis=0), (-1, 1))
-
-var = signal[result[0]:].var(axis=0)
-
-print(mean, var)
-
-exit()
 
 speed_1 = []
 direction_1 = []

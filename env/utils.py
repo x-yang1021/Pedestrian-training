@@ -11,4 +11,4 @@ def get_green_distance(x, green):
     return green[0] - x
 
 def get_wall_distance(x, wall):
-    return wall[0][0] - x
+    return abs(wall[0][0] - x)

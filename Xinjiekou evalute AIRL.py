@@ -7,14 +7,20 @@ from stable_baselines3.ppo import MlpPolicy
 from env.register_env import setup_env
 
 SEED = 1
-North = False
-Heading = 0
+North = True
+Heading = 1
 
 if North:
-    setup_env(mode='eval', North=North, eval_trajectories_path='./env/Xinjiekou_Data/North/Testing Trajectories')
-    env = gym.make("Xinjiekou-v0")
-    policy = PPO.load('./model/North/Policy.zip', env=env)
-    reward_net = torch.load('./model/North/Reward.pth')
+    if Heading:
+        setup_env(mode='eval', North=North, Heading=Heading, eval_trajectories_path='./env/Xinjiekou_Data/North/Southbound/Testing Trajectories')
+        env = gym.make("Xinjiekou-v0")
+        policy = PPO.load('./model/North/Southbound/Policy.zip', env=env)
+        reward_net = torch.load('./model/North/Southbound/Reward.pth')
+    else:
+        setup_env(mode='eval', North=North, Heading=Heading, eval_trajectories_path='./env/Xinjiekou_Data/North/Northbound/Testing Trajectories')
+        env = gym.make("Xinjiekou-v0")
+        policy = PPO.load('./model/North/Northbound/Policy.zip', env=env)
+        reward_net = torch.load('./model/North/Northbound/Reward.pth')
 else:
     if Heading:
         setup_env(mode='eval', North=North, Heading=Heading, eval_trajectories_path='./env/Xinjiekou_Data/South/Southbound/Testing Trajectories')

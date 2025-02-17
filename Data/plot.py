@@ -60,7 +60,7 @@ plt.xlabel('Positionx')
 plt.ylabel('Positiony')
 plt.savefig('Raw Track Points.png')
 plt.show()
-exit()
+
 # 绘制密度表面图
 plt.figure(figsize=(10, 8))
 sns.kdeplot(x=x, y=y, cmap='Blues', fill=True, bw_adjust=0.5)

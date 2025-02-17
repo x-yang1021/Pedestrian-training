@@ -10,10 +10,10 @@ from gymnasium import spaces
 from env.utils import get_transparency,get_green_distance,get_wall_distance
 
 
-origin = [-455,52322]
-North_wall = [(abs(-474 - origin[0]),52322-origin[1]), (abs(-474 - origin[0]),52468-origin[1])]
-North_green = [(-455 - origin[0],52322-origin[1]), (-455 - origin[0],52468-origin[1])]
-North_transparent = [(52337-origin[1],52344-origin[1]), (52401-origin[1], 52407-origin[1])]
+# origin = [-455,52322]
+# North_wall = [(-(-474 - origin[0]),52322-origin[1]), (-(-474 - origin[0]),52468-origin[1])]
+# North_green = [(-455 - origin[0],52322-origin[1]), (-455 - origin[0],52468-origin[1])]
+# North_transparent = [(52337-origin[1],52344-origin[1]), (52401-origin[1], 52407-origin[1])]
 
 
 South_origin = [-455, 52612]
@@ -26,22 +26,32 @@ class Xinjiekou(gym.Env):
     def __init__(self, trajectory_path, North=True, Heading = 1, episode_length=13):
         self.Heading = Heading
         if North:
+            if Heading:
+                origin = [-474, 52322]
+                North_wall = [(-474 - origin[0], 52322 - origin[1]), (-474 - origin[0], 52468 - origin[1])]
+                North_green = [(-455 - origin[0], 52322 - origin[1]), (-455 - origin[0], 52468 - origin[1])]
+            else:
+                origin = [-455, 52468]
+                North_wall = [(-(-474 - origin[0]), 52468 - origin[1]), (-(-474 - origin[0]), -(52322 - origin[1]))]
+                North_green = [(-455 - origin[0], 52468 - origin[1]), (-455 - origin[0], -(52322 - origin[1]))]
             self.wall = North_wall
             self.green = North_green
-            self.transparencies = North_transparent
 
         else:
             self.wall = South_wall
             self.green = South_green
-            self.transparencies = South_transparent
 
         self.trajectories = serialize.load(trajectory_path)
         self.episode_length = episode_length
 
         self.max_speed = 9
         self.max_direction = np.pi
-        self.position_high = np.array([self.wall[1][0], self.wall[1][1]], dtype=np.float32)
-        self.position_low = np.array([self.green[0][0], self.green[0][1]], dtype=np.float32)
+        if not self.Heading:
+            self.position_high = np.array([self.wall[1][0], self.wall[1][1]], dtype=np.float32)
+            self.position_low = np.array([self.green[0][0], self.green[0][1]], dtype=np.float32)
+        else:
+            self.position_low = np.array([self.wall[0][0], self.wall[0][1]], dtype=np.float32)
+            self.position_high = np.array([self.green[1][0], self.green[1][1]], dtype=np.float32)
         self.max_width = abs(self.wall[0][0] - self.green[0][0])
 
         # Define action space
@@ -55,12 +65,10 @@ class Xinjiekou(gym.Env):
             low=np.concatenate([
                 self.position_low,
                 np.full(regular_shape, 0, dtype=np.float32),  # Wall distance (≥ 0)
-                np.zeros(regular_shape, dtype=np.float32),  # Transparency (0 stands for opaque)
             ]),
             high=np.concatenate([
                 self.position_high,
                 np.full(regular_shape, self.max_width, dtype=np.float32),  # Wall distance
-                np.ones(regular_shape, dtype=np.float32), # Transparency (1 stands for transparent)
             ]),
             dtype=np.float32
         )
@@ -101,14 +109,14 @@ class Xinjiekou(gym.Env):
         y1 = pos[1] + speed * np.sin(direction) * 0.4  # 0.4 second
 
         # Update other state components
-        wall_dist = get_wall_distance(x1, self.wall)
-        transparency = get_transparency(y1, self.transparencies)
-
+        if self.Heading:
+            wall_dist = get_wall_distance(x1, self.green)
+        else:
+            wall_dist = get_wall_distance(x1, self.wall)
         # Construct the flattened state array in the specified order
         state_array = np.concatenate([
             np.array([x1, y1], dtype=np.float32),  # position (2 values)
-            np.array([wall_dist], dtype=np.float32),  # wall_dist (2 values)
-            np.array([transparency], dtype=np.float32),  # transparency (1 values)
+            np.array([wall_dist], dtype=np.float32)  # wall_dist (2 values)
         ])
 
         return state_array
