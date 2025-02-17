@@ -17,7 +17,7 @@ South_wall = [(-(-467 - South_origin[0]),52612-South_origin[1]), (-(-467 - South
 South_green = [(-455-South_origin[0], 52612-South_origin[1]), (-455-South_origin[0], -(52546-South_origin[1]))]
 South_transparent = [(-(52581-South_origin[1]),-(52546-South_origin[1]))]
 
-North = False
+North = True
 step_length = 4
 episode_length = 13
 # Load the data
@@ -43,19 +43,19 @@ useful_traj = 0
 all_files = glob.glob(path + "/*.txt")
 for file in all_files:
     df = pd.read_csv(file,sep="\t", header=None)
-    if df.shape[0] < 48:
-        continue
+    # if df.shape[0] < 48:
+    #     continue
     distance = np.sqrt((df.iloc[-1, 2] - df.iloc[0, 2]) ** 2 + (df.iloc[-1, 4] - df.iloc[0, 4]) ** 2)
-    if distance < 1:
-        continue
+    # if distance < 1:
+    #     continue
     if North:
-        x = -(df.iloc[:, 2] - origin[0])
-        y = df.iloc[:, 4] - origin[1]
+        x = -(df.iloc[:, 2] )
+        y = df.iloc[:, 4]
     else:
-        x = -(df.iloc[:, 2] - origin[0])
-        y = -(df.iloc[:, 4] - origin[1])
-    if y.max() > position_high[1] or y.min() < position_low[1] or x.max() > position_high[0] or x.min() < position_low[0]:
-        continue
+        x = -(df.iloc[:, 2] )
+        y = -(df.iloc[:, 4] )
+    # if y.max() > position_high[1] or y.min() < position_low[1] or x.max() > position_high[0] or x.min() < position_low[0]:
+    #     continue
     useful_traj += 1
     #     print(file,df)
     # print(np.mean(y))
