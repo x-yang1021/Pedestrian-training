@@ -84,12 +84,12 @@ dtw_distances_condensed = squareform(dtw_distances)
 Z = linkage(dtw_distances_condensed, method='ward')
 
 # Step 4: Optional: Visualize the dendrogram
-plt.figure(figsize=(10, 7))
-dendrogram(Z, no_labels=True)
-plt.title("Dendrogram of Hierarchical Clustering with DTW")
-plt.ylabel("Distance")
-plt.savefig('Dendrogram.png')
-plt.show()
+# plt.figure(figsize=(10, 7))
+# dendrogram(Z, no_labels=True)
+# plt.title("Dendrogram of Hierarchical Clustering with DTW")
+# plt.ylabel("Distance")
+# plt.savefig('Dendrogram.png')
+# plt.show()
 
 # Step 5: Determine the optimal number of clusters using the Silhouette score
 range_n_clusters = range(2, 10)  # Example range to check

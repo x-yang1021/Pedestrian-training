@@ -36,12 +36,12 @@ learner = PPO(
     env=env,
     policy=MlpPolicy,
     batch_size=256,
-    ent_coef=0.05,
+    ent_coef=0.04,
     learning_rate=0.0005,
     gamma=0.99,
-    clip_range=0.2,
-    vf_coef=0.8,
-    n_epochs=25,
+    clip_range=0.1,
+    vf_coef=0.7,
+    n_epochs=35,
     seed=SEED,
 )
 reward_net = BasicShapedRewardNet(
@@ -54,12 +54,12 @@ airl_trainer = AIRL(
     demonstrations=rollouts,
     demo_batch_size=4096,
     gen_replay_buffer_capacity=2048,
-    n_disc_updates_per_round=2,
+    n_disc_updates_per_round=3,
     venv=env,
     gen_algo=learner,
     reward_net=reward_net,
 )
-airl_trainer.train(1000000)
+airl_trainer.train(1500000)
 
 # 0.41 0.55 0.58 0.80
 # Save the trained model
