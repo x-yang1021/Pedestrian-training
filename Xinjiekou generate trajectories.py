@@ -8,12 +8,19 @@ from sklearn.model_selection import train_test_split
 
 from env.xinjiekou_env import Xinjiekou
 
-origin = [-455,52322]
-North_wall = [(abs(-474 - origin[0]),52322-origin[1]), (abs(-474 - origin[0]),52468-origin[1])]
-North_green = [(-455 - origin[0],52322-origin[1]), (-455 - origin[0],52468-origin[1])]
-North_transparent = [(52337-origin[1],52344-origin[1]), (52401-origin[1], 52407-origin[1])]
 
 Heading = 0
+
+if Heading:
+    origin = [-474,52322]
+    North_wall = [(-474 - origin[0],52322-origin[1]), (-474 - origin[0],52468-origin[1])]
+    North_green = [(-455 - origin[0],52322-origin[1]), (-455 - origin[0],52468-origin[1])]
+    North_transparent = [(52337 - origin[1], 52344 - origin[1]), (52401 - origin[1], 52407 - origin[1])]
+else:
+    origin = [-455, 52468]
+    North_wall = [(-(-474 - origin[0]), 52468 - origin[1]),(-(-474 - origin[0]), -(52322 - origin[1]))]
+    North_green = [(-455 - origin[0], 52468 - origin[1]),(-455 - origin[0],-(52322 - origin[1]))]
+    North_transparent = [(-(52407 - origin[1]),-(52401 - origin[1])), (-(52344 - origin[1]),-(52337 - origin[1]))]
 
 
 if Heading:
@@ -27,7 +34,7 @@ else:
     South_green = [(-455-South_origin[0], 52612-South_origin[1]), (-455-South_origin[0], -(52546-South_origin[1]))]
     South_transparent = [(-(52581-South_origin[1]),-(52546-South_origin[1]))]
 
-North = False
+North = True
 step_length = 4
 episode_length = 13
 
@@ -117,8 +124,12 @@ for file in all_files:
 train_traj, test_traj = train_test_split(trajectories, test_size=0.2, random_state=42)
 
 if North:
-    serialize.save('./env/Xinjiekou_Data/North/Training Trajectories', train_traj)
-    serialize.save('./env/Xinjiekou_Data/North/Testing Trajectories', test_traj)
+    if Heading:
+        serialize.save('./env/Xinjiekou_Data/North/Southbound/Training Trajectories', train_traj)
+        serialize.save('./env/Xinjiekou_Data/North/Southbound/Testing Trajectories', test_traj)
+    else:
+        serialize.save('./env/Xinjiekou_Data/North/Northbound/Training Trajectories', train_traj)
+        serialize.save('./env/Xinjiekou_Data/North/Northbound/Testing Trajectories', test_traj)
 else:
     if Heading:
         serialize.save('./env/Xinjiekou_Data/South/Southbound/Training Trajectories', train_traj)
