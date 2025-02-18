@@ -21,8 +21,8 @@ traj_length = 15
 # distance_threshold = 2.58
 distance_threshold = 9
 df = pd.read_csv('../Data/clustered.csv')
-df_all = pd.read_csv('./entire dataset.csv')
-df_all = df_all[['ID','Positonx','Positiony','Trajectory']]
+df_all = pd.read_csv('./entrie dataset.csv')
+df_all = df_all[['ID','Positionx','Positiony','Trajectory']]
 df_all['Cluster'] = np.nan
 
 
@@ -58,14 +58,17 @@ for j in range(df_cluster.shape[0]):
 Cluster_Trajectories_num[ID] = traj_num
 Cluster_Trajectories[ID].append(trajectory)
 
-# Filter out NaN values in 'ID'
-valid_rows = df_all['ID'].notna()
+for i in range(df_all.shape[0]):
+    if pd.isna(df_all.at[i, 'ID']):
+        continue
+    ID = df_all.at[i, 'ID']
+    if df_all.at[i, 'Trajectory'] in Cluster_Trajectories[ID]:
+        df_all.at[i, 'Cluster'] = cluster
+    else:
+        df_all.at[i, 'Cluster'] = cluster+1
 
-# Vectorized assignment using .loc[]
-df_all.loc[valid_rows & df_all['Trajectory'].isin(Cluster_Trajectories[df_all['ID']]), 'Cluster'] = cluster
-df_all.loc[valid_rows & ~df_all['Trajectory'].isin(Cluster_Trajectories[df_all['ID']]), 'Cluster'] = cluster + 1
+df_plot = df_all[df_all['Cluster']==cluster+1]
 
-df_plot = df_all[df_all['Cluster']==cluster]
 grouped = df_plot.groupby('Trajectory')
 fig, ax = plt.subplots(figsize=(8, 6))
 for name, group in grouped:

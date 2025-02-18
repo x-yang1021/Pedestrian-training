@@ -86,12 +86,24 @@ for model in models:
     algo = rpt.Window(model=model).fit(signal)
     for i in range(1,2):
         result = algo.predict(n_bkps=1)
-        # plt.figure(figsize=(10, 12))
-        rpt.display(signal, result)
-        plt.xlabel('Index')
-        plt.ylabel('Behaviour')
+        fig, ax = plt.subplots(2, 1, figsize=(12, 8))
+
+        ax[0].plot(signal[:, 0], label='Change of Speed', color='steelblue')
+        ax[0].set_ylabel('Change of Speed', fontsize=14)
+
+        ax[1].plot(signal[:, 1], label='Change of Direction', color='steelblue')
+        ax[1].set_ylabel('Change of Direction', fontsize=14)
+
+        for i, (start, end) in enumerate(zip([0] + result[:-1], result)):
+            color = 'lightblue' if i % 2 == 0 else 'pink'
+            ax[0].axvspan(start, end, color=color, alpha=0.5)
+            ax[1].axvspan(start, end, color=color, alpha=0.5)
+
+        for a in ax:
+            a.set_xlabel('Index', fontsize=18)
+            # a.set_ylabel('Change', fontsize=14)
         plt.tight_layout()
-        plt.savefig('Break point.png')
+        plt.savefig("Break_point.png")
         plt.show()
 
         print(f'Change points: {result}', model,i)
