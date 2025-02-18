@@ -133,7 +133,7 @@ tt_stat, p_value = stats.mannwhitneyu(np.array(Near_direction_change),np.array(F
 
 print(p_value, 'Near Direction Change')
 
-
+exit()
 # exam number of useful traj
 
 dfs = []

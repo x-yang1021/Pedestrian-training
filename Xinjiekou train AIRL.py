@@ -41,7 +41,7 @@ learner = PPO(
     gamma=0.99,
     clip_range=0.1,
     vf_coef=0.7,
-    n_epochs=35,
+    n_epochs=25,
     seed=SEED,
 )
 reward_net = BasicShapedRewardNet(
@@ -52,14 +52,14 @@ reward_net = BasicShapedRewardNet(
 
 airl_trainer = AIRL(
     demonstrations=rollouts,
-    demo_batch_size=4096,
+    demo_batch_size=2048,
     gen_replay_buffer_capacity=2048,
-    n_disc_updates_per_round=3,
+    n_disc_updates_per_round=4,
     venv=env,
     gen_algo=learner,
     reward_net=reward_net,
 )
-airl_trainer.train(1500000)
+airl_trainer.train(1000000)
 
 # 0.41 0.55 0.58 0.80
 # Save the trained model

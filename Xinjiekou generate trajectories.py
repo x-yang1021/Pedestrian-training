@@ -34,7 +34,7 @@ else:
     origin = South_origin
 
 
-position_high = np.array([wall[1][0], wall[1][1]], dtype=np.float32)
+position_high = np.array([wall[1][0], transparencies[1][1]], dtype=np.float32)
 position_low = np.array([green[0][0], green[0][1]], dtype=np.float32)
 
 trajectories = []
