@@ -86,9 +86,11 @@ for model in models:
     algo = rpt.Window(model=model).fit(signal)
     for i in range(1,2):
         result = algo.predict(n_bkps=1)
+        # plt.figure(figsize=(10, 12))
         rpt.display(signal, result)
         plt.xlabel('Index')
-        # plt.ylabel('Direction Change')
+        plt.ylabel('Behaviour')
+        plt.tight_layout()
         plt.savefig('Break point.png')
         plt.show()
 
@@ -101,6 +103,8 @@ for model in models:
 # df_special = df_clean[df_clean['Distance'] == 3.28]
 #
 # print(df_special['Speed'].mean())
+
+exit()
 
 obs, vars = signal.shape
 ranks = stats.mstats.rankdata(signal, axis=0)
