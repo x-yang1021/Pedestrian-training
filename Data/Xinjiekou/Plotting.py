@@ -49,11 +49,11 @@ for file in all_files:
     # if distance < 1:
     #     continue
     if North:
-        x = -(df.iloc[:, 2] )
-        y = df.iloc[:, 4]
+        x = -(df.iloc[:, 2] - origin[0])
+        y = df.iloc[:, 4] - origin[1]
     else:
-        x = -(df.iloc[:, 2] )
-        y = -(df.iloc[:, 4] )
+        x = -(df.iloc[:, 2] - origin[0])
+        y = -(df.iloc[:, 4] - origin[1])
     # if y.max() > position_high[1] or y.min() < position_low[1] or x.max() > position_high[0] or x.min() < position_low[0]:
     #     continue
     useful_traj += 1
