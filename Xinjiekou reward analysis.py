@@ -24,6 +24,7 @@ import shap
 SEED = 1
 North = True
 selected_features = True
+plot_type = 'violin'
 
 x_axis_data_labels = [
     'green distance', 'position y', 'wall distance', 'transparency', 'heading',
@@ -116,7 +117,7 @@ for _ in range(1):
             shap_value,
             features=features,
             feature_names=x_axis_data_labels,  # Use your combined feature names here
-            plot_type="violin",
+            plot_type= plot_type,
             show=False  # Prevent SHAP from automatically displaying the plot
         )
 
@@ -138,11 +139,11 @@ for _ in range(1):
             shap_value_selected,
             features=features_selected,
             feature_names=selected_feature_names,
-            plot_type="violin",
+            plot_type=plot_type,
             show=False  # Prevent SHAP from automatically displaying the plot
         )
 
-        plt.savefig(f'./graph/{model_type} Beeswarm Plot.png', dpi=300)
+        plt.savefig(f'./graph/{model_type} {plot_type} Plot.png', dpi=300)
         plt.show()
 
     North = False
