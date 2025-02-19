@@ -41,7 +41,7 @@ class Xinjiekou(gym.Env):
             self.position_high = np.array([self.wall[1][0], self.wall[1][1]], dtype=np.float32)
             self.position_low = np.array([self.green[0][0], self.green[0][1]], dtype=np.float32)
         else:
-            self.position_high = np.array([self.wall[1][0], self.transparencies[1][1]], dtype=np.float32)
+            self.position_high = np.array([self.wall[1][0], self.wall[1][1]], dtype=np.float32)
             self.position_low = np.array([self.green[0][0], self.green[0][1]], dtype=np.float32)
         self.max_width = self.wall[0][0] - self.green[0][0]
 

@@ -23,6 +23,7 @@ import shap
 
 SEED = 1
 North = True
+selected_features = True
 
 x_axis_data_labels = [
     'green distance', 'position y', 'wall distance', 'transparency', 'heading',
@@ -35,8 +36,8 @@ for _ in range(1):
     if North:
         setup_env(mode='eval', North=North, eval_trajectories_path='./env/Xinjiekou_Data/North/Testing Trajectories')
         env = gym.make("Xinjiekou-v0")
-        policy = PPO.load('./model/North/Policy.zip', env=env)
-        reward_net = torch.load('./model/North/Reward.pth')
+        policy = PPO.load('./model/North/Backup/Policy.zip', env=env)
+        reward_net = torch.load('./model/North/Backup/Reward.pth')
         rollouts = Xinjiekou.load_trajectories('./env/Xinjiekou_Data/North/Testing Trajectories')
     else:
         setup_env(mode='eval', North=North, eval_trajectories_path='./env/Xinjiekou_Data/South/Testing Trajectories')
@@ -108,18 +109,40 @@ for _ in range(1):
 
     model_type = "North" if North else "South"
 
-    plt.figure(figsize=(16, 8))  # Adjust size as needed
-    shap.summary_plot(
-        shap_value,
-        features=features,
-        feature_names=x_axis_data_labels,  # Use your combined feature names here
-        plot_type="dot",
-        show=False  # Prevent SHAP from automatically displaying the plot
-    )
+    if not selected_features:
+        plt.figure(figsize=(16, 8))  # Adjust size as needed
+        shap.summary_plot(
+            shap_value,
+            features=features,
+            feature_names=x_axis_data_labels,  # Use your combined feature names here
+            plot_type="dot",
+            show=False  # Prevent SHAP from automatically displaying the plot
+        )
 
-    plt.savefig(f'./graph/{model_type} Beeswarm Plot.png', dpi=300)
+        plt.savefig(f'./graph/{model_type} Beeswarm Plot.png', dpi=300)
 
-    plt.show()
+        plt.show()
+    else:
+        # Select only the columns for 'green distance' (index 0), 'wall distance' (index 2), and 'transparency' (index 3)
+        selected_columns = [0, 2, 3]
+        features_selected = features[:, selected_columns]
+        shap_value_selected = shap_value[:, selected_columns]
+
+        # Define the new feature names list
+        selected_feature_names = ['green distance', 'wall distance', 'transparency']
+
+        # Plot the beeswarm plot using only the selected features
+        plt.figure(figsize=(16, 8))  # Adjust size as needed
+        shap.summary_plot(
+            shap_value_selected,
+            features=features_selected,
+            feature_names=selected_feature_names,
+            plot_type="dot",
+            show=False  # Prevent SHAP from automatically displaying the plot
+        )
+
+        plt.savefig(f'./graph/{model_type} Beeswarm Plot.png', dpi=300)
+        plt.show()
 
     North = False
 #
