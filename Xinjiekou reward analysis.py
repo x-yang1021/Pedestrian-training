@@ -109,13 +109,14 @@ for _ in range(1):
 
     model_type = "North" if North else "South"
 
+
     if not selected_features:
         plt.figure(figsize=(16, 8))  # Adjust size as needed
         shap.summary_plot(
             shap_value,
             features=features,
             feature_names=x_axis_data_labels,  # Use your combined feature names here
-            plot_type="dot",
+            plot_type="violin",
             show=False  # Prevent SHAP from automatically displaying the plot
         )
 
@@ -137,7 +138,7 @@ for _ in range(1):
             shap_value_selected,
             features=features_selected,
             feature_names=selected_feature_names,
-            plot_type="dot",
+            plot_type="violin",
             show=False  # Prevent SHAP from automatically displaying the plot
         )
 
