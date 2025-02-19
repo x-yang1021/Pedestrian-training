@@ -25,16 +25,16 @@ import shap
 SEED = 1
 North = True
 Heading = 0
-selected_features = True
+selected_features = False
 
 x_axis_data_labels = [
-    'green distance', 'position y', 'wall distance',
+    'green distance', 'position y', 'wall distance', 'transparency',
     'speed', 'direction'
 ]
 
-feature_sums =[]
-feature_stds = []
 for _ in range(2):
+    feature_sums = []
+    feature_stds = []
     if North:
         if Heading:
             setup_env(mode='eval', North=North, Heading=Heading,
@@ -135,6 +135,8 @@ for _ in range(2):
             model_type = "South-Southbound"
         else:
             model_type = "South-Northbound"
+
+
 
     if not selected_features:
         plt.figure(figsize=(16, 8))  # Adjust size as needed

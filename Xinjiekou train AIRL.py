@@ -16,7 +16,7 @@ SEED = 42
 North = True
 Heading = 0
 
-for _ in range(1):
+for _ in range(2):
     if North:
         if Heading:
             traj_path = './env/Xinjiekou_Data/North/Southbound/Training Trajectories'
