@@ -15,7 +15,10 @@ def register_xinjiekou_env(trajectories_path, North, Heading, episode_length=13)
 
 def get_env_config(mode='train', North = True, Heading=1, eval_trajectories_path=None):
     if North:
-        trajectories_path = './env/Xinjiekou_Data/North/Training Trajectories'
+        if Heading:
+            trajectories_path = './env/Xinjiekou_Data/North/Southbound/Training Trajectories'
+        else:
+            trajectories_path = './env/Xinjiekou_Data/North/Northbound/Training Trajectories'
     else:
         if Heading:
             trajectories_path = './env/Xinjiekou_Data/South/Southbound/Training Trajectories'

@@ -7,8 +7,8 @@ from stable_baselines3.ppo import MlpPolicy
 from env.register_env import setup_env
 
 SEED = 1
-North = False
-Heading = 1
+North = True
+Heading = 0
 
 if North:
     if Heading:

@@ -8,8 +8,10 @@ from sklearn.model_selection import train_test_split
 
 from env.xinjiekou_env import Xinjiekou
 
-
-Heading = 0
+North = True
+step_length = 4
+episode_length = 13
+Heading = 1
 
 if Heading:
     origin = [-474,52322]
@@ -34,9 +36,7 @@ else:
     South_green = [(-455-South_origin[0], 52612-South_origin[1]), (-455-South_origin[0], -(52546-South_origin[1]))]
     South_transparent = [(-(52581-South_origin[1]),-(52546-South_origin[1]))]
 
-North = True
-step_length = 4
-episode_length = 13
+
 
 # Load the data
 if North:
