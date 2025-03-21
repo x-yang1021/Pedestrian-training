@@ -6,6 +6,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 from env.register_env import setup_env
 from utils import retrieveOriginalTrajectory
+from env.rush_env import Rush
 
 SEED = 1
 patient = True
@@ -28,13 +29,17 @@ else:
 
 reward_net.eval()
 
+if not patient:
+    rollouts = Rush.load_trajectories('./env/Rush_Data/Impatient/Testing Trajectories')
+else:
+    rollouts = Rush.load_trajectories('./env/Rush_Data/Patient/Testing Trajectories')
 
 rng = np.random.default_rng(SEED)  # For newer versions of NumPy (recommended)
 
 avg_mses = []
 final_mses = []
 total_rewards = []
-for _ in range(250):
+for _ in range(len(rollouts)):
     new_seed = int(rng.integers(0, high=2**32 - 1))
     obs, info = env.reset(seed=new_seed)
     dataset = datasets[int(info['experiment'] - 1)]
