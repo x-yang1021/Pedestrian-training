@@ -1,44 +1,49 @@
 import numpy as np
 import torch
-import gym
+import pandas as pd
+import gymnasium as gym
 from stable_baselines3.common.policies import ActorCriticPolicy
 from imitation.algorithms import bc
 from env.register_env import setup_env
 from env.rush_env import Rush
+from utils import retrieveOriginalTrajectory
 
 
-SEED = 1
-patient = True
+SEED = 42
+impatient = False
 
 dataset1 = pd.read_csv('./Data/Experiment 1.csv')
 dataset2 = pd.read_csv('./Data/Experiment 2.csv')
 dataset3 = pd.read_csv('./Data/Experiment 3.csv')
 datasets = [dataset1, dataset2, dataset3]
 
-if not patient:
+if impatient:
     setup_env(mode='eval', eval_trajectories_path='./env/Rush_Data/Impatient/Testing Trajectories')
     env = gym.make("Rush-v0")
-    policy_path = "./Patient/Policy"
+    policy_path = "./benchmark/BC/impatient/Policy"
 else:
     setup_env(mode='eval', eval_trajectories_path='./env/Rush_Data/Patient/Testing Trajectories')
     env = gym.make("Rush-v0")
-    policy_path = "./Impatient/Policy"
+    policy_path = "./benchmark/BC/patient/Policy"
 
-bc_trainer = bc.BC(
-    observation_space=env.observation_space,
-    action_space=env.action_space,
-    demonstrations=None  # not needed for inference
-)
-bc_trainer.policy = bc_trainer.policy.load(policy_path)
+# bc_trainer = bc.BC(
+#     observation_space=env.observation_space,
+#     action_space=env.action_space,
+#     demonstrations=None,
+#     rng=np.random.default_rng(SEED),
+# )
+
+policy = ActorCriticPolicy.load(policy_path)
+
 
 rng = np.random.default_rng(SEED)
 
 avg_mses, final_mses = [], []
 
 if not impatient:
-    rollouts = Rush.load_trajectories('../../env/Patient/Rush_Data/Training Trajectories')
+    rollouts = Rush.load_trajectories('./env/Rush_Data/Patient/Training Trajectories')
 else:
-    rollouts = Rush.load_trajectories('../../env/Impatient/Rush_Data/Training Trajectories')
+    rollouts = Rush.load_trajectories('./env/Rush_Data/Impatient/Training Trajectories')
 
 for _ in range(len(rollouts)):
     seed = int(rng.integers(0, high=2 ** 32 - 1))
@@ -50,7 +55,7 @@ for _ in range(len(rollouts)):
 
     predicted_traj = [obs[:2]]
     while not done:
-        action, _ = bc_trainer.policy.predict(obs)
+        action, _ = policy.predict(obs)
         obs, reward, done, truncated, info = env.step(action)
         predicted_traj.append(obs[:2])
 

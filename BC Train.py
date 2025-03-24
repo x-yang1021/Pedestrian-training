@@ -7,9 +7,11 @@ from imitation.data import rollout
 from imitation.data.wrappers import RolloutInfoWrapper
 from imitation.policies.serialize import load_policy
 from imitation.util.util import make_vec_env
+from env.register_env import setup_env
+from env.rush_env import Rush
 
 SEED = 42
-impatient = True
+impatient = False
 
 setup_env()
 
@@ -21,9 +23,9 @@ env = make_vec_env(
     log_dir='./log')
 
 if not impatient:
-    rollouts = Rush.load_trajectories('../../env/Patient/Rush_Data/Training Trajectories')
+    rollouts = Rush.load_trajectories('./env/Rush_Data/Patient/Training Trajectories')
 else:
-    rollouts = Rush.load_trajectories('../../env/Impatient/Rush_Data/Training Trajectories')
+    rollouts = Rush.load_trajectories('./env/Rush_Data/Impatient/Training Trajectories')
 
 transitions = rollout.flatten_trajectories(rollouts)
 
@@ -34,9 +36,9 @@ bc_trainer = bc.BC(
     rng=np.random.default_rng(SEED),
 )
 
-bc_trainer.train(n_epochs=1)
+bc_trainer.train(n_epochs=10)
 
 if not impatient:
-    bc_trainer.policy.save("./Patient/Policy")
+    bc_trainer.policy.save("./benchmark/BC/patient/Policy")
 else:
-    bc_trainer.policy.save("./Impatient/Policy")
+    bc_trainer.policy.save("./benchmark/BC/impatient/Policy")
