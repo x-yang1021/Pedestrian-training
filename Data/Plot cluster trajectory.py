@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from collections import defaultdict
 
 cluster = 1
 mapping = { 'ID':0,
@@ -18,11 +19,11 @@ mapping = { 'ID':0,
             'Direction Change':12}
 width = len(mapping)
 traj_length = 15
-# distance_threshold = 2.58
-distance_threshold = 9
+distance_threshold = 2.58
+# distance_threshold = 9
 df = pd.read_csv('../Data/clustered.csv')
 df_all = pd.read_csv('./entrie dataset.csv')
-df_all = df_all[['ID','Positionx','Positiony','Trajectory']]
+df_all = df_all[['ID','Positionx','Positiony','Trajectory','Speed','Speed Change']]
 df_all['Cluster'] = np.nan
 
 
@@ -30,7 +31,7 @@ Cluster_IDs = []
 Cluster_Trajectories_num = {}
 df_cluster = df[df['Cluster']==cluster]
 ID = df_cluster.iloc[0]['ID']
-Cluster_Trajectories = {ID:[]}
+Cluster_Trajectories = defaultdict(list)
 trajectory = 0
 traj_num = 1
 lengths = []
@@ -68,6 +69,26 @@ for i in range(df_all.shape[0]):
         df_all.at[i, 'Cluster'] = cluster+1
 
 df_plot = df_all[df_all['Cluster']==cluster+1]
+
+cols = ['Positionx', 'Positiony', 'Speed', 'Speed Change']
+
+# Drop rows with missing values in the selected columns
+df_plot = df_plot.dropna(subset=cols).copy()
+
+# Compute mean and std
+standardization_stats = {
+    col: {
+        'mean': df_plot[col].mean(),
+        'std': df_plot[col].std()
+    }
+    for col in cols
+}
+
+# Print results
+for col, stats in standardization_stats.items():
+    print(f"{col}: mean = {stats['mean']:.4f}, std = {stats['std']:.4f}")
+
+exit()
 
 grouped = df_plot.groupby('Trajectory')
 fig, ax = plt.subplots(figsize=(8, 6))
