@@ -23,7 +23,7 @@ distance_threshold = 2.58
 # distance_threshold = 9
 df = pd.read_csv('../Data/clustered.csv')
 df_all = pd.read_csv('./entrie dataset.csv')
-df_all = df_all[['ID','Positionx','Positiony','Trajectory','Speed','Speed Change']]
+df_all = df_all[['ID','Positionx','Positiony','Trajectory','Speed','Speed Change','Distance']]
 df_all['Cluster'] = np.nan
 
 
@@ -68,7 +68,7 @@ for i in range(df_all.shape[0]):
     else:
         df_all.at[i, 'Cluster'] = cluster+1
 
-df_plot = df_all[df_all['Cluster']==cluster+1]
+df_plot = df_all[df_all['Distance']<=distance_threshold].copy()
 
 cols = ['Positionx', 'Positiony', 'Speed', 'Speed Change']
 

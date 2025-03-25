@@ -1,7 +1,7 @@
 import json
 
 config = {
-    "batch_size": 256,
+    "batch_size": 250,
     "grad_clip": 1.0,
     "learning_rate_style": "exp",
     "learning_rate": 0.001,
@@ -16,7 +16,7 @@ config = {
     "p_z_x_MLP_dims": 32,
     "GMM_components": 1,
     "log_p_yt_xz_max": 6,
-    "N": 1,
+    "N": 2,
     "K": 25,
     "tau_init": 2.0,
     "tau_final": 0.05,
@@ -63,5 +63,5 @@ config = {
     "log_histograms": False
 }
 
-with open("config.json", "w") as f:
+with open("config2.json", "w") as f:
     json.dump(config, f, indent=2)
