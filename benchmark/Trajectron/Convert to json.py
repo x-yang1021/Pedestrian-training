@@ -1,7 +1,7 @@
 import json
 
 config = {
-    "batch_size": 250,
+    "batch_size": 256,
     "grad_clip": 1.0,
     "learning_rate_style": "exp",
     "learning_rate": 0.001,
@@ -17,7 +17,7 @@ config = {
     "GMM_components": 1,
     "log_p_yt_xz_max": 6,
     "N": 2,
-    "K": 25,
+    "K": 2,
     "tau_init": 2.0,
     "tau_final": 0.05,
     "tau_decay_rate": 0.997,
