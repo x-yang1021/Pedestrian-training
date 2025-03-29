@@ -12,14 +12,14 @@ grid_size = (4, 4)
 neighborhood_size = 4.0
 dropout = 0.1
 
-patient = True
+patient = False
 # Load the trained model
 if not patient:
-    model_path = './Impatient/social_lstm.pth'
-    test_data = torch.load('./Impatient/test_position.pt')
+    model_path = '../Impatient/social_lstm.pth'
+    test_data = torch.load('../Impatient/test_position.pt')
 else:
-    model_path = './Patient/social_lstm.pth'
-    test_data = torch.load('./Patient/test_position.pt')
+    model_path = '../Patient/social_lstm.pth'
+    test_data = torch.load('../Patient/test_position.pt')
 
 model = SocialLSTM(
     input_size=input_size,
@@ -58,3 +58,5 @@ with torch.no_grad():
 
 print('Average MSE:', 'Mean', np.mean(avg_mses), 'Min', np.min(avg_mses), 'Max', np.max(avg_mses), '25th', np.percentile(avg_mses, 25), '75th', np.percentile(avg_mses, 75))
 print('Final MSE:', 'Mean', np.mean(final_mses), 'Min', np.min(final_mses), 'Max', np.max(final_mses), '25th', np.percentile(final_mses, 25), '75th', np.percentile(final_mses, 75))
+
+# impatient 0.77 1.21
