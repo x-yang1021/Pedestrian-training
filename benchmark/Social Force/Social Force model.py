@@ -5,19 +5,22 @@ def unit(vec):
     return vec / norm if norm > 0 else np.zeros_like(vec)
 
 class Pedestrian:
-    def __init__(self, pos, vel, goal, shap_values, id):
+    def __init__(self, pos, vel, goal, shap_values, id, v_pref, tau, A , B):
         self.id = id
         self.pos = np.array(pos, dtype=float)
         self.vel = np.array(vel, dtype=float)
         self.goal = np.array(goal, dtype=float)
-        self.v_pref = 1.3  # preferred speed (m/s)
+        self.v_pref = v_pref
         self.heading = unit(goal - pos)
         self.shap = shap_values
+        self.tau = tau
+        self.A = A
+        self.B = B
 
-    def compute_driving_force(self, tau=0.5):
+    def compute_driving_force(self):
         v_desired = self.v_pref * unit(self.goal - self.pos)
         weight = 1 + self.shap.get('destination', 0)
-        return weight / tau * (v_desired - self.vel)
+        return weight / self.tau * (v_desired - self.vel)
 
     def compute_repulsion_force(self, others, A=2.0, B=1.0):
         force = np.zeros(2)
@@ -60,21 +63,9 @@ class Pedestrian:
 
         return f_speed + f_dir
 
-    def update(self, force, dt=0.1):
+    def update(self, force, dt=0.5):
         acc = force  # assume unit mass
         self.vel += acc * dt
         self.pos += self.vel * dt
-
-
-def simulate_step(pedestrians, density_field, dt=0.1):
-    for ped in pedestrians:
-        others = [p for p in pedestrians if p.id != ped.id]
-        f_drive = ped.compute_driving_force()
-        f_repulse = ped.compute_repulsion_force(others)
-        f_density = ped.compute_density_force(local_density=density_field(ped.pos))
-        f_comfort = ped.compute_comfort_force()
-
-        total_force = f_drive + f_repulse + f_density + f_comfort
-        ped.update(total_force, dt)
 
 
