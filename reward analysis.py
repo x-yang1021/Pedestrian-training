@@ -122,48 +122,63 @@ for _ in range(2):
 
     plt.show()
 
+    mean_abs_shap = np.abs(shap_value).mean(axis=0)
+    mean_signed_shap = shap_value.mean(axis=0)
+    std_shap = shap_value.std(axis=0)
+
+    # Combine into a DataFrame for readability and saving
+    shap_stats_df = pd.DataFrame({
+        'Feature': x_axis_data_labels,
+        'Abs Mean': mean_abs_shap,
+        'Mean': mean_signed_shap,
+        'Std': std_shap
+    })
+
+    # Save to CSV for later inspection
+    shap_stats_df.to_csv(f'./benchmark/Social Force/{model_type}_Average_SHAP.csv', index=False)
+
     patient = True
 
 
-
-# Generate x positions for the bars
-x_axis_data = np.arange(len(x_axis_data_labels))  # This will be an array from 0 to 11
-
-# Width of each bar
-width = 0.2
-
-# Legends for the plot
-legends = ['Imatient', 'Patient']
-
-# Set up the figure and axis
-plt.figure(figsize=(24, 12))  # Increased height for better visibility
-ax = plt.subplot()
-ax.set_ylabel('Absolute Mean SHAP value', fontsize=24)  # Larger font size for y-axis label
-
-# Font sizes
-FONT_SIZE = 22
-plt.rc('font', size=FONT_SIZE)            # Fontsize of the text sizes
-plt.rc('axes', titlesize=FONT_SIZE)       # Fontsize of the axes title
-plt.rc('axes', labelsize=FONT_SIZE)       # Fontsize of the x and y labels
-plt.rc('legend', fontsize=FONT_SIZE - 2)  # Fontsize of the legend
-
-# Plotting the bars
-ax.bar(x_axis_data - width/2, feature_sums[0], width=width, align='center', alpha=0.8, color='#eb5e7c', label='Impatient')
-ax.bar(x_axis_data + width/2, feature_sums[1],width=width, align='center', alpha=0.8, color='#2f4b7c', label='Patient')
-
-# Adjusting the plot
-ax.autoscale_view()
-plt.tight_layout(rect=[0, 0.15, 1, 1])  # Adjust bottom margin for labels
-
-# Setting x-axis labels
-ax.set_xticks(x_axis_data)
-ax.set_xticklabels(x_axis_data_labels, fontsize=20, rotation=45, ha='right')  # Larger font and better alignment
-ax.tick_params(axis='y', labelsize=FONT_SIZE)
-
-# Adding the legend
-plt.legend(legends, loc="upper right", fontsize=24)
-
-# Saving and showing the plot
-plt.savefig('./graph/Decision making.png', dpi=300)
-plt.show()
+#
+# # Generate x positions for the bars
+# x_axis_data = np.arange(len(x_axis_data_labels))  # This will be an array from 0 to 11
+#
+# # Width of each bar
+# width = 0.2
+#
+# # Legends for the plot
+# legends = ['Imatient', 'Patient']
+#
+# # Set up the figure and axis
+# plt.figure(figsize=(24, 12))  # Increased height for better visibility
+# ax = plt.subplot()
+# ax.set_ylabel('Absolute Mean SHAP value', fontsize=24)  # Larger font size for y-axis label
+#
+# # Font sizes
+# FONT_SIZE = 22
+# plt.rc('font', size=FONT_SIZE)            # Fontsize of the text sizes
+# plt.rc('axes', titlesize=FONT_SIZE)       # Fontsize of the axes title
+# plt.rc('axes', labelsize=FONT_SIZE)       # Fontsize of the x and y labels
+# plt.rc('legend', fontsize=FONT_SIZE - 2)  # Fontsize of the legend
+#
+# # Plotting the bars
+# ax.bar(x_axis_data - width/2, feature_sums[0], width=width, align='center', alpha=0.8, color='#eb5e7c', label='Impatient')
+# ax.bar(x_axis_data + width/2, feature_sums[1],width=width, align='center', alpha=0.8, color='#2f4b7c', label='Patient')
+#
+# # Adjusting the plot
+# ax.autoscale_view()
+# plt.tight_layout(rect=[0, 0.15, 1, 1])  # Adjust bottom margin for labels
+#
+# # Setting x-axis labels
+# ax.set_xticks(x_axis_data)
+# ax.set_xticklabels(x_axis_data_labels, fontsize=20, rotation=45, ha='right')  # Larger font and better alignment
+# ax.tick_params(axis='y', labelsize=FONT_SIZE)
+#
+# # Adding the legend
+# plt.legend(legends, loc="upper right", fontsize=24)
+#
+# # Saving and showing the plot
+# plt.savefig('./graph/Decision making.png', dpi=300)
+# plt.show()
 
