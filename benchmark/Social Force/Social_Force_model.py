@@ -57,20 +57,6 @@ class Pedestrian:
         shap_density = self.shap.get('density', 0)
         return shap_density * local_density * self.heading * 0.1
 
-    def compute_comfort_force(self):
-        # Speed comfort
-        v_mag = np.linalg.norm(self.vel)
-        speed_diff = v_mag - self.v_pref
-        shap_speed = self.shap.get('speed_change', 0)
-        f_speed = shap_speed * speed_diff * unit(self.vel)
-
-        # Direction comfort
-        current_heading = unit(self.vel) if v_mag > 0 else self.heading
-        heading_diff = current_heading - self.heading
-        shap_dir = self.shap.get('direction_change', 0)
-        f_dir = shap_dir * heading_diff
-
-        return f_speed + f_dir
 
     def update(self, force, dt=0.5):
         vel_vec = self.vel * self.heading
