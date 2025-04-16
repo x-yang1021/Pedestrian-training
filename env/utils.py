@@ -116,3 +116,28 @@ def getContact(positions, x1, y1, direction):
             break  # No need to check further if contact is found
 
     return contact
+
+def getContact_new(positions, x1, y1, direction):
+    contact = [0, 0, 0, 0]
+
+    direction_angles = {
+        'front': direction,
+        'left': (direction - np.pi / 2) % (2 * np.pi),
+        'right': (direction + np.pi / 2) % (2 * np.pi),
+        'back': (direction + np.pi) % (2 * np.pi)
+    }
+
+    # Define sight radius and central angle
+    sight_radius = 0.4
+    central_angle = np.pi / 2
+
+    for i, dir_name in enumerate(['front', 'left', 'right', 'back']):
+        dir_angle = direction_angles[dir_name]
+        for x2, y2 in positions:
+            if withinSight(x1, y1, dir_angle, x2, y2,
+                           sight_radius=sight_radius, central_angle=central_angle):
+                contact[i] = 1
+                break
+
+    return contact  # [front, left, right, back]
+
