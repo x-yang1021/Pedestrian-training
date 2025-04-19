@@ -1,115 +1,83 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+from torch_geometric.nn import GATConv
 
 class SocialLSTMClassifier(nn.Module):
-    def __init__(self, input_size, hidden_size=64, grid_size=(4, 4), neighborhood_size=4.0, dropout=0.1, observed=15):
+    def __init__(
+        self, input_size, hidden_size=64,
+        dropout=0.0, observed=15,
+    ):
         super().__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.grid_size = grid_size
-        self.neighborhood_size = neighborhood_size
         self.obs_len = observed
 
-        self.lstm_cell = nn.LSTMCell(input_size, hidden_size)
-        self.dropout = nn.Dropout(dropout)
+        # LSTM for the target trajectory
+        self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True)
 
-        self.agent_attention = nn.MultiheadAttention(hidden_size, num_heads=1, batch_first=True)
-        self.grid_q_proj = nn.Linear(hidden_size, hidden_size)
-        self.grid_k_proj = nn.Linear(hidden_size, hidden_size)
-        self.grid_v_proj = nn.Linear(hidden_size, hidden_size)
+        # Normalize input
+        self.input_norm = nn.LayerNorm(input_size)
 
-        self.social_pool_mlp = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size),
+        # Embed neighbors to hidden size
+        self.neighbor_fc = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size)
+            nn.Dropout(dropout)
         )
 
-        self.classifier = nn.Linear(hidden_size, 2)
+        # Attention over temporal features
+        self.temporal_attn = nn.MultiheadAttention(hidden_size, num_heads=1, batch_first=True)
 
-    def get_social_grid_attention(self, hidden_states, hidden_target, positions, batch_size, reference_pos, mask=None):
-        grid_cells = self.grid_size[0] * self.grid_size[1]
-        cell_width = self.neighborhood_size / self.grid_size[0]
-        cell_height = self.neighborhood_size / self.grid_size[1]
-        half_grid_x = self.grid_size[0] // 2
-        half_grid_y = self.grid_size[1] // 2
+        # GAT for social interaction modeling
+        self.gat_conv = GATConv(hidden_size, hidden_size, heads=1, concat=False)
 
-        ref_pos = reference_pos.squeeze(0)
-        rel_positions = positions - ref_pos
+        # Final classifier
+        self.classifier = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(),
+            nn.Dropout(0.0),
+            nn.Linear(hidden_size, 2)
+        )
 
-        cell_contents = [[] for _ in range(grid_cells)]
+    def forward(self, observed_trajectory_target, observed_trajectory_others):
+        # observed_trajectory_target: [B, T, F]
+        # observed_trajectory_others: list of list of [N_t, F] for each batch item
 
-        for j in range(batch_size):
-            if mask is not None and mask[j] == 0:
-                continue
+        device = observed_trajectory_target.device
+        B, T, F = observed_trajectory_target.shape
 
-            rel_x, rel_y = rel_positions[j]
+        # Normalize input
+        obs_target_norm = self.input_norm(observed_trajectory_target)
 
-            if (abs(rel_x) > self.neighborhood_size / 2) or (abs(rel_y) > self.neighborhood_size / 2):
-                continue
+        # Encode target sequence using LSTM
+        lstm_out, _ = self.lstm(obs_target_norm)  # [B, T, H]
 
-            cell_x = (rel_x / cell_width).long() + half_grid_x
-            cell_y = (rel_y / cell_height).long() + half_grid_y
+        combined_history = []
+        for b in range(B):
+            combined_steps = []
+            for t in range(self.obs_len):
+                hidden_target = lstm_out[b, t].unsqueeze(0)  # [1, H]
+                others_t = observed_trajectory_others[b][t]  # [N_t, F] or empty
+                if others_t.size(0) == 0:
+                    combined = hidden_target
+                else:
+                    others_norm = self.input_norm(others_t)  # [N_t, F]
+                    hidden_others = self.neighbor_fc(others_norm)  # [N_t, H]
+                    all_nodes = torch.cat([hidden_target, hidden_others], dim=0)  # [1+N_t, H]
+                    edge_index = torch.tensor([
+                        [0] * hidden_others.size(0) + list(range(1, 1 + hidden_others.size(0))),
+                        list(range(1, 1 + hidden_others.size(0))) + [0] * hidden_others.size(0)
+                    ], dtype=torch.long, device=device)
+                    updated = self.gat_conv(all_nodes, edge_index)
+                    combined = updated[0].unsqueeze(0)  # [1, H]
 
-            if 0 <= cell_x < self.grid_size[0] and 0 <= cell_y < self.grid_size[1]:
-                idx = cell_y * self.grid_size[0] + cell_x
-                cell_contents[idx].append(hidden_states[j].unsqueeze(0))
+                combined_steps.append(combined.unsqueeze(1))  # [1, 1, H]
+            combined_seq = torch.cat(combined_steps, dim=1)  # [1, T, H]
+            combined_history.append(combined_seq)
 
-        cell_outputs = []
-        for agents in cell_contents:
-            if len(agents) > 0:
-                agent_tensor = torch.cat(agents, dim=0).unsqueeze(0)  # shape [1, num_agents_in_cell, hidden_size]
-                q = hidden_target.unsqueeze(0).unsqueeze(1)
-                attn_out, _ = self.agent_attention(q, agent_tensor, agent_tensor)
-                cell_outputs.append(attn_out.squeeze(0))  # [1, hidden_size]
-            else:
-                cell_outputs.append(torch.zeros(1, self.hidden_size, device=hidden_states.device))
-
-        cell_stack = torch.cat(cell_outputs, dim=0)  # [grid_cells, hidden_size]
-        # Project keys and values from cell outputs
-        K = self.grid_k_proj(cell_stack)  # [N, D]
-        V = self.grid_v_proj(cell_stack)  # [N, D]
-
-        # Query: target agent's hidden state
-        q = self.grid_q_proj(hidden_target).unsqueeze(0)  # [1, D]
-
-        # Compute scaled dot-product attention
-        d = self.hidden_size ** 0.5
-        attn_scores = (q @ K.T) / d  # [1, N]
-        attn_weights = F.softmax(attn_scores, dim=-1)  # [1, N]
-
-        # Weighted sum of values
-        grid_context = attn_weights @ V
-
-        return grid_context
-
-    def forward(self, observed_trajectory_target, observed_trajectory_others, neighbor_mask=None):
-        obs_len = len(observed_trajectory_others)
-
-        hidden_target = torch.zeros(1, self.hidden_size, device=observed_trajectory_target[0].device)
-        cell_target = torch.zeros(1, self.hidden_size, device=observed_trajectory_target[0].device)
-
-        for t in range(obs_len):
-            target_input = observed_trajectory_target[t].unsqueeze(0)
-            target_pos = target_input[:, :2]
-
-            hidden_target, cell_target = self.lstm_cell(target_input, (hidden_target, cell_target))
-            hidden_target = self.dropout(hidden_target)
-
-            others_input = observed_trajectory_others[t]
-            if others_input.shape[0] > 0:
-                others_pos = others_input[:, :2]
-                hidden_others = torch.zeros(others_input.shape[0], self.hidden_size, device=others_input.device)
-                cell_others = torch.zeros(others_input.shape[0], self.hidden_size, device=others_input.device)
-
-                hidden_others, cell_others = self.lstm_cell(others_input, (hidden_others, cell_others))
-                hidden_others = self.dropout(hidden_others)
-
-                mask_t = neighbor_mask[t] if neighbor_mask is not None else None
-                social_context = self.get_social_grid_attention(hidden_others, hidden_target, others_pos, others_input.shape[0], target_pos, mask=mask_t)
-            else:
-                social_context = torch.zeros_like(hidden_target)
-
-            combined = hidden_target + social_context
-
-        return self.classifier(combined)
+        combined_batch = torch.cat(combined_history, dim=0)  # [B, T, H]
+        query = combined_batch[:, -1:, :]  # [B, 1, H]
+        attended, _ = self.temporal_attn(query, combined_batch, combined_batch)
+        attended = attended.squeeze(1)  # [B, H]
+        logits = self.classifier(attended)  # [B, 2]
+        return logits
