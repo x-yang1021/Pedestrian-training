@@ -8,8 +8,8 @@ sys.path.append('../../')
 from env.utils import withinSight, getPositions,getDensity, getFront, getContact_new
 from utils import retrieveOriginalTrajectory
 
-impatient = True
-simulation_steps = 200
+impatient = False
+simulation_steps = 500
 seed = 42
 distance_threshold = 2.58
 goal = [0,0]
@@ -102,11 +102,20 @@ while step < simulation_steps:
     traj = rng.integers(1,traj_num+1)
     if not Cluster_Trajectories[ID] or traj not in Cluster_Trajectories[ID]:
         continue
-    ped = ped[ped.iloc[:, mapping['Trajectory']] == traj]
     ped = ped[ped.iloc[:, mapping['Distance']] <= distance_threshold]
     ped = ped.dropna(subset=[ped.columns[mapping['Direction Change']]])
     if ped.shape[0] < traj_length:
         continue
+
+    max_start_idx = ped.shape[0] - traj_length
+    valid_starts = [i for i in range(max_start_idx + 1)
+                    if ped.iloc[i:i + traj_length].shape[0] == traj_length]
+
+    if not valid_starts:
+        continue
+
+    start_idx = random.choice(valid_starts)
+    ped = ped.iloc[start_idx:start_idx + traj_length]
     initial_x = ped.iloc[0,mapping['Positionx']]
     initial_y = ped.iloc[0,mapping['Positiony']]
     initial_pos = np.array([initial_x, initial_y])
@@ -125,13 +134,13 @@ while step < simulation_steps:
         f_repulsion = ego.compute_repulsion_force(direction_flags)
         density = getDensity(positions, ego.pos[0], ego.pos[1], ego.direction)
         f_density = ego.compute_density_force(density)
-        total_force = (f_drive + f_repulsion + f_density) * 0.5
+        total_force = (f_drive + f_repulsion + f_density) * 1
         ego.update(total_force)
         sim_traj.append(ego.pos.copy())
-        time_step += 1
-        real_x = ped.iloc[time_step,mapping['Positionx']]
-        real_y = ped.iloc[time_step,mapping['Positiony']]
+        real_x = ped.iloc[time_step, mapping['Positionx']]
+        real_y = ped.iloc[time_step, mapping['Positiony']]
         real_traj.append(np.array([real_x, real_y]))
+        time_step += 1
     sim_traj = np.array(sim_traj)
     real_trah = np.array(real_traj)
     ade = np.mean(np.linalg.norm(sim_traj - real_traj, axis=1))
@@ -142,8 +151,8 @@ while step < simulation_steps:
 
 print(np.mean(ADEs), np.mean(FDEs))
 
-# impatient 1.30 2.02
-# patient 1.07 1.18
+# impatient 0.76 1.50
+# patient 0.80 1.44
 
 
 

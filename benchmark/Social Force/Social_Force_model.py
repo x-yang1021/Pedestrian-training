@@ -17,8 +17,8 @@ class Pedestrian:
 
     def compute_driving_force(self,tau=0.5):
         dist = self.goal - self.pos
-        weight_x = 1 + self.shap.get('self position x', 0)
-        weight_y = 1 + self.shap.get('self position y', 0)
+        weight_x = self.shap.get('self position x', 0)
+        weight_y = self.shap.get('self position y', 0)
         force_x = weight_x * dist[0]
         force_y = weight_y * - dist[1]
         return np.array([force_x, force_y])
@@ -48,7 +48,7 @@ class Pedestrian:
             else:
                 shap_val = self.shap.get('surrounding contact', 0)
 
-            weight = 1 + shap_val
+            weight = shap_val
             force += weight * dir_vec
 
         return force * 10

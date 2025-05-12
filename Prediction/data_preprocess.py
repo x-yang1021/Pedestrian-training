@@ -13,7 +13,7 @@ trajectory_features = [
     'Speed', 'Speed Change', 'Direction', 'Direction Change'
 ]
 traj_length = 6
-distance_threshold = 5.0
+distance_threshold = 3
 
 # 1. LOAD & CLEAN
 df = pd.read_csv(CSV_PATH)

@@ -210,6 +210,10 @@ for file in all_files:
         df = df.sort_values(by='Time')
         df.reset_index(drop=True,inplace=True)
 
+    # if ID+200 == 287:
+    #     df.loc[df['Time'] == 241.0, :] = np.nan
+    #     print('cleared')
+
     consec_zero = 0
     for i in range(df.shape[0]):
         #remove last zeros

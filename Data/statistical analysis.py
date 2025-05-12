@@ -74,12 +74,13 @@ df_clean.reset_index(drop=True, inplace=True)
 
 df_test = df_clean
 df_test = pd.DataFrame()
+# print(df_clean['Speed Change'].max())
 df_test['Speed Change'] = 2 * (df_clean['Speed Change'] - df_clean['Speed Change'].min()) / (df_clean['Speed Change'].max() - df_clean['Speed Change'].min()) - 1
 df_test['Direction Change'] = 2 * (df_clean['Direction Change'] - df_clean['Direction Change'].min()) / (df_clean['Direction Change'].max() - df_clean['Direction Change'].min()) - 1
-# df_test['Direction Change'] = df_test['Direction Change'].abs()
+
 
 # signal = df_clean['Distance'].values
-signal = df_test[['Speed Change','Direction Change']].values
+signal = df_test[['Speed Change', 'Direction Change']].values
 models = ["l2",'l1','linear','clinear','rank'] # Change point detection model
 models=['l2']
 for model in models:
@@ -101,7 +102,7 @@ for model in models:
 
         for a in ax:
             a.set_xlabel('Index', fontsize=18)
-            # a.set_ylabel('Change', fontsize=14)
+            a.set_ylabel('Change', fontsize=14)
         plt.tight_layout()
         plt.savefig("Break_point.png")
         plt.show()
@@ -116,7 +117,7 @@ for model in models:
 #
 # print(df_special['Speed'].mean())
 
-exit()
+
 
 obs, vars = signal.shape
 ranks = stats.mstats.rankdata(signal, axis=0)

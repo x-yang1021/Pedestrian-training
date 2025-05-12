@@ -91,7 +91,6 @@ plt.ylabel("Distance")
 plt.savefig('Dendrogram.png')
 plt.show()
 
-exit()
 
 # Step 5: Determine the optimal number of clusters using the Silhouette score
 range_n_clusters = range(2, 10)  # Example range to check

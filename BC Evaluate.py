@@ -10,7 +10,7 @@ from utils import retrieveOriginalTrajectory
 
 
 SEED = 42
-impatient = False
+impatient = True
 
 dataset1 = pd.read_csv('./Data/Experiment 1.csv')
 dataset2 = pd.read_csv('./Data/Experiment 2.csv')
@@ -81,3 +81,6 @@ print("Final MSE:",
       "Max:", np.max(final_mses),
       "25th:", np.percentile(final_mses, 25),
       "75th:", np.percentile(final_mses, 75))
+
+#  patient 0.85 1.30
+#  impatient 1.00 1.66
