@@ -8,7 +8,7 @@ sys.path.append('../../')
 from env.utils import withinSight, getPositions,getDensity, getFront, getContact_new
 from utils import retrieveOriginalTrajectory
 
-impatient = False
+impatient = True
 simulation_steps = 500
 seed = 42
 distance_threshold = 2.58
@@ -134,7 +134,7 @@ while step < simulation_steps:
         f_repulsion = ego.compute_repulsion_force(direction_flags)
         density = getDensity(positions, ego.pos[0], ego.pos[1], ego.direction)
         f_density = ego.compute_density_force(density)
-        total_force = (f_drive + f_repulsion + f_density) * 1
+        total_force = (f_drive + f_repulsion + f_density) * 0.01
         ego.update(total_force)
         sim_traj.append(ego.pos.copy())
         real_x = ped.iloc[time_step, mapping['Positionx']]
@@ -151,8 +151,8 @@ while step < simulation_steps:
 
 print(np.mean(ADEs), np.mean(FDEs))
 
-# impatient 0.76 1.50
-# patient 0.80 1.44
+# impatient 0.44 1.37
+# patient 0.30 1.31
 
 
 

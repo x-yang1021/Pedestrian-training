@@ -16,13 +16,22 @@ from imitation.rewards.reward_nets import BasicShapedRewardNet
 from imitation.algorithms.base import make_data_loader
 from imitation.rewards.reward_nets import RewardNet
 from imitation.util.networks import RunningNorm
-
+import inspect
 from captum.attr import (IntegratedGradients, GradientShap, Saliency,InputXGradient,
                          DeepLift,DeepLiftShap, FeatureAblation,Occlusion, FeaturePermutation, ShapleyValueSampling, KernelShap)
 import shap
 
 SEED = 1
 patient = False
+
+class WrappedRewardNet(torch.nn.Module):
+    def __init__(self, reward_net):
+        super().__init__()
+        self.reward_net = reward_net
+
+    def forward(self, x):
+        obs, acts, next_obs, dones = torch.split(x, [10, 2, 10, 1], dim=-1)
+        return self.reward_net(obs, acts, next_obs, dones)
 
 x_axis_data_labels = [
     'self position x', 'self position y', 'destination', 'self speed', 'self direction',
@@ -46,6 +55,10 @@ for _ in range(2):
         reward_net = torch.load('./model/impatient/Rush Reward.pth')
         rollouts = Rush.load_trajectories('./env/Rush_Data/Impatient/Testing Trajectories')
 
+    print(reward_net)
+    print(policy.policy)
+    exit()
+
     reward_net = reward_net._base
     reward_net.eval()
     obs = []
@@ -56,7 +69,10 @@ for _ in range(2):
         obs.append(rollouts[i].obs[:-1])
         acts.append(rollouts[i].acts)
         next_obs.append(rollouts[i].obs[:-1])
-        dones.append(np.zeros(len(obs)))
+        traj_len = len(rollouts[i].acts)
+        done_flags = np.zeros((traj_len, 1), dtype=np.float32)
+        done_flags[-1] = 1.0  # Mark last transition in trajectory as done
+        dones.append(done_flags)
 
     obs = np.concatenate(obs)
     acts = np.concatenate(acts)
@@ -70,42 +86,36 @@ for _ in range(2):
         dones,
     )
 
+    print("obs shape:", obs.shape)
+    print("acts shape:", acts.shape)
+    print("next_obs shape:", next_obs.shape)
+    print("dones shape:", dones.shape)
+
     # Initialize attribution methods
-    svs = ShapleyValueSampling(reward_net)
+    # svs = ShapleyValueSampling(reward_net)
+    wrapped_reward = WrappedRewardNet(reward_net)
+    svs = GradientShap(wrapped_reward)
+    X_input = torch.cat([obs, acts, next_obs, dones], dim=-1)
+    baseline = torch.zeros_like(X_input)
+
+    print(inspect.signature(reward_net.forward))
 
     # Compute attributions
-    attr_svs = svs.attribute(X_test)
-
-    attr_svs_norm_sums = []
-    attr_svs_stds = []
+    # attr_svs = svs.attribute(X_test)
+    attr_svs = svs.attribute(inputs=X_input, baselines=baseline)
     shap_values_list = []
 
-    for i in range(min(len(attr_svs), 2)):
+    for i in range(len(attr_svs)):
         # Convert to numpy
-        vals = attr_svs[i].detach().numpy()  # shape: (num_samples, num_features) or something similar
-
-        # Sum across the first dimension (0) to aggregate attributions over samples
-        mean_vals = abs(vals).mean(axis=0)
-        # Compute the standard deviation across the same dimension
-        std_vals = vals.std(axis=0)
-
-        # Store results
-        attr_svs_norm_sums.append(mean_vals)
-        attr_svs_stds.append(std_vals)
-
+        vals = attr_svs[i].detach().numpy()
         # Store SHAP values for beeswarm
-        shap_values_list.append(vals)
-
-    # Concatenate results
-    attr_svs_norm_sum = np.concatenate(attr_svs_norm_sums)
-    attr_svs_std = np.concatenate(attr_svs_stds)
-
-    feature_sums.append(attr_svs_norm_sum)
-    feature_stds.append(attr_svs_std)
+        shap_values_list.append(vals[:12])
 
     # Combine observations and actions into a single feature matrix
     features = np.concatenate([obs, acts], axis=1)
-    shap_value = np.concatenate(shap_values_list, axis=1)
+    shap_value = np.stack(shap_values_list, axis=-1)
+    shap_value = shap_value.T
+
     # Define the title based on whether it's "Impatient" or "Patient"
     model_type = "Impatient" if not patient else "Patient"
 
