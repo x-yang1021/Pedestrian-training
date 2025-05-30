@@ -8,7 +8,7 @@ sys.path.append('../../')
 from env.utils import withinSight, getPositions,getDensity, getFront, getContact_new
 from utils import retrieveOriginalTrajectory
 
-impatient = True
+impatient = False
 simulation_steps = 500
 seed = 42
 distance_threshold = 2.58
@@ -151,8 +151,8 @@ while step < simulation_steps:
 
 print(np.mean(ADEs), np.mean(FDEs))
 
-# impatient 0.44 1.37
-# patient 0.30 1.31
+# impatient 0.72 1.54
+# patient 0.28 1.12
 
 
 

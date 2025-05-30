@@ -12,7 +12,7 @@ grid_size = (4, 4)
 neighborhood_size = 4.0
 dropout = 0.1
 
-patient = False
+patient = True
 # Load the trained model
 if not patient:
     model_path = '../Impatient/social_lstm.pth'
@@ -60,3 +60,4 @@ print('Average MSE:', 'Mean', np.mean(avg_mses), 'Min', np.min(avg_mses), 'Max',
 print('Final MSE:', 'Mean', np.mean(final_mses), 'Min', np.min(final_mses), 'Max', np.max(final_mses), '25th', np.percentile(final_mses, 25), '75th', np.percentile(final_mses, 75))
 
 # impatient 0.77 1.21
+# Patient 0.41 0.64
