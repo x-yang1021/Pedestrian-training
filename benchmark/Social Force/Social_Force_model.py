@@ -51,7 +51,7 @@ class Pedestrian:
             weight = shap_val
             force += weight * dir_vec
 
-        return force * 10
+        return force * 0.1
 
     def compute_density_force(self, local_density):
         shap_density = self.shap.get('density', 0)

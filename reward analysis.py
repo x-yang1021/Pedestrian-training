@@ -159,6 +159,28 @@ for _ in range(2):
     plt.savefig(f'./graph/{model_type} SHAP Combined Plot.png', dpi=300)
     plt.show()
 
+    # Save summary stats
+
+    mean_abs_shap = np.abs(shap_value).mean(axis=0)
+
+    mean_signed_shap = shap_value.mean(axis=0)
+
+    std_shap = shap_value.std(axis=0)
+
+    shap_stats_df = pd.DataFrame({
+
+        'Feature': x_axis_data_labels,
+
+        'Abs Mean': mean_abs_shap,
+
+        'Mean': mean_signed_shap,
+
+        'Std': std_shap
+
+    })
+
+    shap_stats_df.to_csv(f'./benchmark/Social Force/{model_type}_Average_SHAP.csv', index=False)
+
     # Toggle patient for second loop
     patient = True
 

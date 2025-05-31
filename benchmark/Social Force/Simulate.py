@@ -11,7 +11,7 @@ from utils import retrieveOriginalTrajectory
 impatient = False
 simulation_steps = 500
 seed = 42
-distance_threshold = 2.58
+distance_threshold = 2.58 if not impatient else 9.0
 goal = [0,0]
 
 if not impatient:
@@ -134,7 +134,7 @@ while step < simulation_steps:
         f_repulsion = ego.compute_repulsion_force(direction_flags)
         density = getDensity(positions, ego.pos[0], ego.pos[1], ego.direction)
         f_density = ego.compute_density_force(density)
-        total_force = (f_drive + f_repulsion + f_density) * 0.01
+        total_force = (f_drive + f_repulsion + f_density) * 0.1
         ego.update(total_force)
         sim_traj.append(ego.pos.copy())
         real_x = ped.iloc[time_step, mapping['Positionx']]
@@ -151,8 +151,8 @@ while step < simulation_steps:
 
 print(np.mean(ADEs), np.mean(FDEs))
 
-# impatient 0.72 1.54
-# patient 0.28 1.12
+# impatient 0.79 1.77
+# patient 0.52 1.52
 
 
 
