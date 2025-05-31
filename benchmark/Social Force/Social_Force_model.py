@@ -17,11 +17,9 @@ class Pedestrian:
 
     def compute_driving_force(self,tau=0.5):
         dist = self.goal - self.pos
-        weight_x = self.shap.get('self position x', 0)
-        weight_y = self.shap.get('self position y', 0)
-        force_x = weight_x * dist[0]
-        force_y = weight_y * - dist[1]
-        return np.array([force_x, force_y])
+        weight = self.shap.get('Distance', 0)  # scalar weight applied along the direction
+        force = weight * dist * 0.1  # 2D force vector
+        return force
 
     def compute_repulsion_force(self, direction_flags):
         force = np.zeros(2)

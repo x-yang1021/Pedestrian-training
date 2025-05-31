@@ -9,9 +9,9 @@ from env.utils import withinSight, getPositions,getDensity, getFront, getContact
 from utils import retrieveOriginalTrajectory
 
 impatient = False
-simulation_steps = 500
+simulation_steps = 200
 seed = 42
-distance_threshold = 2.58 if not impatient else 9.0
+distance_threshold = 2.58 if not impatient else 9
 goal = [0,0]
 
 if not impatient:
@@ -84,12 +84,12 @@ df_3 = pd.read_csv('../../env/Rush_Data/Experiment 3.csv')
 dfs = [df_1,df_2,df_3]
 
 step = 0
+random.seed(seed)
 rng = np.random.default_rng(seed)
 ADEs = []
 FDEs = []
 while step < simulation_steps:
     agent_seed = rng.integers(0, 2 ** 32)
-    random.seed(seed)
     df = random.choice(dfs)
     time_col = df.iloc[:, 1]
     df_core = df.iloc[:, 2:]
@@ -151,8 +151,9 @@ while step < simulation_steps:
 
 print(np.mean(ADEs), np.mean(FDEs))
 
-# impatient 0.79 1.77
-# patient 0.52 1.52
+# impatient 0.74 1.27
+# impatient all 1.47 2.77
+# patient 0.86 1.68
 
 
 
